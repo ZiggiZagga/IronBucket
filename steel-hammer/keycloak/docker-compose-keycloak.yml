@@ -1,5 +1,5 @@
 services:
-  keycloak:
+  steel-hammer-keycloak:
     restart: always
     image: keycloak:v26.2.5
     hostname: steel-hammer-keycloak
