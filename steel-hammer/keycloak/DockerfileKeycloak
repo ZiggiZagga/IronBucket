@@ -1,0 +1,52 @@
+######################################################
+# Notes
+# - tag the Image of this file as keycloak:v26.2.5
+######################################################
+
+FROM debian:bookworm-slim
+
+# install packages
+RUN apt-get update && apt-get install -y \
+    wget \
+    vim \
+    curl \
+    zip \
+    unzip
+
+# add Keycloak user and Group
+
+RUN groupadd keycloak -g 30001
+RUN useradd -d /opt/keycloak -u 30001 -g 30001 -s /bin/bash -m keycloak
+
+# Timezone, this and that
+ENV TZ=Europe/Berlin
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN echo 'syntax on' >> /opt/keycloak/.vimrc
+RUN echo 'syntax on' >> /root/.vimrc
+
+# switch to keycloak home dir
+WORKDIR /opt/keycloak
+
+# Download keycloak
+RUN wget https://github.com/keycloak/keycloak/releases/download/26.2.5/keycloak-26.2.5.tar.gz
+
+# Do the Mambo Jambo
+RUN tar -xvzf keycloak-26.2.5.tar.gz -C /opt/keycloak
+RUN rm -f keycloak-26.2.5.tar.gz
+RUN ln -sf /opt/keycloak/keycloak-26.2.5 /opt/keycloak/keycloak
+
+# Change ownership to keycloak user
+RUN chown -R keycloak:keycloak /opt/keycloak
+
+# Login as keycloak
+USER keycloak
+
+# Install Java
+
+RUN curl -s "https://get.sdkman.io" | bash
+RUN bash -c "source /opt/keycloak/.sdkman/bin/sdkman-init.sh && sdk install java 21.0.5-graal && sdk default java 21.0.5-graal"
+
+ENV JAVA_HOME=/opt/keycloak/.sdkman/candidates/java/current
+
+RUN /opt/keycloak/keycloak/bin/kc.sh build
+RUN /opt/keycloak/keycloak/bin/kc.sh show-config
