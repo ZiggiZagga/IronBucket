@@ -12,9 +12,9 @@
 
 | Feature | Description |
 |--------|-------------|
-| 🔐 **Zero-Trust Identity** | Authenticate with any OIDC-compliant provider (Google, Azure AD, Okta) |
+| 🔐 **Zero-Trust Identity** | Authenticate with any OIDC-compliant provider ([Keycloak](https://github.com/keycloak/keycloak)) |
 | 🎯 **Granular Access Control** | Write policies for paths, prefixes, groups, or object metadata |
-| ⚙️ **S3-Compatible Proxy** | Drop-in for S3 APIs—backed by MinIO, Ceph, AWS S3, and others |
+| ⚙️ **S3-Compatible Proxy** | Drop-in for S3 APIs—backed by [MinIO](https://github.com/minio/minio), Ceph, AWS S3, and others |
 | 🔁 **GitOps-Native Policies** | Declarative access rules live in Git—versioned, auditable, reviewable |
 | 🪵 **Full Auditability** | Every request is logged; every decision is explainable |
 
@@ -22,8 +22,7 @@
 
 ## 🏗️ Architecture Diagram
 
-```mermaid
-flowchart TD
+```
     User[[User / Tool]] --> Gateway[IronBucket Gateway]
     Gateway --> PolicyEngine[Policy Engine]
     Gateway --> Git[Git Policies]
