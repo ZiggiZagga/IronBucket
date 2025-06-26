@@ -1,0 +1,33 @@
+services:
+  steel-hammer-minio:
+    restart: always
+    image: miniov1:latest
+    container_name: steel-hammer-minio
+    command: /opt/minio/minio server --console-address=":9001" 
+
+    ports:
+      - 9000:9000   
+      - 9000:9001
+
+    #volumes:
+    #  - /opt/minio/data:/opt/minio/data
+    #  - /opt/minio/certs:/opt/minio/.minio/certs
+    #  - /opt/minio/conf:/opt/minio/conf
+
+    environment:
+      - "MINIO_BROWSER=on"
+      - "MINIO_VOLUMES=/opt/minio/data"
+       
+      - "MINIO_ROOT_USER=MINIO_ROOT_USER"
+      - "MINIO_ROOT_PASSWORD=MINIO_ROOT_PASSWORD"
+
+      # TODO security first
+      #- "MINIO_IDENTITY_OPENID_CONFIG_URL_PRIMARY_IAM=https://steel-hammer-keycloak:7082/realms/dev/.well-known/openid-configuration"
+      #- "MINIO_IDENTITY_OPENID_CLIENT_ID_PRIMARY_IAM=minioPrimaryKey"
+      #- "MINIO_IDENTITY_OPENID_CLIENT_SECRET_PRIMARY_IAM=minioPrimarySecret"
+      #- "MINIO_IDENTITY_OPENID_DISPLAY_NAME_PRIMARY_IAM=Steel-Hammer"
+      #- "MINIO_IDENTITY_OPENID_SCOPES_PRIMARY_IAM=openid"
+      #- "MINIO_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC_PRIMARY_IAM=on"
+
+
+      
