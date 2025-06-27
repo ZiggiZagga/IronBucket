@@ -47,6 +47,11 @@ RUN curl -s "https://get.sdkman.io" | bash
 RUN bash -c "source /opt/keycloak/.sdkman/bin/sdkman-init.sh && sdk install java 21.0.5-graal && sdk default java 21.0.5-graal"
 
 ENV JAVA_HOME=/opt/keycloak/.sdkman/candidates/java/current
+RUN echo export "PATH=$PATH:/opt/keycloak/keycloak/bin"
+
+RUN bash -c "source /opt/keycloak/.bashrc"
+
+USER keycloak
 
 RUN /opt/keycloak/keycloak/bin/kc.sh build
 RUN /opt/keycloak/keycloak/bin/kc.sh show-config
