@@ -1,0 +1,62 @@
+{
+  "realm": "dev",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "dev-client",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dev-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["*"],
+      "baseUrl": "http://localhost:7085"
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "devrole"
+      },
+      {
+        "name": "adminrole"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "devgroup"
+    },
+    {
+      "name": "admingroup"
+    }
+  ],
+  "users": [
+    {
+      "username": "bob",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bobP@ss"
+        }
+      ],
+      "groups": ["devgroup"],
+      "realmRoles": ["devrole"]
+    },
+    {
+      "username": "alice",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "aliceP@ss"
+        }
+      ],
+      "groups": ["admingroup"],
+      "realmRoles": ["adminrole"]
+    }
+  ]
+}
+
