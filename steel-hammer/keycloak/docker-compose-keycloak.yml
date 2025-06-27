@@ -1,0 +1,40 @@
+services:
+  steel-hammer-keycloak:
+    networks:
+      - steel-hammer-network
+
+    restart: always
+    
+    hostname: steel-hammer-keycloak
+    container_name: steel-hammer-keycloak
+
+    build:
+      context: . 
+      dockerfile: ${DOCKER_FILES_HOMEDIR}/keycloak/DockerfileKeycloak
+    
+    #TODO security first
+    #entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start","--hostname", "steel-hammer-keycloak",  "--https-port=7082" ]
+    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start-dev",  "--http-port=7081" ]
+    
+    volumes:      
+      - ./dev-realm.json:/opt/keycloak/keycloak/data/import/dev-realm.json
+    #  - /opt/keycloak/certs:/opt/keycloak/certs
+    
+    ports:
+      - "7081:7081"
+      
+    environment:
+      #- "KC_HTTPS_KEY_STORE_FILE=/opt/keycloak/certs/keycloak.jks"
+      #- "KC_HTTPS_KEY_STORE_PASSWORD=KC_HTTPS_KEY_STORE_PASSWORD"
+      - "KC_BOOTSTRAP_ADMIN_USERNAME=admin"
+      - "KC_BOOTSTRAP_ADMIN_PASSWORD=admin"
+      - "KC_DB=postgres"
+      - "KC_DB_USERNAME=keycloak_db_user"
+      - "KC_DB_PASSWORD=keycloak_db_pass"
+      - "KC_DB_URL=jdbc:postgresql://steel-hammer-postgres:5432/keycloak"
+    depends_on:
+      - steel-hammer-postgres
+
+networks:
+  steel-hammer-network:
+    driver: bridge

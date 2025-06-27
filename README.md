@@ -48,8 +48,8 @@
 
 ```bash
 git clone https://github.com/ZiggiZagga/ironbucket.git
-cd ironbucket
-./gradlew bootRun
+cd ironbucket/steel-hammer
+docker compose -f docker-compose-steel-hammer.xml up --build
 ```
 
 Or use Docker Compose for full stack setup.
