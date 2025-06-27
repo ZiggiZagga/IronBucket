@@ -52,8 +52,6 @@ cd ironbucket/steel-hammer
 docker compose -f docker-compose-steel-hammer.xml up --build
 ```
 
-Or use Docker Compose for full stack setup.
-See docs/quickstart.md for more details.
 
 ---
 ## 📜 Writing Policies
