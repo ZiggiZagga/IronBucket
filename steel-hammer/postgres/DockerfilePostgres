@@ -1,0 +1,22 @@
+######################################################
+# Notes
+######################################################
+
+FROM postgres:16.9-bullseye
+
+USER root
+
+# install packages
+RUN apt-get update && apt-get install -y \
+    wget \
+    vim \
+    curl \
+    zip \
+    unzip
+
+# change postgres user
+RUN usermod -u 30003 postgres
+RUN groupadd postgres_group -g 30003
+RUN usermod -aG postgres_group postgres
+
+USER postgres
