@@ -51,7 +51,11 @@ git clone https://github.com/ZiggiZagga/ironbucket.git
 cd ironbucket/steel-hammer
 docker compose -f docker-compose-steel-hammer.xml up --build
 ```
+---
 
+### 🔗 Gateway Service
+
+The gateway handles OIDC authentication, token parsing, and identity-aware routing. You can explore its code here: 👉 [**Sentinel-Gear: Gateway Repository**](https://github.com/ZiggiZagga/Sentinel-Gear)
 
 ---
 ## 📜 Writing Policies
