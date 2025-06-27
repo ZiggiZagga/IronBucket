@@ -8,17 +8,45 @@
 
 ---
 
-## 🚀 Why IronBucket?
+## 🧩 What's Strong About IronBucket ✨
 
-| Feature | Description |
-|--------|-------------|
-| 🔐 **Zero-Trust Identity** | Authenticate with any OIDC-compliant provider ([Keycloak](https://github.com/keycloak/keycloak)) |
-| 🎯 **Granular Access Control** | Write policies for paths, prefixes, groups, or object metadata |
-| ⚙️ **S3-Compatible Proxy** | Drop-in for S3 APIs—backed by [MinIO](https://github.com/minio/minio), Ceph, AWS S3, and others |
-| 🔁 **GitOps-Native Policies** | Declarative access rules live in Git—versioned, auditable, reviewable |
-| 🪵 **Full Auditability** | Every request is logged; every decision is explainable |
+| **Aspect** | **Why it matters** |
+|-----------|--------------------|
+| **GitOps-native policy store** | Treating access rules like code—branches, PRs, rollbacks—pulls security into the engineering workflow. No more brittle IAM JSON or scattered ACLs. |
+| **Zero-trust, identity-aware proxy** | By terminating OIDC/OAuth at the gateway, IronBucket decouples identity from the store’s own ACL model and provides a unified RBAC/ABAC layer across S3, MinIO, Ceph, etc. |
+| **Drop-in S3 API compatibility** | Keeping the wire protocol untouched means zero rewrites. It works just like Envoy's service mesh adoption playbook. |
+| **Clear inspiration from proven OSS projects** | IronBucket borrows branching from Project Nessie and tag-based enforcement from Polaris—standing on solid OSS shoulders rather than inventing in a vacuum. |
 
 ---
+
+## 🧠 Open Engineering Challenges (Join the Mission)
+
+🚧 This project launched yesterday—almost no code is written yet. If you’ve ever wanted to help shape something from day zero, **now’s your chance**.
+
+Here are some of the toughest, most rewarding problems waiting for builders like you:
+
+| **Challenge** | **Why it matters & how you could help** |
+|---------------|-----------------------------------------|
+| ⚙️ **Performance tuning** | Every object fetch includes auth + policy evaluation. Help benchmark latency, optimize in-memory caching, and explore async audit strategies. |
+| 🏗️ **High availability (HA)** | A gateway outage shouldn't mean a data outage. Design resilient HA topologies using stateless pods, load balancers, or sidecar approaches. |
+| 🛡️ **Policy engine evolution** | Should we use YAML? Rego? Cedar? Help shape the policy language, embed a battle-tested engine, and unlock tooling support. |
+| 🏷️ **Metadata & tag enforcement** | ABAC requires clean, immutable tags. Build CLI tools or upload hooks to guarantee metadata consistency and prevent drift. |
+| 🏢 **Multi-tenant isolation** | Secure SaaS-style deployments need namespacing, quotas, and noisy-neighbor controls. Architect strong tenant boundaries from the ground up. |
+
+> 💡 Want to leave your mark on open-source data governance? **IronBucket is your forge.**
+
+---
+
+## 🛠️ Quick Wins to Tighten the Story
+
+- 📘 **Publish a threat model**: Diagram trust boundaries (client → gateway → policy engine → store) and highlight mitigations.
+- 🧪 **Policy dry-run mode**: Let teams simulate access before merging changes to `main`.
+- 💻 **CLI for dev laptops**: A lightweight dev proxy to test policies locally without prod risk.
+- 🧩 **Pluggable storage adapters**: Start with S3/MinIO, but leave room for Wasabi, Backblaze, or future targets.
+- 🧱 **Roadmapped integrations**: Explicitly support Keycloak/Auth0, GitHub/GitLab, and CI/CD hooks so users know what’s stable.
+
+---
+
 
 ## 🏗️ Architecture Diagram
 
