@@ -1,0 +1,23 @@
+services:
+  steel-hammer-postgres:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-postgres
+    container_name: steel-hammer-postgres
+
+    build:
+      context: . 
+      dockerfile: ${DOCKER_FILES_HOMEDIR}/postgres/DockerfilePostgres
+    
+    ports:
+      - "5432:5432"
+      
+    environment:
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+networks:
+  steel-hammer-network:
+    driver: bridge
