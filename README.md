@@ -21,7 +21,7 @@
 
 ## 🧠 Open Engineering Challenges (Join the Mission)
 
-🚧 This project launched yesterday—almost no code is written yet. If you’ve ever wanted to help shape something from day zero, **now’s your chance**.
+🚧 This project is completely new almost no code is written yet. If you’ve ever wanted to help shape something from day zero, **now’s your chance**.
 
 Here are some of the toughest, most rewarding problems waiting for builders like you:
 
