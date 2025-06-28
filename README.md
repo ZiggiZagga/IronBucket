@@ -175,6 +175,122 @@ ironbucket/
 ```
 ---
 
+
+### [IronBucket](https://github.com/ZiggiZagga/IronBucket)
+**Role:** The umbrella project and central policy engine.  
+**Description:**  
+- Defines the architecture, APIs, and integration contracts for building identity- and policy-driven systems.
+- Coordinates security, routing, and policy enforcement across the ecosystem.
+- Serves as the strategic and technical foundation for all subprojects.
+
+---
+
+## Core Subprojects
+
+### [Sentinel-Gear](https://github.com/ZiggiZagga/Sentinel-Gear)
+**Role:** Gateway service for authentication and initial policy enforcement.  
+**Description:**  
+- Acts as the perimeter gateway, providing OpenID Connect (OIDC) authentication and token validation.
+- Integrates with IronBucket for policy checks before forwarding requests.
+- Entry point for all inbound traffic.
+
+---
+
+### [Claimspindel](https://github.com/ZiggiZagga/Claimspindel)
+**Role:** Dynamic JWT gateway and smart routing.  
+**Description:**  
+- Inspects JWTs at the edge and makes real-time routing decisions based on identity claims (region, role, tenant, etc).
+- Enforces fine-grained, claim-based access policies before requests reach core services.
+- Works with Sentinel-Gear and IronBucket for layered security.
+
+---
+
+### [Buzzle-Vane](https://github.com/ZiggiZagga/Buzzle-Vane)
+**Role:** Eureka-based identity-aware service discovery.  
+**Description:**  
+- Registers and discovers services within the ecosystem.
+- Guides traffic toward the appropriate service instances based on identity, region, and dynamic policy.
+- Ensures context-aware service resolution.
+
+---
+
+### [Brazz-Nossel](https://github.com/ZiggiZagga/Brazz-Nossel)
+**Role:** Identity-aware S3 Proxy.  
+**Description:**  
+- Acts as a secure, policy-enforcing proxy for S3-compatible object storage.
+- Applies identity-driven access controls to S3 operations (GET, PUT, etc).
+- Enables unified policy and identity for both API/service traffic and object storage.
+
+---
+
+## Minimal Working Example: Quickstart Guide
+
+Follow these steps to spin up a minimal working demo of the IronBucket ecosystem:
+
+1. **Clone All Repositories**
+   ```sh
+   git clone https://github.com/ZiggiZagga/IronBucket.git
+   git clone https://github.com/ZiggiZagga/Sentinel-Gear.git
+   git clone https://github.com/ZiggiZagga/Claimspindel.git
+   git clone https://github.com/ZiggiZagga/Buzzle-Vane.git
+   git clone https://github.com/ZiggiZagga/Brazz-Nossel.git
+   ```
+
+2. **Start Core Identity and Policy Services**
+   - Navigate to the steel-hammer folder inside the IronBucket repository:
+     ```sh
+     cd IronBucket/steel-hammer
+     ```
+   - Launch Keycloak (on port 7081) and Postgres (on port 5432) via Docker Compose:
+     ```sh
+     docker compose -f docker-compose.yml up --build
+     ```
+   - Wait for the services to start.  
+   - Verify that Keycloak is running by navigating to [http://localhost:7081](http://localhost:7081) in your browser.
+
+3. **Start the Java Applications (in order):**
+   - Start **Buzzle-Vane**
+   - Start **Sentinel-Gear**
+   - Start **Claimspindel**
+   - Start **Brazz-Nossel**
+
+   *(You need to do this in your favorite IDE.)*
+
+4. **Verify the Setup**
+   - Open [http://localhost:7085](http://localhost:7085) to access the Sentinel-Gear endpoint.
+   - You should be redirected to the Keycloak login page.
+
+5. **Test Users**
+   The system comes preconfigured with two example users:
+   | Username | Role  | Password   |
+   |----------|-------|------------|
+   | bob      | dev   | bobP@ss    |
+   | alice    | admin | aliceP@ss  |
+
+---
+
+
+- **Sentinel-Gear** authenticates and validates inbound requests.
+- **Claimspindel** inspects identity claims and routes based on dynamic policies.
+- **Buzzle-Vane** handles service registration and discovery, identity-aware.
+- **Brazz-Nossel** proxies S3 storage access, enforcing the same identity and policy standards.
+
+---
+
+## Contributing
+
+Each repository has its own contribution guidelines and documentation. Please refer to the individual repos for details on how to get started or join the discussion.
+
+---
+
+## See Also
+
+- [IronBucket README](https://github.com/ZiggiZagga/IronBucket/blob/main/README.md)
+- [Sentinel-Gear](https://github.com/ZiggiZagga/Sentinel-Gear)
+- [Claimspindel](https://github.com/ZiggiZagga/Claimspindel)
+- [Buzzle-Vane](https://github.com/ZiggiZagga/Buzzle-Vane)
+- [Brazz-Nossel](https://github.com/ZiggiZagga/Brazz-Nossel)
+---
 ## **Goto Production fast strategy**
 
 ### 🧬 From **[Project Nessie](https://github.com/projectnessie/nessie)**
