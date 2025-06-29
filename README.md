@@ -72,11 +72,6 @@ Here are some of the toughest, most rewarding problems waiting for builders like
   
 ---  
 
-### 🔗 Gateway Service
-
-The gateway handles OIDC authentication, token parsing, and identity-aware routing. You can explore its code here: 👉 [**Sentinel-Gear: Gateway Repository**](https://github.com/ZiggiZagga/Sentinel-Gear)
-
----
 ## 📜 Writing Policies
 
 IronBucket policies live in Git as YAML or JSON files. They define who can do *what* to *which* resource, under *which* conditions.
@@ -275,28 +270,50 @@ Follow these steps to spin up a minimal working demo of the IronBucket ecosystem
 
 ---
 
-
-- **Sentinel-Gear** authenticates and validates inbound requests.
-- **Claimspindel** inspects identity claims and routes based on dynamic policies.
-- **Buzzle-Vane** handles service registration and discovery, identity-aware.
-- **Brazz-Nossel** proxies S3 storage access, enforcing the same identity and policy standards.
+## Proof-of-Concept Snapshot
 
 ---
 
-## Contributing
+## 🧵 Identity Flow: End-to-End
 
-Each repository has its own contribution guidelines and documentation. Please refer to the individual repos for details on how to get started or join the discussion.
+1. **User connects** to [`localhost:7085/s3`](http://localhost:7085/s3)
+2. **Redirected to Keycloak** for authentication (log in as Bob `dev` or Alice `admin`)
+3. **Sentinel-Gear** (OAuth2 client) obtains and sanitizes the access token
+4. **Claimspindel** (discovered via **Buzzle-Vane**) **introspects** the JWT using a custom `ClaimsPredicateFactory`
+5. **Claimspindel routes** the request:
+    - Users with `roles: dev` → `brazz-nossel/dev-controller`
+    - Users with `roles: admin` → `brazz-nossel/admin-controller`
+6. **Brazz-Nossel** responds with a personalized greeting:  
+   - “Hallo dev” or “Hallo admin” depending on identity
 
 ---
 
-## See Also
+## 🧩 Features & What We’ve Proven
 
-- [IronBucket README](https://github.com/ZiggiZagga/IronBucket/blob/main/README.md)
-- [Sentinel-Gear](https://github.com/ZiggiZagga/Sentinel-Gear)
-- [Claimspindel](https://github.com/ZiggiZagga/Claimspindel)
-- [Buzzle-Vane](https://github.com/ZiggiZagga/Buzzle-Vane)
-- [Brazz-Nossel](https://github.com/ZiggiZagga/Brazz-Nossel)
+- **✅ Claims-Driven Routing:** JWT claims are parsed and drive routing decisions
+- **✅ Dynamic Discovery:** Buzzle-Vane (Eureka) enables runtime service discovery
+- **✅ Trust Boundaries:** Gateways enforce strict trust, no role conflation
+- **✅ Route Activation:** Controllers respond only when claims match
+- **✅ Policy Segmentation:** Fine-grained access by role
+- **✅ Modular Services:** Each service has a clear identity and responsibility
+- **✅ Human-Readable Naming:** Every component has a memorable, expressive name
+
 ---
+
+
+## 🗺️ Next Steps
+
+- Expand policy matrix for more granular roles
+- Harden trust boundaries
+- Add automated tests for claim-based routing
+- Extend the “living narrative” with richer identities
+
+---
+
+
+> _IronBucket gives your cloud a heartbeat. Identity isn’t just a checkbox—it’s the narrative that connects your services._
+
+
 ## **Goto Production fast strategy**
 
 ### 🧬 From **[Project Nessie](https://github.com/projectnessie/nessie)**
