@@ -249,7 +249,7 @@ Follow these steps to spin up a minimal working demo of the IronBucket ecosystem
      
 
 3. **Start the Java Applications in your IDE (in order):**
-   - before you can run the Java Applications you have to make sure they have access to the following environment variables:
+   - before you can run the Java Applications you have to make sure they all have access to the following environment variables:
      ```sh
      export IDP_PROVIDER_HOST="localhost:7081"
      export IDP_PROVIDER_PROTOCOL="http"
