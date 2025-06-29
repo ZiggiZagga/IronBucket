@@ -72,15 +72,6 @@ Here are some of the toughest, most rewarding problems waiting for builders like
   
 ---  
 
-### ⏱ 60-Second Setup
-
-```bash
-git clone https://github.com/ZiggiZagga/ironbucket.git
-cd ironbucket/steel-hammer
-docker compose -f docker-compose-steel-hammer.xml up --build
-```
----
-
 ### 🔗 Gateway Service
 
 The gateway handles OIDC authentication, token parsing, and identity-aware routing. You can explore its code here: 👉 [**Sentinel-Gear: Gateway Repository**](https://github.com/ZiggiZagga/Sentinel-Gear)
@@ -241,23 +232,38 @@ Follow these steps to spin up a minimal working demo of the IronBucket ecosystem
      ```sh
      cd IronBucket/steel-hammer
      ```
+   - Environmentvariables:     
+     ```sh
+     pwd
+     ```
+     Put the path into the double exports below and export the variable `DOCKER_FILES_HOMEDIR`.
+      ```sh
+     export DOCKER_FILES_HOMEDIR=""
+     ```
    - Launch Keycloak (on port 7081) and Postgres (on port 5432) via Docker Compose:
      ```sh
      docker compose -f docker-compose.yml up --build
      ```
    - Wait for the services to start.  
    - Verify that Keycloak is running by navigating to [http://localhost:7081](http://localhost:7081) in your browser.
+     
 
-3. **Start the Java Applications (in order):**
-   - Start **Buzzle-Vane**
-   - Start **Sentinel-Gear**
-   - Start **Claimspindel**
-   - Start **Brazz-Nossel**
+3. **Start the Java Applications in your IDE (in order):**
+   - before you can run the Java Applications you have to make sure they have access to the following environment variables:
+     ```sh
+     export IDP_PROVIDER_HOST="localhost:7081"
+     export IDP_PROVIDER_PROTOCOL="http"
+     export IDP_PROVIDER_REALM="dev"
+     ```
+   - Start **[Buzzle-Vane](https://github.com/ZiggiZagga/Buzzle-Vane)**
+   - Start **[Sentinel-Gear](https://github.com/ZiggiZagga/Sentinel-Gear)**
+   - Start **[Claimspindel](https://github.com/ZiggiZagga/Claimspindel)**
+   - Start **[Brazz-Nossel](https://github.com/ZiggiZagga/Brazz-Nossel)**
 
    *(You need to do this in your favorite IDE.)*
 
 4. **Verify the Setup**
-   - Open [http://localhost:7085](http://localhost:7085) to access the Sentinel-Gear endpoint.
+   - Open [http://localhost:7085/s3](http://localhost:7085/s3) to access the Sentinel-Gear endpoint.
    - You should be redirected to the Keycloak login page.
 
 5. **Test Users**
