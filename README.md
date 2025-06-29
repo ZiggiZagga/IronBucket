@@ -50,16 +50,54 @@ Here are some of the toughest, most rewarding problems waiting for builders like
 
 ## 🏗️ Architecture Diagram
 
-```
-    User[[User / Tool]] --> Gateway[IronBucket Gateway]
-    Gateway --> PolicyEngine[Policy Engine]
-    Gateway --> Git[Git Policies]
-    PolicyEngine --> Proxy[S3 Proxy Layer]
-    Proxy --> Store[S3-Compatible Store]
+```mermaid
+flowchart TD
+  U[User / Tool] --> GW[IronBucket Gateway]
+  GW --> PE[Policy Engine]
+  GW --> GIT[Git Policies]
+  PE --> S3[S3 Proxy Layer]
+  S3 --> STORE[S3-Compatible Store]
 ```
 
 ---
 
+## Proof-of-Concept Snapshot
+
+## 🧵 Identity Flow: End-to-End
+
+1. **User connects** to [`localhost:7085/s3`](http://localhost:7085/s3)
+2. **Redirected to Keycloak** for authentication (log in as Bob `dev` or Alice `admin`)
+3. **Sentinel-Gear** (OAuth2 client) obtains and sanitizes the access token
+4. **Claimspindel** (discovered via **Buzzle-Vane**) **introspects** the JWT using a custom `ClaimsPredicateFactory`
+5. **Claimspindel routes** the request:
+    - Users with `roles: dev` → `brazz-nossel/dev-controller`
+    - Users with `roles: admin` → `brazz-nossel/admin-controller`
+6. **Brazz-Nossel** responds with a personalized greeting:  
+   - “Hallo dev” or “Hallo admin” depending on identity
+
+---
+
+## 🧩 Features & What We’ve Proven
+
+- **✅ Claims-Driven Routing:** JWT claims are parsed and drive routing decisions
+- **✅ Dynamic Discovery:** Buzzle-Vane (Eureka) enables runtime service discovery
+- **✅ Trust Boundaries:** Gateways enforce strict trust, no role conflation
+- **✅ Route Activation:** Controllers respond only when claims match
+- **✅ Policy Segmentation:** Fine-grained access by role
+- **✅ Modular Services:** Each service has a clear identity and responsibility
+- **✅ Human-Readable Naming:** Every component has a memorable, expressive name
+
+---
+
+
+## 🗺️ Next Steps
+
+- Expand policy matrix for more granular roles
+- Harden trust boundaries
+- Add automated tests for claim-based routing
+- Extend the “living narrative” with richer identities
+
+> _IronBucket gives your cloud a heartbeat. Identity isn’t just a checkbox—it’s the narrative that connects your services._
 
 ## 🧪 Quick Start (Local Dev)
 
@@ -269,49 +307,6 @@ Follow these steps to spin up a minimal working demo of the IronBucket ecosystem
    | alice    | admin | aliceP@ss  |
 
 ---
-
-## Proof-of-Concept Snapshot
-
----
-
-## 🧵 Identity Flow: End-to-End
-
-1. **User connects** to [`localhost:7085/s3`](http://localhost:7085/s3)
-2. **Redirected to Keycloak** for authentication (log in as Bob `dev` or Alice `admin`)
-3. **Sentinel-Gear** (OAuth2 client) obtains and sanitizes the access token
-4. **Claimspindel** (discovered via **Buzzle-Vane**) **introspects** the JWT using a custom `ClaimsPredicateFactory`
-5. **Claimspindel routes** the request:
-    - Users with `roles: dev` → `brazz-nossel/dev-controller`
-    - Users with `roles: admin` → `brazz-nossel/admin-controller`
-6. **Brazz-Nossel** responds with a personalized greeting:  
-   - “Hallo dev” or “Hallo admin” depending on identity
-
----
-
-## 🧩 Features & What We’ve Proven
-
-- **✅ Claims-Driven Routing:** JWT claims are parsed and drive routing decisions
-- **✅ Dynamic Discovery:** Buzzle-Vane (Eureka) enables runtime service discovery
-- **✅ Trust Boundaries:** Gateways enforce strict trust, no role conflation
-- **✅ Route Activation:** Controllers respond only when claims match
-- **✅ Policy Segmentation:** Fine-grained access by role
-- **✅ Modular Services:** Each service has a clear identity and responsibility
-- **✅ Human-Readable Naming:** Every component has a memorable, expressive name
-
----
-
-
-## 🗺️ Next Steps
-
-- Expand policy matrix for more granular roles
-- Harden trust boundaries
-- Add automated tests for claim-based routing
-- Extend the “living narrative” with richer identities
-
----
-
-
-> _IronBucket gives your cloud a heartbeat. Identity isn’t just a checkbox—it’s the narrative that connects your services._
 
 
 ## **Goto Production fast strategy**
