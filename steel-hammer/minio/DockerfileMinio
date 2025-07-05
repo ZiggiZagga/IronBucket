@@ -9,7 +9,9 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y \
     wget \
     vim \
-    openssh-client
+    openssh-client \
+    jq \
+    curl
 
 # add minio user and Group
 RUN groupadd minio -g 30002
@@ -36,4 +38,12 @@ RUN chown -R minio:minio /opt/minio
 
 USER minio
 
+RUN mkdir -p /opt/minio/minio-binaries
+RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+  --create-dirs \
+  -o /opt/minio/minio-binaries/mc
 
+RUN chmod +x /opt/minio/minio-binaries/mc
+ENV PATH=$PATH:/opt/minio/minio-binaries
+
+RUN mc --help
