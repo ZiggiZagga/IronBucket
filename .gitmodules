@@ -1,0 +1,15 @@
+[submodule "Sentinel-Gear"]
+	path = Sentinel-Gear
+	url = https://github.com/ZiggiZagga/Sentinel-Gear.git
+[submodule "Brazz-Nossel"]
+	path = Brazz-Nossel
+	url = https://github.com/ZiggiZagga/Brazz-Nossel.git
+[submodule "Claimspindel"]
+	path = Claimspindel
+	url = https://github.com/ZiggiZagga/Claimspindel.git
+[submodule "Buzzle-Vane"]
+	path = Buzzle-Vane
+	url = https://github.com/ZiggiZagga/Buzzle-Vane.git
+[submodule "Pactum-Scroll"]
+	path = Pactum-Scroll
+	url = https://github.com/ZiggiZagga/Pactum-Scroll.git
