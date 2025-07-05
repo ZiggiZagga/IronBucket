@@ -1,0 +1,112 @@
+{
+  "realm": "ironbucket-lab",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "ROLE_DATA_INGESTOR" },
+      { "name": "ROLE_DATA_VIEWER" },
+      { "name": "ROLE_QA_AUDITOR" },
+      { "name": "ROLE_OPS_OVERRIDE" }
+    ]
+  },
+  "groups": [
+    {
+      "name": "data-ingestors-eu",
+      "realmRoles": ["ROLE_DATA_INGESTOR"],
+      "attributes": {
+        "storage_permissions": [
+          "{\"rules\":[{\"bucket\":\"analytics-eu\",\"prefixes\":[{\"name\":\"incoming/\",\"allowedMethods\":[\"UPLOAD\",\"DELETE\", \"DOWNLOAD\", \"LIST\"],\"tags\":{\"classification\":[\"internal\"],\"env\":[\"staging\"]}}]}]}"
+        ]
+      }
+    },
+    {
+      "name": "data-viewers",
+      "realmRoles": ["ROLE_DATA_VIEWER"],
+      "attributes": {
+        "storage_permissions": [
+          "{\"rules\":[{\"bucket\":\"analytics-eu\",\"prefixes\":[{\"name\":\"reports/\",\"allowedMethods\":[\"DOWNLOAD\"],\"tags\":{\"classification\":[\"public\"]}}]}]}"
+        ]
+      }
+    },
+    {
+      "name": "qa-auditors",
+      "realmRoles": ["ROLE_QA_AUDITOR"],
+      "attributes": {
+        "storage_permissions": [
+          "{\"rules\":[{\"bucket\":\"qa-logs\",\"prefixes\":[{\"name\":\"/\",\"allowedMethods\":[\"DOWNLOAD\",\"LIST\"],\"tags\":{\"env\":[\"staging\",\"dev\"]}}]}]}"
+        ]
+      }
+    },
+    {
+      "name": "ops-override",
+      "realmRoles": ["ROLE_OPS_OVERRIDE"],
+      "attributes": {
+        "storage_permissions": [
+          "{\"rules\":[{\"bucket\":\"*\",\"prefixes\":[{\"name\":\"*\",\"allowedMethods\":[\"UPLOAD\",\"DOWNLOAD\",\"DELETE\",\"LIST\"],\"tags\":{\"*\": [\"*\"]}}]}]}"
+        ]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "sentinel-gear-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "sentinel-gear-app-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:7085/*"],
+      "baseUrl": "http://localhost:7085",
+      "protocolMappers": [
+        {
+          "name": "storage-permissions-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "storage_permissions",
+            "claim.name": "storage_permissions",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "alicepass", "temporary": false }
+      ],
+      "groups": ["data-ingestors-eu"]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "bobpass1", "temporary": false }
+      ],
+      "groups": ["data-viewers"]
+    },
+    {
+      "username": "carol",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "carolpass", "temporary": false }
+      ],
+      "groups": ["qa-auditors"]
+    },
+    {
+      "username": "dan",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "danpass1", "temporary": false }
+      ],
+      "groups": ["ops-override"]
+    }
+  ]
+}
