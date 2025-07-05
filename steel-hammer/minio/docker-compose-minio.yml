@@ -1,13 +1,16 @@
 services:
   steel-hammer-minio:
     restart: always
-    image: miniov1:latest
+
     container_name: steel-hammer-minio
-    command: /opt/minio/minio server --console-address=":9001" 
+    build:
+      context: .
+      dockerfile: ${DOCKER_FILES_HOMEDIR}/minio/DockerfileMinio
+    command: /opt/minio/minio server --console-address=":9001"
 
     ports:
-      - 9000:9000   
-      - 9000:9001
+      - 9000:9000
+      - 9001:9001
 
     #volumes:
     #  - /opt/minio/data:/opt/minio/data
@@ -17,7 +20,7 @@ services:
     environment:
       - "MINIO_BROWSER=on"
       - "MINIO_VOLUMES=/opt/minio/data"
-       
+
       - "MINIO_ROOT_USER=MINIO_ROOT_USER"
       - "MINIO_ROOT_PASSWORD=MINIO_ROOT_PASSWORD"
 
@@ -28,6 +31,3 @@ services:
       #- "MINIO_IDENTITY_OPENID_DISPLAY_NAME_PRIMARY_IAM=Steel-Hammer"
       #- "MINIO_IDENTITY_OPENID_SCOPES_PRIMARY_IAM=openid"
       #- "MINIO_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC_PRIMARY_IAM=on"
-
-
-      
