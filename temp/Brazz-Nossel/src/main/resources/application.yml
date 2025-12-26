@@ -1,0 +1,28 @@
+server:
+  port: 0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    region: ${EUREKA_REGION:dev-region-1}
+
+spring:
+  application:
+    name: brazz-nossel
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+          discovery:
+            locator:
+              lower-case-service-id: true
+              enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/certs
