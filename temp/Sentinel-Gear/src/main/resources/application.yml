@@ -1,0 +1,62 @@
+logging:
+  level:
+    org:
+      '[springframework]': INFO
+      springframework:
+        graphql: INFO
+    graphql: INFO 
+
+server:
+  port: 7085
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    region: ${EUREKA_REGION:dev-region-1}
+
+spring:
+  application:
+    name: sentinel-gear
+
+
+ 
+  cloud:
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - TokenRelay
+          routes: 
+            - id: route-hub
+              uri: lb://claimspindel
+              predicates:
+                - Path=/**
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+  security:
+    oauth2:
+      client:
+        registration:
+          gateway-service:
+            client-id: dev-client
+            client-secret: dev-secret
+            scope:
+              - openid
+            authorization-grant-type: authorization_code
+        provider:
+          gateway-service:
+            issuer-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}
+            authorization-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/auth
+            token-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/token
+            user-info-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/userinfo
+            jwk-set-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/certs
+  docker:
+    compose:
+      file:
+        - ${DOCKER_FILES_HOMEDIR}/docker-compose-steel-hammer.yml
+      enabled: false

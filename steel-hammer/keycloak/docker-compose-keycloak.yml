@@ -12,27 +12,29 @@ services:
       context: .
       dockerfile: ${DOCKER_FILES_HOMEDIR}/keycloak/DockerfileKeycloak
 
-    #TODO security first
-    #entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start","--hostname", "steel-hammer-keycloak",  "--https-port=7082" ]
+    # Security first: run in production mode, enable HTTPS, import realm, and enable WebAuthn/Passkey support
     entrypoint:
       [
         "/opt/keycloak/keycloak/bin/kc.sh",
-        "start-dev",
-        "--http-port=7081",
-        "--verbose",
+        "start",
+        "--hostname", "steel-hammer-keycloak",
+        "--https-port=7082",
+        "--https-certificate-file=/opt/keycloak/certs/tls.crt",
+        "--https-certificate-key-file=/opt/keycloak/certs/tls.key",
         "--import-realm",
+        "--verbose"
       ]
 
     volumes:
       - ./realms:/opt/keycloak/keycloak/data/import
-    #  - /opt/keycloak/certs:/opt/keycloak/certs
+      - ./certs:/opt/keycloak/certs:ro
 
     ports:
-      - "7081:7081"
+      - "7082:7082"
 
     environment:
-      #- "KC_HTTPS_KEY_STORE_FILE=/opt/keycloak/certs/keycloak.jks"
-      #- "KC_HTTPS_KEY_STORE_PASSWORD=KC_HTTPS_KEY_STORE_PASSWORD"
+      - "KC_HTTPS_CERTIFICATE_FILE=/opt/keycloak/certs/tls.crt"
+      - "KC_HTTPS_CERTIFICATE_KEY_FILE=/opt/keycloak/certs/tls.key"
       - "KC_BOOTSTRAP_ADMIN_USERNAME=admin"
       - "KC_BOOTSTRAP_ADMIN_PASSWORD=admin"
       - "KC_DB=postgres"
@@ -41,7 +43,15 @@ services:
       - "KC_DB_URL=jdbc:postgresql://steel-hammer-postgres:5432/keycloak"
     depends_on:
       - steel-hammer-postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:7082/health", "--insecure"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 networks:
   steel-hammer-network:
     driver: bridge
+
+# To enable passkey support, ensure WebAuthn flows are configured in the realm and the Keycloak server is reachable via HTTPS.
+# Place your TLS certificate and key in ./certs/tls.crt and ./certs/tls.key (self-signed for dev, trusted for prod).

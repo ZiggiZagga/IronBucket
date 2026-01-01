@@ -1,0 +1,17 @@
+server:
+  port: 8761
+  
+spring:
+  application:
+    name: buzzle-vane
+    
+eureka:
+  instance:
+    hostname: ${EUREKA_HOST:localhost}
+    prefer-ip-address: true
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    region: ${EUREKA_REGION:dev-region-1}
