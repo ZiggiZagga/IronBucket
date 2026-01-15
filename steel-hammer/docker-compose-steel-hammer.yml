@@ -12,9 +12,6 @@ services:
       context: . 
       dockerfile: ${DOCKER_FILES_HOMEDIR}/postgres/DockerfilePostgres
     
-    ports:
-      - "5432:5432"
-      
     environment:
       - "POSTGRES_PASSWORD=postgres_admin_pw"
     volumes:
@@ -42,10 +39,6 @@ services:
     
     volumes:      
        - ./keycloak/dev-realm.json:/opt/keycloak/keycloak/data/import/dev-realm.json
-    #  - /opt/keycloak/certs:/opt/keycloak/certs
-    
-    ports:
-      - "7081:7081"
       
     environment:
       #- "KC_HTTPS_KEY_STORE_FILE=/opt/keycloak/certs/keycloak.jks"
@@ -73,6 +66,7 @@ services:
 
     ports:
       - "8080:8080"
+      - "8081:8081"
 
     depends_on:
       - steel-hammer-keycloak
@@ -81,6 +75,11 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
+      - "SPRING_APPLICATION_NAME=sentinel-gear"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -101,9 +100,6 @@ services:
       context: ../temp/Claimspindel
       dockerfile: Dockerfile
 
-    ports:
-      - "8081:8081"
-
     depends_on:
       - steel-hammer-keycloak
       - steel-hammer-postgres
@@ -112,6 +108,11 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
+      - "SPRING_APPLICATION_NAME=claimspindel"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
@@ -132,9 +133,6 @@ services:
       context: ../temp/Brazz-Nossel
       dockerfile: Dockerfile
 
-    ports:
-      - "8082:8082"
-
     depends_on:
       - steel-hammer-keycloak
       - steel-hammer-postgres
@@ -146,6 +144,11 @@ services:
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "MINIO_ACCESS_KEY=minioadmin"
       - "MINIO_SECRET_KEY=minioadmin"
+      - "SPRING_APPLICATION_NAME=brazz-nossel"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
@@ -170,10 +173,6 @@ services:
 
     command: /opt/minio/minio server /opt/minio/data --console-address=":9001"
 
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-
     environment:
       - "MINIO_BROWSER=on"
       - "MINIO_ROOT_USER=minioadmin"
@@ -196,9 +195,6 @@ services:
       context: ../temp/Buzzle-Vane
       dockerfile: Dockerfile
 
-    ports:
-      - "8083:8083"
-
     depends_on:
       - steel-hammer-sentinel-gear
       - steel-hammer-claimspindel
@@ -206,6 +202,11 @@ services:
 
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
+      - "SPRING_APPLICATION_NAME=buzzle-vane"
+      - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
@@ -229,6 +230,7 @@ services:
     volumes:
       - ./tests:/tests
       - /tmp/ironbucket-test:/tmp/ironbucket-test
+      - ./test-scripts:/scripts:ro
 
     depends_on:
       - steel-hammer-keycloak
@@ -248,9 +250,14 @@ services:
       - "BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083"
 
     # Test will run automatically when container starts
-    entrypoint: ["/bin/bash", "-c", "sleep 45 && /tests/e2e-alice-bob-container.sh"]
+    entrypoint: ["/bin/sh", "-c", "sleep 60 && /scripts/run-e2e-tests.sh"]
 
     restart: "no"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   steel-hammer-network:

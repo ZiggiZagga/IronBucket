@@ -1,0 +1,313 @@
+version: '3.8'
+
+services:
+
+  # =============================================
+  # OBSERVABILITY STACK - LGTM
+  # =============================================
+
+  loki:
+    image: grafana/loki:latest
+    container_name: steel-hammer-loki
+    hostname: steel-hammer-loki
+    networks:
+      - steel-hammer-network
+    volumes:
+      - loki-storage:/loki
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+    command: -config.file=/etc/loki/loki-config.yaml
+    restart: always
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: steel-hammer-mimir
+    hostname: steel-hammer-mimir
+    networks:
+      - steel-hammer-network
+    volumes:
+      - mimir-storage:/data
+      - ./mimir-config.yaml:/etc/mimir/mimir.yaml
+    command: -config.file=/etc/mimir/mimir.yaml
+    restart: always
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: steel-hammer-tempo
+    hostname: steel-hammer-tempo
+    networks:
+      - steel-hammer-network
+    volumes:
+      - tempo-storage:/var/tempo
+      - ./tempo-config.yaml:/etc/tempo/tempo-config.yaml
+    command: -config.file=/etc/tempo/tempo-config.yaml
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: steel-hammer-grafana
+    hostname: steel-hammer-grafana
+    networks:
+      - steel-hammer-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    restart: always
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: steel-hammer-otel-collector
+    hostname: steel-hammer-otel-collector
+    networks:
+      - steel-hammer-network
+    command:
+      - "--config=/etc/otel-collector-config.yml"
+    environment:
+      - GOGC=80
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    restart: always
+    depends_on:
+      - loki
+      - mimir
+      - tempo
+
+  # =============================================
+  # DATA LAYER
+  # =============================================
+
+  steel-hammer-postgres:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-postgres
+    container_name: steel-hammer-postgres
+    build:
+      context: .
+      dockerfile: postgres/DockerfilePostgres
+    environment:
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  steel-hammer-minio:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-minio
+    container_name: steel-hammer-minio
+    build:
+      context: .
+      dockerfile: minio/DockerfileMinio
+    environment:
+      - "MINIO_ROOT_USER=minioadmin"
+      - "MINIO_ROOT_PASSWORD=minioadmin"
+    volumes:
+      - minio-storage:/minio-storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # =============================================
+  # IDENTITY
+  # =============================================
+
+  steel-hammer-keycloak:
+    networks:
+      - steel-hammer-network
+    restart: always
+    hostname: steel-hammer-keycloak
+    container_name: steel-hammer-keycloak
+    build:
+      context: .
+      dockerfile: keycloak/DockerfileKeycloak
+    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start-dev", "--import-realm", "--http-port=7081" ]
+    volumes:
+      - ./keycloak/dev-realm.json:/opt/keycloak/keycloak/data/import/dev-realm.json
+    environment:
+      - "KC_BOOTSTRAP_ADMIN_USERNAME=admin"
+      - "KC_BOOTSTRAP_ADMIN_PASSWORD=admin"
+      - "KC_DB=postgres"
+      - "KC_DB_USERNAME=keycloak_db_user"
+      - "KC_DB_PASSWORD=keycloak_db_pass"
+      - "KC_DB_URL=jdbc:postgresql://steel-hammer-postgres:5432/keycloak"
+    depends_on:
+      - steel-hammer-postgres
+
+  # =============================================
+  # SERVICE MESH
+  # =============================================
+
+  steel-hammer-buzzle-vane:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-buzzle-vane
+    container_name: steel-hammer-buzzle-vane
+    build:
+      context: ../temp/Buzzle-Vane
+      dockerfile: Dockerfile
+    depends_on:
+      - steel-hammer-keycloak
+      - otel-collector
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "SPRING_APPLICATION_NAME=buzzle-vane"
+      - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # =============================================
+  # GATEWAY & MICROSERVICES
+  # =============================================
+
+  steel-hammer-sentinel-gear:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-sentinel-gear
+    container_name: steel-hammer-sentinel-gear
+    build:
+      context: ../temp/Sentinel-Gear
+      dockerfile: Dockerfile
+    depends_on:
+      - steel-hammer-keycloak
+      - steel-hammer-postgres
+      - otel-collector
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+      - "SPRING_APPLICATION_NAME=sentinel-gear"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
+      - "LOGGING_LEVEL_COM_IRONBUCKET=DEBUG"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  steel-hammer-claimspindel:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-claimspindel
+    container_name: steel-hammer-claimspindel
+    build:
+      context: ../temp/Claimspindel
+      dockerfile: Dockerfile
+    depends_on:
+      - steel-hammer-keycloak
+      - steel-hammer-postgres
+      - steel-hammer-sentinel-gear
+      - otel-collector
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+      - "SPRING_APPLICATION_NAME=claimspindel"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  steel-hammer-brazz-nossel:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-brazz-nossel
+    container_name: steel-hammer-brazz-nossel
+    build:
+      context: ../temp/Brazz-Nossel
+      dockerfile: Dockerfile
+    depends_on:
+      - steel-hammer-keycloak
+      - steel-hammer-postgres
+      - steel-hammer-claimspindel
+      - steel-hammer-minio
+      - otel-collector
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+      - "MINIO_ACCESS_KEY=minioadmin"
+      - "MINIO_SECRET_KEY=minioadmin"
+      - "SPRING_APPLICATION_NAME=brazz-nossel"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # =============================================
+  # TEST CLIENT (Internal E2E Tests)
+  # =============================================
+
+  steel-hammer-test-client:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-test-client
+    container_name: steel-hammer-test-client
+    image: curlimages/curl:latest
+    depends_on:
+      - steel-hammer-sentinel-gear
+      - steel-hammer-claimspindel
+      - steel-hammer-brazz-nossel
+      - steel-hammer-buzzle-vane
+    environment:
+      - KEYCLOAK_URL=http://steel-hammer-keycloak:7081
+      - MINIO_URL=http://steel-hammer-minio:9000
+      - POSTGRES_HOST=steel-hammer-postgres
+      - SENTINEL_GEAR_URL=http://steel-hammer-sentinel-gear:8080
+      - CLAIMSPINDEL_URL=http://steel-hammer-claimspindel:8081
+      - BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082
+      - BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083
+    volumes:
+      - ./test-scripts:/scripts:ro
+    entrypoint: ["/bin/sh", "-c", "sleep 60 && /scripts/run-e2e-tests.sh"]
+    restart: "no"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  steel-hammer-network:
+    driver: bridge
+
+volumes:
+  postgres-storage:
+  minio-storage:
+  loki-storage:
+  mimir-storage:
+  tempo-storage:
+  grafana-storage:

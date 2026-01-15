@@ -1,0 +1,22 @@
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  trace_idle_period: 10s
+  max_trace_idle: 5m
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
