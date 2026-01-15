@@ -6,13 +6,28 @@
 
 ---
 
-## 🎯 Start Here
+## 🎯 Start Here (Pick Your Path)
 
+### 👤 For Users & Operators
 | Purpose | Document | Time |
 |---------|----------|------|
-| **Quick Start (Setup)** | [START.md](START.md) | 10 min ⚡ |
+| **Quick Start** | [START.md](START.md) | 10 min ⚡ |
+| **Troubleshooting** | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | 15 min |
+| **Deployment Guide** | [docs/DEPLOYMENT-GUIDE.md](docs/DEPLOYMENT-GUIDE.md) | 20 min |
+
+### 🏗️ For Architects & Contributors
+| Purpose | Document | Time |
+|---------|----------|------|
+| **Architecture Overview** | [ARCHITECTURE.md](ARCHITECTURE.md) | 30 min |
+| **Contributing Guide** | [CONTRIBUTING.md](CONTRIBUTING.md) | 20 min |
 | **Project Overview** | [README.md](README.md) | 5 min |
-| **Complete Roadmap** | [ROADMAP.md](ROADMAP.md) | 15 min |
+
+### 🚀 For Community
+| Purpose | Document | Time |
+|---------|----------|------|
+| **Complete Roadmap** | [COMMUNITY-ROADMAP.md](COMMUNITY-ROADMAP.md) | 15 min |
+| **Project Roadmap** | [ROADMAP.md](ROADMAP.md) | 15 min |
+| **Documentation Improvement Plan** | [DOCS-AUDIT-AND-IMPROVEMENT-PLAN.md](DOCS-AUDIT-AND-IMPROVEMENT-PLAN.md) | 25 min |
 
 ---
 
