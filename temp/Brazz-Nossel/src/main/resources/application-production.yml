@@ -1,0 +1,163 @@
+# Brazz-Nossel (S3 Proxy) Production Configuration
+# Security-hardened, observable, and resilient
+
+spring:
+  application:
+    name: brazz-nossel
+  
+  profiles:
+    active: production
+  
+  # Security: JWT Resource Server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${IDP_PROVIDER_PROTOCOL:https}://${IDP_PROVIDER_HOST:required}/realms/${IDP_PROVIDER_REALM:required}/protocol/openid-connect/certs
+          issuer-uri: ${IDP_PROVIDER_PROTOCOL:https}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}
+  
+  # Cloud Gateway Configuration for S3 Proxy
+  cloud:
+    gateway:
+      server:
+        webflux:
+          use-blocking-handler: false
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            corsConfigurations:
+              '[/**]':
+                allowedOrigins:
+                  - ${CORS_ALLOWED_ORIGINS:https://localhost:3000}
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - HEAD
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                exposedHeaders:
+                  - X-Request-ID
+                  - ETag
+                  - Content-Length
+                allowCredentials: true
+                maxAge: 3600
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8082}
+  servlet:
+    context-path: /
+  shutdown: graceful
+  compression:
+    enabled: true
+    min-response-size: 1024
+  max-http-request-header-size: 16KB
+  error:
+    include-message: always
+    include-binding-errors: always
+  
+  # TLS/SSL - Required for production
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE_PATH:/etc/ssl/keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:required}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS:ironbucket}
+
+# Eureka Service Discovery
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    region: ${EUREKA_REGION:prod-region-1}
+    initial-instance-info-replication-interval-seconds: 30
+    instance-info-replication-interval-seconds: 60
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      version: ${APP_VERSION:1.0.0}
+      environment: production
+
+# Logging Configuration
+logging:
+  level:
+    root: WARN
+    com.ironbucket: INFO
+    org.springframework: WARN
+    org.springframework.security: DEBUG
+    org.springframework.cloud: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/ironbucket/brazz-nossel.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# Actuator Configuration - Security-hardened observability
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+      exclude: env,configprops,loggers
+    health:
+      show-details: when-authorized
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: brazz-nossel
+      environment: production
+      version: ${APP_VERSION:1.0.0}
+
+# S3 Configuration
+s3:
+  endpoint: ${S3_ENDPOINT:required}
+  access-key: ${S3_ACCESS_KEY:required}
+  secret-key: ${S3_SECRET_KEY:required}
+  region: ${S3_REGION:us-east-1}
+  use-path-style-access: ${S3_PATH_STYLE:false}
+  cache:
+    enabled: true
+    ttl-minutes: 10
+  audit:
+    enabled: true
+    storage: postgres
+
+# JWT/OIDC Configuration
+ironbucket:
+  security:
+    jwt:
+      issuer-whitelist: ${JWT_ISSUER_WHITELIST:}
+      audience: ${JWT_AUDIENCE:ironbucket}
+      clock-skew-seconds: 30
+    tenant:
+      mode: ${TENANT_MODE:multi}
+      default-tenant: ${DEFAULT_TENANT:default}
+    policy:
+      engine-url: ${POLICY_ENGINE_URL:http://localhost:8081}
+      cache:
+        ttl-seconds: 300
+        max-size: 5000

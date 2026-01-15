@@ -155,6 +155,36 @@ services:
 
     restart: "always"
 
+  steel-hammer-minio:
+    networks:
+      - steel-hammer-network
+
+    hostname: steel-hammer-minio
+    container_name: steel-hammer-minio
+
+    restart: always
+
+    build:
+      context: ./minio
+      dockerfile: DockerfileMinio
+
+    command: /opt/minio/minio server /opt/minio/data --console-address=":9001"
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    environment:
+      - "MINIO_BROWSER=on"
+      - "MINIO_ROOT_USER=minioadmin"
+      - "MINIO_ROOT_PASSWORD=minioadmin"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   steel-hammer-buzzle-vane:
     networks:
       - steel-hammer-network

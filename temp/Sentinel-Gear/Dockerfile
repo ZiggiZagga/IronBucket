@@ -1,13 +1,13 @@
 # Multi-stage build for Sentinel-Gear
 
 # Stage 1: Build
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
 COPY . .
 RUN mvn clean package -DskipTests -q
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # Install curl for health checks

@@ -110,4 +110,4 @@ description: >
   - Explore alternative implementations.
   - Run spikes that can later be distilled into production-ready code.
 
-Perform a comprehensive and bring it to production-ready state the entire IronBucket system, adhering to the above guidelines.
+Perform a comprehensive and bring it to production-ready state the entire IronBucket system, adhering to the above guidelines.  Now make sure everything is using latest java 25(Dockerfile,poms) everything. Make sure everything builds in containers and all e2e test pass

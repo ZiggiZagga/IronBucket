@@ -1,0 +1,58 @@
+# Multi-stage build for Sentinel-Gear with production hardening
+# Build Stage: Java 25 with Maven
+FROM maven:3.9-eclipse-temurin-25 AS builder
+WORKDIR /build
+COPY . .
+
+# Build with optimizations
+RUN mvn clean package -DskipTests -q \
+    && echo "Build completed successfully"
+
+# Runtime Stage: Minimal JRE-only image
+FROM eclipse-temurin:25-jre-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    curl \
+    tzdata \
+    dumb-init
+
+# Create non-root user with restricted permissions
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
+# Copy JAR from builder
+COPY --from=builder /build/target/*.jar app.jar
+CHOWN 1000:1000 app.jar
+
+# Set JVM options for production
+ENV JAVA_OPTS="-XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:InitiatingHeapOccupancyPercent=35 \
+    -XX:G1ReservePercent=10 \
+    -XX:G1HeapRegionSize=16M \
+    -XX:MinMetaspaceSize=64M \
+    -XX:MaxMetaspaceSize=512M \
+    -XX:+ParallelRefProcEnabled \
+    -XX:+UnlockDiagnosticVMOptions \
+    -XX:G1SummarizeRSetStatsPeriod=1 \
+    -Duser.timezone=UTC"
+
+# Expose port
+EXPOSE 8080
+
+# Health check with timeout
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=30s \
+    CMD curl -f http://localhost:8080/actuator/health/readiness || exit 1
+
+# Switch to non-root user
+USER appuser
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["/sbin/dumb-init", "--"]
+
+# Start application with production profile
+CMD ["java", "-jar", "-Dspring.profiles.active=production", "app.jar"]

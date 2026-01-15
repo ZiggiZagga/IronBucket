@@ -41,6 +41,90 @@ public class JWTValidator {
     }
     
     /**
+     * Validate JWT with symmetric key (HMAC)
+     * Used for development/testing with pre-shared secrets
+     */
+    public JWTValidationResult validateWithSymmetricKey(String token, String secret) {
+        return validateWithSymmetricKey(token, secret, new ValidationOptions());
+    }
+    
+    /**
+     * Validate JWT with symmetric key (HMAC) and options
+     * Used for development/testing with pre-shared secrets
+     */
+    public JWTValidationResult validateWithSymmetricKey(String token, String secret, ValidationOptions options) {
+        try {
+            // Check token format
+            if (token == null || token.trim().isEmpty()) {
+                return JWTValidationResult.invalid("Token is empty");
+            }
+            
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                return JWTValidationResult.invalid("Malformed JWT: expected 3 parts, got " + parts.length);
+            }
+            
+            // Create HMAC key from secret
+            Key hmacKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+            
+            // Parse token with HMAC key
+            JwtParser parser = Jwts.parserBuilder()
+                .setSigningKey(hmacKey)
+                .build();
+                
+            Jws<Claims> jws = parser.parseClaimsJws(token);
+            Claims claims = jws.getBody();
+            
+            // Validate required claims
+            JWTValidationResult requiredResult = validateRequiredClaims(claims);
+            if (!requiredResult.isValid()) {
+                return requiredResult;
+            }
+            
+            // Validate expiration
+            JWTValidationResult expirationResult = validateExpiration(claims, options.getClockSkew());
+            if (!expirationResult.isValid()) {
+                return expirationResult;
+            }
+            
+            // Validate issued at
+            JWTValidationResult issuedAtResult = validateIssuedAt(claims, options.getClockSkew());
+            if (!issuedAtResult.isValid()) {
+                return issuedAtResult;
+            }
+            
+            // Validate issuer
+            if (!options.getIssuerWhitelist().isEmpty()) {
+                JWTValidationResult issuerResult = validateIssuer(claims, options.getIssuerWhitelist());
+                if (!issuerResult.isValid()) {
+                    return issuerResult;
+                }
+            }
+            
+            // Validate audience
+            if (options.getExpectedAudience() != null) {
+                JWTValidationResult audienceResult = validateAudience(claims, options.getExpectedAudience());
+                if (!audienceResult.isValid()) {
+                    return audienceResult;
+                }
+            }
+            
+            // Convert to Map for return
+            Map<String, Object> claimsMap = new HashMap<>(claims);
+            return JWTValidationResult.valid(claimsMap);
+            
+        } catch (SignatureException e) {
+            return JWTValidationResult.invalid("Invalid JWT signature: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            return JWTValidationResult.invalid("Malformed JWT: " + e.getMessage());
+        } catch (ExpiredJwtException e) {
+            return JWTValidationResult.invalid("JWT is expired");
+        } catch (JwtException e) {
+            return JWTValidationResult.invalid("JWT validation failed: " + e.getMessage());
+        }
+    }
+    
+    /**
      * Validate JWT with options
      */
     public JWTValidationResult validate(String token, ValidationOptions options) {
