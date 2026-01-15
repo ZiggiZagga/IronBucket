@@ -1,0 +1,57 @@
+server:
+  port: 8082
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: brazz-nossel
+  datasource:
+    url: jdbc:postgresql://steel-hammer-postgres:5432/ironbucket
+    username: postgres
+    password: ${POSTGRES_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 3
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.ironbucket: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId}] %-5level %logger{36} - %msg%n"
+
+# Service configuration
+app:
+  s3:
+    endpoint: http://steel-hammer-minio:9000
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    region: us-east-1
+    path-style: true
+  policy:
+    engine-url: http://sentinel-gear:8080/policy/evaluate
+    cache-ttl-minutes: 10
+  claimspindel:
+    url: http://claimspindel:8081
+    timeout-ms: 10000
+  audit:
+    enabled: true
+    log-level: INFO

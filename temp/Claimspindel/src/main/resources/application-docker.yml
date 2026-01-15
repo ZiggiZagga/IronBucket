@@ -1,0 +1,53 @@
+server:
+  port: 8081
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: claimspindel
+  datasource:
+    url: jdbc:postgresql://steel-hammer-postgres:5432/ironbucket
+    username: postgres
+    password: ${POSTGRES_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://steel-hammer-keycloak:7081/realms/dev
+          jwk-set-uri: http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.ironbucket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId}] %-5level %logger{36} - %msg%n"
+
+# Service configuration
+app:
+  routing:
+    timeout-ms: 10000
+  policy:
+    engine-url: http://sentinel-gear:8080/policy/evaluate
+    cache-ttl-minutes: 5
+    retries: 3
+  sentinel-gear:
+    url: http://sentinel-gear:8080
+    timeout-ms: 5000

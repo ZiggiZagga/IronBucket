@@ -60,6 +60,131 @@ services:
     depends_on:
       - steel-hammer-postgres
 
+  steel-hammer-sentinel-gear:
+    networks:
+      - steel-hammer-network
+
+    hostname: steel-hammer-sentinel-gear
+    container_name: steel-hammer-sentinel-gear
+
+    build:
+      context: ../temp/Sentinel-Gear
+      dockerfile: Dockerfile
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - steel-hammer-keycloak
+      - steel-hammer-postgres
+
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+    restart: "always"
+
+  steel-hammer-claimspindel:
+    networks:
+      - steel-hammer-network
+
+    hostname: steel-hammer-claimspindel
+    container_name: steel-hammer-claimspindel
+
+    build:
+      context: ../temp/Claimspindel
+      dockerfile: Dockerfile
+
+    ports:
+      - "8081:8081"
+
+    depends_on:
+      - steel-hammer-keycloak
+      - steel-hammer-postgres
+      - steel-hammer-sentinel-gear
+
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+    restart: "always"
+
+  steel-hammer-brazz-nossel:
+    networks:
+      - steel-hammer-network
+
+    hostname: steel-hammer-brazz-nossel
+    container_name: steel-hammer-brazz-nossel
+
+    build:
+      context: ../temp/Brazz-Nossel
+      dockerfile: Dockerfile
+
+    ports:
+      - "8082:8082"
+
+    depends_on:
+      - steel-hammer-keycloak
+      - steel-hammer-postgres
+      - steel-hammer-claimspindel
+      - steel-hammer-minio
+
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "POSTGRES_PASSWORD=postgres_admin_pw"
+      - "MINIO_ACCESS_KEY=minioadmin"
+      - "MINIO_SECRET_KEY=minioadmin"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+    restart: "always"
+
+  steel-hammer-buzzle-vane:
+    networks:
+      - steel-hammer-network
+
+    hostname: steel-hammer-buzzle-vane
+    container_name: steel-hammer-buzzle-vane
+
+    build:
+      context: ../temp/Buzzle-Vane
+      dockerfile: Dockerfile
+
+    ports:
+      - "8083:8083"
+
+    depends_on:
+      - steel-hammer-sentinel-gear
+      - steel-hammer-claimspindel
+      - steel-hammer-brazz-nossel
+
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+    restart: "always"
+
   steel-hammer-test:
     networks:
       - steel-hammer-network
@@ -78,14 +203,22 @@ services:
     depends_on:
       - steel-hammer-keycloak
       - steel-hammer-postgres
+      - steel-hammer-sentinel-gear
+      - steel-hammer-claimspindel
+      - steel-hammer-brazz-nossel
+      - steel-hammer-buzzle-vane
 
     environment:
       - "KEYCLOAK_URL=http://steel-hammer-keycloak:7081"
       - "MINIO_URL=http://steel-hammer-minio:9000"
       - "POSTGRES_HOST=steel-hammer-postgres"
+      - "SENTINEL_GEAR_URL=http://steel-hammer-sentinel-gear:8080"
+      - "CLAIMSPINDEL_URL=http://steel-hammer-claimspindel:8081"
+      - "BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082"
+      - "BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083"
 
     # Test will run automatically when container starts
-    entrypoint: ["/bin/bash", "-c", "sleep 30 && /tests/e2e-alice-bob-container.sh"]
+    entrypoint: ["/bin/bash", "-c", "sleep 45 && /tests/e2e-alice-bob-container.sh"]
 
     restart: "no"
 
