@@ -110,4 +110,4 @@ description: >
   - Explore alternative implementations.
   - Run spikes that can later be distilled into production-ready code.
 
-Perform a comprehensive and bring it to production-ready state the entire IronBucket system, adhering to the above guidelines.  Make sure everything builds in containers and all e2e test pass. Make sure we use the latest from spring boot observability, like oltp , opentelemetry, logging best practices.
+Perform a comprehensive and bring it to production-ready state the entire IronBucket system, adhering to the above guidelines.  Make sure everything builds in containers and all e2e test pass. 

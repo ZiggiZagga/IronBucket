@@ -10,7 +10,7 @@ services:
 
     build:
       context: . 
-      dockerfile: ${DOCKER_FILES_HOMEDIR}/postgres/DockerfilePostgres
+      dockerfile: ./postgres/DockerfilePostgres
     
     environment:
       - "POSTGRES_PASSWORD=postgres_admin_pw"
@@ -31,7 +31,7 @@ services:
 
     build:
       context: . 
-      dockerfile: ${DOCKER_FILES_HOMEDIR}/keycloak/DockerfileKeycloak
+      dockerfile: ./keycloak/DockerfileKeycloak
     
     #TODO security first
     #entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start","--hostname", "steel-hammer-keycloak",  "--https-port=7082" ]
@@ -225,7 +225,7 @@ services:
 
     build:
       context: .
-      dockerfile: ${DOCKER_FILES_HOMEDIR}/DockerfileTestRunner
+      dockerfile: ./DockerfileTestRunner
 
     volumes:
       - ./tests:/tests

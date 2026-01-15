@@ -94,26 +94,9 @@ spring:
               lower-case-service-id: true
   security:
     oauth2:
-      client:
-        registration:
-          gateway-service:
-            client-id: dev-client
-            client-secret: dev-secret
-            scope:
-              - openid
-            authorization-grant-type: authorization_code
       resourceserver:
         jwt:
-          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:7081/realms/dev}
-        provider:
-          gateway-service:
-            issuer-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}
-            authorization-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/auth
-            token-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/token
-            user-info-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/userinfo
-            jwk-set-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/certs
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://steel-hammer-keycloak:7081/realms/dev}
   docker:
     compose:
-      file:
-        - ${DOCKER_FILES_HOMEDIR}/docker-compose-steel-hammer.yml
       enabled: false

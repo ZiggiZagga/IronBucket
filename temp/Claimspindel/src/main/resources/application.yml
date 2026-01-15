@@ -40,4 +40,5 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${IDP_PROVIDER_PROTOCOL}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}/protocol/openid-connect/certs
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://steel-hammer-keycloak:7081/realms/dev}
+          jwk-set-uri: ${OAUTH2_ISSUER_URI:http://steel-hammer-keycloak:7081/realms/dev}/protocol/openid-connect/certs
