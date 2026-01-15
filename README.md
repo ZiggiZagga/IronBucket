@@ -8,9 +8,15 @@
 
 ---
 
+## � Get Started in 10 Minutes
+
+**👉 [Click here to get started](START.md)** - Complete setup guide with quick start instructions.
+
+---
+
 ## 📊 Project Status
 
-> 🗺️ **See the complete [ROADMAP.md](ROADMAP.md) for detailed planning and [DOCS-INDEX.md](DOCS-INDEX.md) for navigation.**
+> 🗺️ **Navigation**: [START.md](START.md) (quick start) | [DOCS-INDEX.md](DOCS-INDEX.md) (documentation) | [ROADMAP.md](ROADMAP.md) (planning)
 
 ### ✅ Phase 1: Core Contracts — COMPLETE
 
