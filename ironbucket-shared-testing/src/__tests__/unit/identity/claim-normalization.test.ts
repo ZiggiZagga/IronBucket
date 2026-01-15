@@ -9,9 +9,17 @@ import {
   createServiceAccountJWT,
   createAdminJWT,
   createDevJWT,
-  createJWTWithoutTenant
+  createJWTWithoutTenant,
+  getTestSecret
 } from '../../fixtures/jwts/test-fixtures';
 import { NormalizedIdentity } from '../../types/identity';
+import {
+  normalizeClaims,
+  resolveUsername,
+  resolveTenant,
+  validateNormalizedIdentity
+} from '../../validators/claim-normalizer';
+import jwt from 'jsonwebtoken';
 
 describe('Claim Normalization - Phase 2', () => {
   
@@ -427,7 +435,16 @@ describe('Claim Normalization - Phase 2', () => {
 });
 
 // Helper function (to be implemented)
-function normalizeJWTClaims(jwt: string, options?: any): NormalizedIdentity {
-  // Implementation placeholder
-  return {} as NormalizedIdentity;
+function normalizeJWTClaims(jwt_token: string, options?: any): NormalizedIdentity {
+  const decoded = jwt.decode(jwt_token) as Record<string, any>;
+  const config: any = {};
+  
+  if (options?.defaultTenant) {
+    config.defaultTenant = options.defaultTenant;
+  }
+  if (options?.validateTenant) {
+    config.validateTenant = options.validateTenant;
+  }
+  
+  return normalizeClaims(decoded, undefined, config);
 }

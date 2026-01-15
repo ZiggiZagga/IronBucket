@@ -1,0 +1,101 @@
+[0;34m╔══════════════════════════════════════════════════════════════════╗[0m
+[0;34m║                                                                  ║[0m
+[0;34m║         IronBucket Containerized E2E Tests - Quick Start         ║[0m
+[0;34m║                                                                  ║[0m
+[0;34m║  All tests run inside Docker containers on internal network    ║[0m
+[0;34m║                                                                  ║[0m
+[0;34m╚══════════════════════════════════════════════════════════════════╝[0m
+
+[1;33mStep 1: Checking prerequisites...[0m
+
+[0;32m✅ Docker installed[0m
+[0;32m✅ Docker Compose installed[0m
+[0;32m✅ Project structure verified[0m
+
+[1;33mStep 2: Preparing Docker environment...[0m
+
+[0;32m✅ Changed to: /workspaces/IronBucket/steel-hammer[0m
+[0;32m✅ Set DOCKER_FILES_HOMEDIR=.[0m
+
+[1;33mStep 3: Cleaning up old containers...[0m
+
+Stopping running services...
+[0;32m✅ Old containers removed[0m
+
+[1;33mStep 4: Building and starting Docker services...[0m
+
+This may take 2-5 minutes on first run (downloading images, building containers)
+
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.57kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from DockerfileTestRunner
+#2 transferring dockerfile: 470B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/curlimages/curl:latest
+#3 ...
+
+#4 [auth] curlimages/curl:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/curlimages/curl:latest
+#3 DONE 1.2s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 16.12kB done
+#6 DONE 0.0s
+
+#7 [1/5] FROM docker.io/curlimages/curl:latest@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17
+#7 resolve docker.io/curlimages/curl:latest@sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17 0.0s done
+#7 sha256:d94d07ba9e7d6de898b6d96c1a072f6f8266c687af78a74f380087a0addf5d17 1.19kB / 1.19kB done
+#7 sha256:4940582f3591ca417f9e486a1cc2bfeef6cb3abb92b5a5c462655ceb8cff5115 751B / 751B done
+#7 sha256:9dcf90ad7bb5f2233d364a8dd4974ed7495f8bda55867b26aa3c99babe939af5 1.48kB / 1.48kB done
+#7 sha256:014e56e613968f73cce0858124ca5fbc601d7888099969a4eea69f31dcd71a53 0B / 3.86MB 0.1s
+#7 sha256:1297ab07a74017d8f69b992e215475f9d1b5be710a5ccb67d91c761ebe98f302 0B / 6.90MB 0.1s
+#7 sha256:bd9ddc54bea929a22b334e73e026d4136e5b73f5cc29942896c72e4ece69b13d 0B / 34B 0.1s
+#7 sha256:014e56e613968f73cce0858124ca5fbc601d7888099969a4eea69f31dcd71a53 3.86MB / 3.86MB 0.2s done
+#7 extracting sha256:014e56e613968f73cce0858124ca5fbc601d7888099969a4eea69f31dcd71a53 0.1s
+#7 sha256:1297ab07a74017d8f69b992e215475f9d1b5be710a5ccb67d91c761ebe98f302 6.90MB / 6.90MB 0.3s done
+#7 sha256:bd9ddc54bea929a22b334e73e026d4136e5b73f5cc29942896c72e4ece69b13d 34B / 34B 0.3s done
+#7 extracting sha256:014e56e613968f73cce0858124ca5fbc601d7888099969a4eea69f31dcd71a53 0.2s done
+#7 extracting sha256:1297ab07a74017d8f69b992e215475f9d1b5be710a5ccb67d91c761ebe98f302
+#7 extracting sha256:1297ab07a74017d8f69b992e215475f9d1b5be710a5ccb67d91c761ebe98f302 0.1s done
+#7 extracting sha256:bd9ddc54bea929a22b334e73e026d4136e5b73f5cc29942896c72e4ece69b13d
+#7 extracting sha256:bd9ddc54bea929a22b334e73e026d4136e5b73f5cc29942896c72e4ece69b13d done
+#7 DONE 0.8s
+
+#8 [2/5] RUN apk add --no-cache     bash     jq     postgresql-client     coreutils
+#8 0.196 ERROR: Unable to open log: Permission denied
+#8 ERROR: process "/bin/sh -c apk add --no-cache     bash     jq     postgresql-client     coreutils" did not complete successfully: exit code: 99
+------
+ > [2/5] RUN apk add --no-cache     bash     jq     postgresql-client     coreutils:
+0.196 ERROR: Unable to open log: Permission denied
+------
+DockerfileTestRunner:4
+
+--------------------
+
+   3 |     # Install required tools
+
+   4 | >>> RUN apk add --no-cache \
+
+   5 | >>>     bash \
+
+   6 | >>>     jq \
+
+   7 | >>>     postgresql-client \
+
+   8 | >>>     coreutils
+
+   9 |     
+
+--------------------
+
+failed to solve: process "/bin/sh -c apk add --no-cache     bash     jq     postgresql-client     coreutils" did not complete successfully: exit code: 99
+

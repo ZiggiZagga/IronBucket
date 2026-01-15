@@ -1,0 +1,21 @@
+FROM alpine:latest
+
+# Install required tools
+RUN apk add --no-cache \
+    curl \
+    bash \
+    jq \
+    postgresql-client \
+    coreutils
+
+# Create test directory
+RUN mkdir -p /tests /tmp/ironbucket-test
+
+# Copy test script
+COPY tests/e2e-alice-bob-container.sh /tests/
+
+# Make executable
+RUN chmod +x /tests/e2e-alice-bob-container.sh
+
+# Default command - run tests
+CMD ["/bin/bash", "/tests/e2e-alice-bob-container.sh"]

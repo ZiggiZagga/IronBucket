@@ -7,9 +7,22 @@
 import {
   createTestJWT,
   createAdminJWT,
-  createDevJWT
+  createDevJWT,
+  getTestSecret
 } from '../../fixtures/jwts/test-fixtures';
 import { NormalizedIdentity } from '../../types/identity';
+import {
+  validateTenantIsolation,
+  isValidTenantIdentifier,
+  assertTenantAccess,
+  filterResourcesByTenant,
+  buildTenantScopedPath,
+  TenantIsolationConfig
+} from '../../validators/tenant-isolation-validator';
+import {
+  normalizeClaims
+} from '../../validators/claim-normalizer';
+import jwt from 'jsonwebtoken';
 
 describe('Tenant Isolation - Phase 2', () => {
   
@@ -381,41 +394,96 @@ describe('Tenant Isolation - Phase 2', () => {
 });
 
 // Helper functions (to be implemented)
-function normalizeWithTenantIsolation(jwt: string, config: any, headers?: any, options?: any): NormalizedIdentity {
-  return {} as NormalizedIdentity;
+function normalizeWithTenantIsolation(jwt_token: string, config: any, headers?: any, options?: any): NormalizedIdentity {
+  const decoded = jwt.decode(jwt_token) as Record<string, any>;
+  
+  // Normalize claims first
+  const normalized = normalizeClaims(decoded);
+  
+  // Apply tenant isolation config
+  const tenantConfig: TenantIsolationConfig = {
+    mode: config.mode === 'single' ? 'single-tenant' : 'multi-tenant',
+    singleTenantValue: config.tenant
+  };
+  
+  // For migration/onboarding
+  if (config.autoAssignTenant && !normalized.tenant) {
+    normalized.tenant = config.autoAssignTenant;
+  }
+  if (options?.targetTenant) {
+    normalized.tenant = options.targetTenant;
+  }
+  
+  // Validate tenant isolation
+  const validation = validateTenantIsolation(normalized, undefined, tenantConfig);
+  if (!validation.valid) {
+    throw new Error(validation.error || 'Tenant isolation validation failed');
+  }
+  
+  if (validation.tenant) {
+    normalized.tenant = validation.tenant;
+  }
+  
+  return normalized;
 }
 
 function filterPoliciesByTenant(policies: any[], tenant: string): any[] {
-  return [];
+  return policies.filter((p) => !p.tenant || p.tenant === tenant);
 }
 
 function canAccessBucket(identity: NormalizedIdentity, bucket: string): boolean {
-  return false;
+  // Bucket must be in tenant scope or shared
+  return bucket.startsWith(`tenant-${identity.tenant}/`) || bucket.startsWith('shared/');
 }
 
 function canAccessResource(identity: NormalizedIdentity, resource: string): boolean {
-  return false;
+  // Check if resource is in tenant scope
+  return resource.includes(identity.tenant);
 }
 
 function createAuditLog(identity: NormalizedIdentity, action: string, resource: string): any {
-  return { tenant: identity.tenant, action, resource };
+  return { tenant: identity.tenant, action, resource, timestamp: new Date() };
 }
 
 function filterAuditLogsByTenant(logs: any[], tenant: string): any[] {
-  return [];
+  return logs.filter((log) => log.tenant === tenant);
 }
 
 class TenantAwareCache {
+  private cache = new Map<string, any>();
+  
   constructor(options?: any) {}
-  getOrNormalize(jwt: string, config: any): NormalizedIdentity {
-    return {} as NormalizedIdentity;
+  
+  getOrNormalize(jwt_token: string, config: any): NormalizedIdentity {
+    const decoded = jwt.decode(jwt_token) as Record<string, any>;
+    return normalizeClaims(decoded);
   }
+  
   size(tenant: string): number {
-    return 0;
+    return Array.from(this.cache.values()).filter(
+      (entry) => entry.identity.tenant === tenant
+    ).length;
   }
-  invalidateTenant(tenant: string): void {}
+  
+  invalidateTenant(tenant: string): void {
+    for (const [key, value] of this.cache.entries()) {
+      if (value.identity.tenant === tenant) {
+        this.cache.delete(key);
+      }
+    }
+  }
 }
 
 function canPerformTenantAction(identity: NormalizedIdentity, tenant: string, action: string): boolean {
-  return false;
+  // Can only perform actions in own tenant
+  if (identity.tenant !== tenant) {
+    return false;
+  }
+  
+  // Check if identity has the permission
+  const hasPermission = identity.roles.some((r) =>
+    r.includes(action) || r.includes('*')
+  );
+  
+  return hasPermission;
 }

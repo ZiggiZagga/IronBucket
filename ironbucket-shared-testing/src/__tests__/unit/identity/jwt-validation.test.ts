@@ -19,6 +19,15 @@ import {
   getMockJWKS
 } from '../../fixtures/jwts/test-fixtures';
 
+import {
+  validateJWT as realValidateJWT,
+  JWTValidationResult,
+  extractRoles,
+  isServiceAccount
+} from '../../validators/jwt-validator';
+
+import jwt from 'jsonwebtoken';
+
 describe('JWT Validation - Phase 2', () => {
   
   describe('1. Valid JWT Acceptance', () => {
@@ -475,29 +484,47 @@ describe('JWT Validation - Phase 2', () => {
 
 // Helper functions (to be implemented)
 
-function validateJWT(jwt: string, options?: any) {
-  // Implementation placeholder
-  return { valid: true, claims: {} };
+function validateJWT(jwt_token: string, options?: any): JWTValidationResult {
+  const secret = getTestSecret();
+  const config: any = {};
+  
+  if (options?.issuerWhitelist) {
+    config.issuerWhitelist = options.issuerWhitelist;
+  }
+  if (options?.expectedAudience) {
+    config.expectedAudience = options.expectedAudience;
+  }
+  if (options?.clockSkew) {
+    config.clockSkewSeconds = options.clockSkew;
+  }
+  
+  return realValidateJWT(jwt_token, secret, config);
 }
 
-function validateJWTSignature(jwt: string, secret: string) {
-  return { valid: true };
+function validateJWTSignature(jwt_token: string, secret: string): JWTValidationResult {
+  return realValidateJWT(jwt_token, secret);
 }
 
-function validateJWTWithJWKS(jwt: string, jwks: any) {
-  return { valid: true };
+function validateJWTWithJWKS(jwt_token: string, jwks: any): JWTValidationResult {
+  // For testing purposes, use the test secret
+  return realValidateJWT(jwt_token, getTestSecret());
 }
 
-function validateJWTWithIssuerWhitelist(jwt: string, whitelist: string[]) {
-  return { valid: true };
+function validateJWTWithIssuerWhitelist(jwt_token: string, whitelist: string[]): JWTValidationResult {
+  return realValidateJWT(jwt_token, getTestSecret(), {
+    issuerWhitelist: whitelist
+  });
 }
 
-function validateJWTAudience(jwt: string, audience: string) {
-  return { valid: true };
+function validateJWTAudience(jwt_token: string, audience: string): JWTValidationResult {
+  return realValidateJWT(jwt_token, getTestSecret(), {
+    expectedAudience: audience
+  });
 }
 
-function detectServiceAccount(jwt: string): boolean {
-  return false;
+function detectServiceAccount(jwt_token: string): boolean {
+  const decoded = jwt.decode(jwt_token) as any;
+  return isServiceAccount(decoded);
 }
 
 function extractRealmRoles(claims: any): string[] {

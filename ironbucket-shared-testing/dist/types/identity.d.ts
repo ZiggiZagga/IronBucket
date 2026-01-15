@@ -31,14 +31,6 @@ export interface NormalizedIdentity {
     createdAt: number;
 }
 /**
- * JWT Validation Result
- */
-export interface JWTValidationResult {
-    valid: boolean;
-    error?: string;
-    claims?: Record<string, any>;
-}
-/**
  * Claim Normalization Result
  */
 export interface ClaimNormalizationResult {
