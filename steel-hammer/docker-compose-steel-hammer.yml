@@ -61,7 +61,7 @@ services:
     container_name: steel-hammer-buzzle-vane
 
     build:
-      context: ../temp/Buzzle-Vane
+      context: ../Buzzle-Vane
       dockerfile: Dockerfile
 
     depends_on:
@@ -92,7 +92,7 @@ services:
     container_name: steel-hammer-sentinel-gear
 
     build:
-      context: ../temp/Sentinel-Gear
+      context: ../Sentinel-Gear
       dockerfile: Dockerfile
 
     ports:
@@ -129,7 +129,7 @@ services:
     container_name: steel-hammer-claimspindel
 
     build:
-      context: ../temp/Claimspindel
+      context: ../Claimspindel
       dockerfile: Dockerfile
 
     depends_on:
@@ -163,7 +163,7 @@ services:
     container_name: steel-hammer-brazz-nossel
 
     build:
-      context: ../temp/Brazz-Nossel
+      context: ../Brazz-Nossel
       dockerfile: Dockerfile
 
     depends_on:
