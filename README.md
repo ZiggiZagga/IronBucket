@@ -8,9 +8,17 @@
 
 ---
 
-## � Get Started in 10 Minutes
+## ⚡ Get Started in 10 Minutes
 
-**👉 [Click here to get started](START.md)** - Complete setup guide with quick start instructions.
+**👉 [Click here to get started](GETTING_STARTED_GUIDE.md)** - Complete setup guide with Docker and Maven tests.
+
+**Quick commands:**
+```bash
+./spinup.sh              # Run all tests (Docker + Maven) - 5-10 minutes
+./spinup.sh --local-only # Run local Maven tests only - 2-3 minutes
+```
+
+**Or read the quick start**: [START.md](START.md) - Fast setup for experienced developers.
 
 ---
 
