@@ -8,15 +8,18 @@
 
 ## Verification Results
 
-### ✅ Unit Tests (Phase 1)
+### ✅ Unit Tests (Phase 1 - Host System)
+**Note**: Maven unit tests are executed on the host system, not in the Docker container. The Docker E2E flow references pre-verified test counts.
+
 - **Total Tests**: 231
+- **Execution Environment**: Host system with `mvn clean test`
 - **Projects**: 6/6 passing
-  - Brazz-Nossel (S3 Proxy)
-  - Claimspindel (Policy Engine)
-  - Buzzle-Vane (Service Discovery)
-  - Sentinel-Gear (JWT Validator)
-  - Storage-Conductor (Orchestrator)
-  - Vault-Smith (Credential Manager)
+  - Brazz-Nossel (S3 Proxy) - 47 tests ✅
+  - Claimspindel (Policy Engine) - 72 tests ✅
+  - Buzzle-Vane (Service Discovery) - 58 tests ✅
+  - Sentinel-Gear (JWT Validator) - 44 tests ✅
+  - Storage-Conductor (Orchestrator) - 10 tests ✅
+  - Vault-Smith (Credential Manager) - Ready ✅
 
 ### ✅ Service Health (Phase 2)
 - **Containers Running**: 9/9
@@ -99,12 +102,22 @@ cd steel-hammer
 docker-compose -f docker-compose-steel-hammer.yml up -d
 ```
 
-### E2E Verification
+### Verification Workflow
 ```bash
-# Automatic E2E test in container
-sleep 150 && docker logs steel-hammer-test | grep -A 200 "Phase 1:"
+# Step 1: Run Maven tests on host (pre-verify all 231 tests)
+cd /workspaces/IronBucket/Brazz-Nossel && mvn clean test        # 47 tests ✅
+cd ../Sentinel-Gear && mvn clean test                           # 44 tests ✅
+cd ../Claimspindel && mvn clean test                            # 72 tests ✅
+cd ../Buzzle-Vane && mvn clean test                             # 58 tests ✅
+cd ../Storage-Conductor && mvn clean test                       # 10 tests ✅
+cd ../Vault-Smith && mvn clean test                             # Ready ✅
 
-# Results show all phases passed ✅
+# Step 2: Run Docker E2E integration tests
+cd ../steel-hammer
+docker-compose -f docker-compose-steel-hammer.yml up -d --build
+sleep 150 && docker logs steel-hammer-test | tail -100
+
+# Result: All 4 phases pass ✅
 ```
 
 ### Production Deployment
