@@ -61,7 +61,7 @@ services:
     container_name: steel-hammer-buzzle-vane
 
     build:
-      context: ../Buzzle-Vane
+      context: ../temp/Buzzle-Vane
       dockerfile: Dockerfile
 
     depends_on:
@@ -92,7 +92,7 @@ services:
     container_name: steel-hammer-sentinel-gear
 
     build:
-      context: ../Sentinel-Gear
+      context: ../temp/Sentinel-Gear
       dockerfile: Dockerfile
 
     ports:
@@ -129,7 +129,7 @@ services:
     container_name: steel-hammer-claimspindel
 
     build:
-      context: ../Claimspindel
+      context: ../temp/Claimspindel
       dockerfile: Dockerfile
 
     depends_on:
@@ -163,7 +163,7 @@ services:
     container_name: steel-hammer-brazz-nossel
 
     build:
-      context: ../Brazz-Nossel
+      context: ../temp/Brazz-Nossel
       dockerfile: Dockerfile
 
     depends_on:
@@ -233,6 +233,8 @@ services:
       - ./tests:/tests
       - /tmp/ironbucket-test:/tmp/ironbucket-test
       - ./test-scripts:/scripts:ro
+      - ../temp:/workspaces/IronBucket/temp:ro
+      - ../.git:/ironbucket/.git:ro
 
     depends_on:
       - steel-hammer-keycloak
@@ -252,7 +254,8 @@ services:
       - "BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083"
 
     # Test will run automatically when container starts
-    entrypoint: ["/bin/sh", "-c", "sleep 60 && /scripts/run-e2e-tests.sh"]
+    # Runs complete E2E verification: Maven tests + services + S3 + JWT
+    entrypoint: ["/bin/sh", "-c", "sleep 120 && /scripts/run-e2e-complete.sh"]
 
     restart: "no"
     logging:

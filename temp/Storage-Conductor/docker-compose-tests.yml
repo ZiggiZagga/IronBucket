@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+
+  # MinIO: S3-compatible object storage for testing
+  storage-conductor-minio:
+    image: minio/minio:latest
+    hostname: minio
+    container_name: storage-conductor-minio
+    networks:
+      - storage-test-network
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /minio-data --console-address ":9001"
+    volumes:
+      - minio-data:/minio-data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # PostgreSQL: Database for Keycloak
+  storage-conductor-postgres:
+    image: postgres:15-alpine
+    hostname: postgres
+    container_name: storage-conductor-postgres
+    networks:
+      - storage-test-network
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Keycloak: Identity provider (OIDC/OAuth2)
+  storage-conductor-keycloak:
+    image: keycloak/keycloak:latest
+    hostname: keycloak
+    container_name: storage-conductor-keycloak
+    networks:
+      - storage-test-network
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+    command:
+      - "start-dev"
+      - "--import-realm"
+    volumes:
+      - ../../steel-hammer/keycloak/dev-realm.json:/opt/keycloak/data/import/dev-realm.json
+    depends_on:
+      storage-conductor-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo 'Health check' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Storage-Conductor Tests: Main test orchestrator
+  storage-conductor-tests:
+    build:
+      context: ..
+      dockerfile: Storage-Conductor/Dockerfile
+    hostname: storage-conductor-tests
+    container_name: storage-conductor-tests
+    networks:
+      - storage-test-network
+    depends_on:
+      storage-conductor-minio:
+        condition: service_healthy
+      storage-conductor-postgres:
+        condition: service_healthy
+      storage-conductor-keycloak:
+        condition: service_healthy
+    environment:
+      # MinIO S3 configuration
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_REGION: us-east-1
+      S3_ENDPOINT: http://minio:9000
+      # Service URLs for testing
+      KEYCLOAK_URL: http://keycloak:8080
+      # Test configuration
+      TEST_TENANT: test-org-001
+    restart: "no"
+
+networks:
+  storage-test-network:
+    driver: bridge
+    name: storage-test-network
+
+volumes:
+  minio-data:
+    driver: local
+  postgres-data:
+    driver: local
