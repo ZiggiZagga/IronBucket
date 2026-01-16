@@ -99,7 +99,6 @@ class SentinelGearPolicyFallbackTest {
         RetryConfig config = RetryConfig.custom()
                 .maxAttempts(4)
                 .waitDuration(Duration.ofMillis(100))
-                .intervalFunction(io.github.resilience4j.core.registry.EntryAddedEvent::getAddedEntry)
                 .build();
 
         // Verify that the wait duration is as expected
@@ -164,7 +163,8 @@ class SentinelGearPolicyFallbackTest {
     void test_circuitBreaker_opensAfter5Failures() {
         // GIVEN: A circuit breaker configuration
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-                .failureThreshold(5)
+                .slidingWindowSize(5)
+                .failureRateThreshold(100f)
                 .slowCallRateThreshold(100)
                 .slowCallDurationThreshold(Duration.ofSeconds(2))
                 .minimumNumberOfCalls(1)

@@ -103,11 +103,12 @@ class SentinelGearJWTClaimsExtractionTest {
         assertFalse(result.isValid(), "Malformed JWT should be invalid");
 
         // AND: Error message is descriptive
-        assertNotNull(result.getErrorMessage());
+        assertTrue(result.getError().isPresent(), "Error should be present");
+        String errorMsg = result.getError().get();
         assertTrue(
-                result.getErrorMessage().toLowerCase().contains("malformed") ||
-                result.getErrorMessage().toLowerCase().contains("invalid") ||
-                result.getErrorMessage().toLowerCase().contains("format"),
+                errorMsg.toLowerCase().contains("malformed") ||
+                errorMsg.toLowerCase().contains("invalid") ||
+                errorMsg.toLowerCase().contains("format"),
                 "Error should mention malformed/invalid/format"
         );
     }
@@ -133,7 +134,7 @@ class SentinelGearJWTClaimsExtractionTest {
 
         // THEN: Validation fails (unsigned tokens should not be accepted)
         assertFalse(result.isValid(), "Unsigned JWT should be rejected");
-        assertNotNull(result.getErrorMessage());
+        assertTrue(result.getError().isPresent(), "Error should be present");
     }
 
     /**
@@ -159,10 +160,11 @@ class SentinelGearJWTClaimsExtractionTest {
         assertFalse(result.isValid(), "Expired JWT should be rejected");
 
         // AND: Error indicates expiration
-        assertNotNull(result.getErrorMessage());
+        assertTrue(result.getError().isPresent(), "Error should be present");
+        String errorMsg = result.getError().get();
         assertTrue(
-                result.getErrorMessage().toLowerCase().contains("expired") ||
-                result.getErrorMessage().toLowerCase().contains("expiration"),
+                errorMsg.toLowerCase().contains("expired") ||
+                errorMsg.toLowerCase().contains("expiration"),
                 "Error should mention expiration"
         );
     }
@@ -190,10 +192,11 @@ class SentinelGearJWTClaimsExtractionTest {
         assertFalse(result.isValid(), "JWT with wrong issuer should be rejected");
 
         // AND: Error indicates issuer problem
-        assertNotNull(result.getErrorMessage());
+        assertTrue(result.getError().isPresent(), "Error should be present");
+        String errorMsg = result.getError().get();
         assertTrue(
-                result.getErrorMessage().toLowerCase().contains("issuer") ||
-                result.getErrorMessage().toLowerCase().contains("invalid"),
+                errorMsg.toLowerCase().contains("issuer") ||
+                errorMsg.toLowerCase().contains("invalid"),
                 "Error should mention issuer or validation failure"
         );
     }

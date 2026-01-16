@@ -29,7 +29,7 @@ public class JWTFixtures {
                 .claim("region", region)
                 .claim("groups", groups)
                 .claim("services", services)
-                .setExpirationTime(new Date(System.currentTimeMillis() + 3600000)) // 1 hour
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000)) // 1 hour
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -68,7 +68,7 @@ public class JWTFixtures {
                 .claim("region", "us-east-1")
                 .claim("groups", List.of("test:group"))
                 .claim("services", List.of("s3"))
-                .setExpirationTime(new Date(System.currentTimeMillis() - 3600000)) // 1 hour ago
+                .setExpiration(new Date(System.currentTimeMillis() - 3600000)) // 1 hour ago
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -83,7 +83,7 @@ public class JWTFixtures {
                 .claim("region", "us-east-1")
                 .claim("groups", List.of("test:group"))
                 .claim("services", List.of("s3"))
-                .setExpirationTime(new Date(System.currentTimeMillis() + 3600000))
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -110,7 +110,7 @@ public class JWTFixtures {
                 .setIssuer(ISSUER)
                 .setSubject(subject)
                 .claim("groups", List.of("test:group"))
-                .setExpirationTime(new Date(System.currentTimeMillis() + 3600000))
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
