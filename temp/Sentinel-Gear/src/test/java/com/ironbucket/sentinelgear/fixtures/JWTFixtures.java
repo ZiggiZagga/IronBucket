@@ -61,6 +61,13 @@ public class JWTFixtures {
     }
 
     /**
+     * Generate an expired JWT for alice@acme-corp
+     */
+    public String generateExpiredAliceACMEJWT() {
+        return generateExpiredJWT("alice@acme-corp");
+    }
+
+    /**
      * Generate an expired JWT token
      */
     public String generateExpiredJWT(String subject) {
@@ -134,4 +141,158 @@ public class JWTFixtures {
     public SecretKey getTestSecretKey() {
         return key;
     }
-}
+
+    /**
+     * Generate JWT with invalid signature (signed with different key)
+     */
+    public String generateJWTWithInvalidSignature() {
+        SecretKey wrongKey = Keys.hmacShaKeyFor("different-secret-key-for-invalid-signature-1234567890".getBytes());
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject("alice@acme-corp")
+                .setAudience("sentinel-gear-app")
+                .claim("region", "us-east-1")
+                .claim("groups", List.of("acme-corp:admins"))
+                .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(wrongKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Generate JWT for service account with sa- prefix
+     */
+    public String generateServiceAccountJWT(String serviceAccountName) {
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject(serviceAccountName)
+                .setAudience("sentinel-gear-app")
+                .claim("isServiceAccount", true)
+                .claim("region", "us-east-1")
+                .claim("groups", List.of("service-accounts"))
+                .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Generate JWT with realm roles
+     */
+    public String generateJWTWithRealmRoles(List<String> roles) {
+        Map<String, Object> realmAccess = new HashMap<>();
+        realmAccess.put("roles", roles);
+        
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject("alice@acme-corp")
+                .setAudience("sentinel-gear-app")
+                .claim("realm_access", realmAccess)
+                .claim("region", "us-east-1")
+                .claim("groups", List.of("acme-corp:admins"))
+                .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Generate JWT with resource roles for specific app
+     */
+    public String generateJWTWithResourceRoles(String appName, List<String> roles) {
+        Map<String, Object> appRoles = new HashMap<>();
+        appRoles.put("roles", roles);
+        
+        Map<String, Object> resourceAccess = new HashMap<>();
+        resourceAccess.put(appName, appRoles);
+        
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject("alice@acme-corp")
+                .setAudience("sentinel-gear-app")
+                .claim("resource_access", resourceAccess)
+                .claim("region", "us-east-1")
+                .claim("groups", List.of("acme-corp:admins"))
+                .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Generate complete JWT with all identity claims
+     */
+    public String generateCompleteIdentityJWT(String subject, String tenant, List<String> groups, List<String> regions) {
+        Map<String, Object> realmAccess = new HashMap<>();
+        realmAccess.put("roles", List.of("user", "admin"));
+        
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject(subject)
+                .setAudience("sentinel-gear-app")
+                .claim("tenant", tenant)
+                .claim("realm_access", realmAccess)
+                .claim("region", regions.get(0))
+                .claim("regions", regions)
+                .claim("groups", groups)
+                .claim("services", List.of("s3", "kms"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Generate JWT with specific audience
+     */
+    public String generateJWTWithAudience(String audience) {
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject("alice@acme-corp")
+                .setAudience(audience)
+                .claim("region", "us-east-1")
+                .claim("groups", List.of("acme-corp:admins"))
+                .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Generate JWT with groups claim
+     */
+    public String generateJWTWithGroups(List<String> groups) {
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject("alice@acme-corp")
+                .setAudience("sentinel-gear-app")
+                .claim("groups", groups)
+                .claim("region", "us-east-1")
+                .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Generate JWT with region claim
+     */
+    public String generateJWTWithRegion(String region) {
+        return Jwts.builder()
+                .setIssuer(ISSUER)
+                .setSubject("alice@acme-corp")
+                .setAudience("sentinel-gear-app")
+                .claim("region", region)
+                .claim("groups", List.of("acme-corp:admins"))
+                .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }}

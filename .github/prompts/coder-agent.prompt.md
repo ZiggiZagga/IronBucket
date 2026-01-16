@@ -111,3 +111,4 @@ description: >
   - Run spikes that can later be distilled into production-ready code.
 
 Perform a comprehensive and prove that Sentinel-Gear (identity gateway) and Claimspindel (claims routing) govern and secure the storage. We can't just upload to Minio directly! 
+Before you commit, verify that all tests pass and that the code adheres to the architectural guardrails and production-readiness checklist outlined above. Summarize your changes only when all tests pass. There are some fake tests, those where intented to pass instead of find actuall cases and error surfaces. Improve them to follow high standards laid by Sentinel-Gear project. If the test fails most cases means that the code is bad and not the test.
