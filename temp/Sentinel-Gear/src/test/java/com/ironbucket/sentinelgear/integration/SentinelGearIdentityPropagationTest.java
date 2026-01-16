@@ -48,7 +48,12 @@ class SentinelGearIdentityPropagationTest {
         // THEN: Header should be forwarded
         assertNotNull(downstreamHeaders.get("X-Identity-Context"));
         assertEquals(identityContextHeader, downstreamHeaders.get("X-Identity-Context"));
-        assertTrue(downstreamHeaders.get("X-Identity-Context").contains("alice"));
+        
+        // Decode header to verify content
+        String decodedContext = new String(java.util.Base64.getDecoder().decode(
+            downstreamHeaders.get("X-Identity-Context")
+        ));
+        assertTrue(decodedContext.contains("alice"), "Decoded header should contain 'alice'");
     }
 
     /**

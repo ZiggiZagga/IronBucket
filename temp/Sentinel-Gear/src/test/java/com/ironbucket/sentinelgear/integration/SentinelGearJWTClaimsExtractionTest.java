@@ -2,6 +2,7 @@ package com.ironbucket.sentinelgear.integration;
 
 import com.ironbucket.sentinelgear.fixtures.JWTFixtures;
 import com.ironbucket.sentinelgear.identity.JWTValidator;
+import com.ironbucket.sentinelgear.identity.JWTValidator.ValidationOptions;
 import com.ironbucket.sentinelgear.identity.JWTValidationResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,10 @@ class SentinelGearJWTClaimsExtractionTest {
         );
 
         // THEN: Validation succeeds
-        assertTrue(result.isValid(), "JWT should be valid");
+        if (!result.isValid()) {
+            System.out.println("JWT validation failed: " + result.getError().orElse("Unknown error"));
+        }
+        assertTrue(result.isValid(), "JWT should be valid: " + result.getError().orElse("Unknown error"));
 
         // AND: Claims are extracted
         assertNotNull(result.getClaims());
@@ -185,7 +189,10 @@ class SentinelGearJWTClaimsExtractionTest {
         // WHEN: JWT is validated with issuer whitelist
         JWTValidationResult result = jwtValidator.validateWithSymmetricKey(
                 wrongIssuerJWT,
-                "test-secret-key-that-is-long-enough-for-hs256"
+                "test-secret-key-that-is-long-enough-for-hs256",
+                new ValidationOptions().setIssuerWhitelist(
+                    List.of("https://keycloak:7081/auth/realms/iron-bucket")
+                )
         );
 
         // THEN: Validation fails

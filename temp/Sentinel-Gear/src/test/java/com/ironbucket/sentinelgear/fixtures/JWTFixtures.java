@@ -26,9 +26,11 @@ public class JWTFixtures {
         return Jwts.builder()
                 .setIssuer(ISSUER)
                 .setSubject(subject)
+                .setAudience("sentinel-gear-app")  // Add audience claim
                 .claim("region", region)
                 .claim("groups", groups)
                 .claim("services", services)
+                .setIssuedAt(new Date())  // Add issued at claim
                 .setExpiration(new Date(System.currentTimeMillis() + 3600000)) // 1 hour
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -65,9 +67,11 @@ public class JWTFixtures {
         return Jwts.builder()
                 .setIssuer(ISSUER)
                 .setSubject(subject)
+                .setAudience("sentinel-gear-app")
                 .claim("region", "us-east-1")
                 .claim("groups", List.of("test:group"))
                 .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() - 3600000)) // 1 hour ago
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -80,9 +84,11 @@ public class JWTFixtures {
         return Jwts.builder()
                 .setIssuer("https://wrong-issuer.example.com")
                 .setSubject(subject)
+                .setAudience("sentinel-gear-app")
                 .claim("region", "us-east-1")
                 .claim("groups", List.of("test:group"))
                 .claim("services", List.of("s3"))
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 3600000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
