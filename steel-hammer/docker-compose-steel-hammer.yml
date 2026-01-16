@@ -233,8 +233,8 @@ services:
       - ./tests:/tests
       - /tmp/ironbucket-test:/tmp/ironbucket-test
       - ./test-scripts:/scripts:ro
-      - ../temp:/workspaces/IronBucket/temp:ro
-      - ../.git:/ironbucket/.git:ro
+      - /workspaces/IronBucket/temp:/workspaces/IronBucket/temp:ro
+      - /workspaces/IronBucket/.git:/ironbucket/.git:ro
 
     depends_on:
       - steel-hammer-keycloak
