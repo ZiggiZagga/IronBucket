@@ -1,21 +1,14 @@
-FROM alpine:latest
+FROM maven:3.9-eclipse-temurin-25
 
-# Install required tools
-RUN apk add --no-cache \
+# Install minimal tools for testing
+RUN apt-get update && apt-get install -y \
     curl \
-    bash \
     jq \
     postgresql-client \
-    coreutils
+    && rm -rf /var/lib/apt/lists/*
 
-# Create test directory
-RUN mkdir -p /tests /tmp/ironbucket-test
+# Create result directory
+RUN mkdir -p /tmp/ironbucket-test-results
 
-# Copy test script
-COPY tests/e2e-alice-bob-container.sh /tests/
-
-# Make executable
-RUN chmod +x /tests/e2e-alice-bob-container.sh
-
-# Default command - run tests
-CMD ["/bin/bash", "/tests/e2e-alice-bob-container.sh"]
+# Default command
+CMD ["/bin/bash"]
