@@ -254,8 +254,8 @@ services:
       - "BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083"
 
     # Test will run automatically when container starts
-    # Runs all Maven tests from mounted /workspaces/IronBucket/temp directory
-    entrypoint: ["/bin/sh", "-c", "sleep 60 && /scripts/run-containerized-maven-tests.sh"]
+    # Runs complete E2E verification: Maven tests + services + S3 + JWT
+    entrypoint: ["/bin/sh", "-c", "sleep 120 && /scripts/run-e2e-complete.sh"]
 
     restart: "no"
     logging:
