@@ -82,11 +82,6 @@ jobs:
           java-version: '25'
           cache: 'maven'
       
-      - name: Build Pactum-Scroll
-        run: |
-          cd temp/Pactum-Scroll
-          mvn clean install -B || echo "Pactum-Scroll build skipped"
-      
       - name: Build Vault-Smith
         run: |
           cd temp/Vault-Smith
@@ -144,7 +139,7 @@ jobs:
       - name: Update version in POMs
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          for module in Pactum-Scroll Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
+          for module in Vault-Smith Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane Storage-Conductor; do
             if [ -f "temp/$module/pom.xml" ]; then
               cd temp/$module
               mvn versions:set -DnewVersion=${VERSION#v} -DgenerateBackupPoms=false
@@ -154,10 +149,12 @@ jobs:
       
       - name: Build all modules
         run: |
-          cd temp/Pactum-Scroll && mvn clean install -DskipTests -B || echo "Skipped"
-          for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
-            cd ../temp/$module
+          # Note: Pactum-Scroll is just a contract definition (no POM), skip it
+          for module in Vault-Smith Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane Storage-Conductor; do
+            echo "Building $module..."
+            cd temp/$module
             mvn clean package -DskipTests -B
+            cd ../..
             cd ../..
           done
       
