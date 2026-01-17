@@ -75,7 +75,8 @@ jobs:
           for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
             echo "Running SpotBugs on $module..."
             cd temp/$module
-            mvn compile spotbugs:check -B || true
+            # Use spotbugs:spotbugs to generate XML report, not just check
+            mvn compile spotbugs:spotbugs -B || true
             cd ../..
           done
       
