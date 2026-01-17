@@ -6,6 +6,7 @@ import com.ironbucket.vaultsmith.impl.AwsS3Backend;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import java.io.ByteArrayInputStream;
 import java.util.Set;
@@ -19,8 +20,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * - AWS S3 (if AWS credentials provided)
  * - MinIO (local docker instance)
  * - Ceph RGW (if configured)
+ * 
+ * NOTE: These are integration tests that require a running S3-compatible backend.
+ * Set S3_TESTS_ENABLED=true environment variable to run these tests.
  */
 @DisplayName("S3 Compatibility Tests")
+@EnabledIfEnvironmentVariable(named = "S3_TESTS_ENABLED", matches = "true")
 public class S3CompatibilityTest {
 
     private S3StorageBackend backend;

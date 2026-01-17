@@ -15,6 +15,20 @@ jobs:
     name: Build and Test All Modules
     runs-on: ubuntu-latest
     
+    services:
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,24 +55,44 @@ jobs:
           cd temp/Pactum-Scroll
           mvn clean install -B -V || echo "Pactum-Scroll build skipped"
       
+      - name: Build Vault-Smith
+        run: |
+          cd temp/Vault-Smith
+          mvn clean install -DskipTests -B
+      
       - name: Build Sentinel-Gear (JWT Validator)
+        env:
+          S3_TESTS_ENABLED: true
         run: |
           cd temp/Sentinel-Gear
           mvn clean test -B -V
       
       - name: Build Claimspindel (Policy Router)
+        env:
+          S3_TESTS_ENABLED: true
         run: |
           cd temp/Claimspindel
           mvn clean test -B -V
       
       - name: Build Brazz-Nossel (S3 Proxy)
+        env:
+          S3_TESTS_ENABLED: true
         run: |
           cd temp/Brazz-Nossel
           mvn clean test -B -V
       
       - name: Build Buzzle-Vane (Service Discovery)
+        env:
+          S3_TESTS_ENABLED: true
         run: |
           cd temp/Buzzle-Vane
+          mvn clean test -B -V
+      
+      - name: Build Storage-Conductor
+        env:
+          S3_TESTS_ENABLED: true
+        run: |
+          cd temp/Storage-Conductor
           mvn clean test -B -V
       
       - name: Generate test report summary
@@ -90,6 +124,7 @@ jobs:
           cd ../Claimspindel && mvn package -DskipTests -B
           cd ../Brazz-Nossel && mvn package -DskipTests -B
           cd ../Buzzle-Vane && mvn package -DskipTests -B
+          cd ../Storage-Conductor && mvn package -DskipTests -B
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -100,4 +135,5 @@ jobs:
             temp/Claimspindel/target/*.jar
             temp/Brazz-Nossel/target/*.jar
             temp/Buzzle-Vane/target/*.jar
+            temp/Storage-Conductor/target/*.jar
           retention-days: 90

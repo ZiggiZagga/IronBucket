@@ -51,6 +51,22 @@ jobs:
     needs: [validate]
     runs-on: ubuntu-latest
     
+    services:
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        volumes:
+          - minio-data:/data
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,9 +83,16 @@ jobs:
           cd temp/Pactum-Scroll
           mvn clean install -B || echo "Pactum-Scroll build skipped"
       
-      - name: Run all tests
+      - name: Build Vault-Smith
         run: |
-          for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
+          cd temp/Vault-Smith
+          mvn clean install -DskipTests -B
+      
+      - name: Run all tests
+        env:
+          S3_TESTS_ENABLED: true
+        run: |
+          for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane Storage-Conductor; do
             echo "Testing $module..."
             cd temp/$module
             mvn clean test -B
