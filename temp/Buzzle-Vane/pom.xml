@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ironbucket</groupId>
 	<artifactId>buzzlevane</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>4.0.1</version>
 	<name>buzzle-vane</name>
 	<description>Eureka-based discovery client—registering services, resolving instances, and guiding traffic with identity awareness.</description>
 	<url/>

@@ -147,6 +147,15 @@ jobs:
               cd ../..
             fi
           done
+          
+          # Update vault-smith dependency version in Storage-Conductor
+          echo "Updating vault-smith dependency in Storage-Conductor to ${VERSION#v}..."
+          if [ -f "temp/Storage-Conductor/pom.xml" ]; then
+            # Use xmlstarlet or sed to update the vault-smith dependency version
+            sed -i "/<artifactId>vault-smith<\/artifactId>/,/<\/dependency>/ s/<version>[^<]*<\/version>/<version>${VERSION#v}<\/version>/" temp/Storage-Conductor/pom.xml
+            echo "Updated vault-smith dependency to ${VERSION#v}"
+            grep -A2 "vault-smith" temp/Storage-Conductor/pom.xml || echo "Warning: Could not verify update"
+          fi
       
       - name: Build all modules
         run: |

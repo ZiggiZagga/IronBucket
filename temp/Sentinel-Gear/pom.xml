@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ironbucket</groupId>
 	<artifactId>sentinelgear</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>4.0.1</version>
 	<name>sentinel-gear</name>
 	<description>Spring Cloud Gateway–based service hardened for zero-trust environments. Acting as the secure entrypoint to the IronBucket ecosystem, it enforces identity-aware policies, integrates with GitOps workflows, and transforms your object access layer into a governed, auditable flow.</description>
 	<url>https://github.com/ZiggiZagga/Sentinel-Gear</url>

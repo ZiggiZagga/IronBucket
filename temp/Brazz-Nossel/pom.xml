@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ironbucket</groupId>
 	<artifactId>brazznossel</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>4.0.1</version>
 	<name>brazz-nossel</name>
 	<description>channels object storage traffic with identity awareness, policy-governed enforcement, and full audit traceability—one stream at a time</description>
 	<url/>

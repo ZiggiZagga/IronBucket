@@ -13,7 +13,7 @@
 
   <groupId>com.ironbucket</groupId>
   <artifactId>vault-smith</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>4.0.1</version>
   <packaging>jar</packaging>
 
   <name>Vault-Smith</name>

@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.ironbucket</groupId>
 	<artifactId>claimspindel</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>4.0.1</version>
 	<name>Claimspindel</name>
 	<description>a smart, claims-aware gateway that inspects identity tokens at the edge to route, protect, and enrich incoming requests—driven entirely by the user’s JWT.</description>
 	<url/>

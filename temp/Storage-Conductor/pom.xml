@@ -13,7 +13,7 @@
 
   <groupId>com.ironbucket</groupId>
   <artifactId>storage-conductor</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>4.0.1</version>
   <packaging>jar</packaging>
 
   <name>Storage-Conductor</name>
@@ -30,7 +30,7 @@
     <dependency>
       <groupId>com.ironbucket</groupId>
       <artifactId>vault-smith</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>4.0.1</version>
     </dependency>
 
     <!-- JClouds for cloud-agnostic S3 access -->
