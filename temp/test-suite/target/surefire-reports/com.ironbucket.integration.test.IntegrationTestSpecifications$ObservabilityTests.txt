@@ -1,0 +1,22 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.108 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testDistributedTracing  Time elapsed: 0.024 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Distributed tracing missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testDistributedTracing(IntegrationTestSpecifications.java:226)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testPrometheusMetrics  Time elapsed: 0.023 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Prometheus metrics missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testPrometheusMetrics(IntegrationTestSpecifications.java:218)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testHealthCheck  Time elapsed: 0.024 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Health check test missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testHealthCheck(IntegrationTestSpecifications.java:210)
+

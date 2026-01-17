@@ -251,11 +251,68 @@ E2E_RESULT=$?
 echo ""
 
 # ============================================================================
-# PHASE 4: VERIFY JWT AUTHENTICATION ENFORCEMENT
+# PHASE 4: RUN INTEGRATION TEST SUITE (NOT IMPLEMENTED - RED REPORT)
 # ============================================================================
 
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Phase 4: JWT Authentication Enforcement${NC}"
+echo -e "${BLUE}  Phase 4: Integration Test Suite (Specification Tests)${NC}"
+echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+echo ""
+
+echo -e "${CYAN}Running IronBucket Integration Test Specifications...${NC}"
+echo -e "${YELLOW}⚠️  These tests INTENTIONALLY FAIL to show missing implementation${NC}"
+echo ""
+
+cd /workspaces/IronBucket/temp/test-suite
+
+# Run Maven tests with color output
+mvn test 2>&1 | tee /tmp/test-suite-output.log
+
+TEST_SUITE_RESULT=${PIPESTATUS[0]}
+
+echo ""
+echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+
+# Extract test statistics
+TESTS_RUN=$(grep -E "Tests run:" /tmp/test-suite-output.log | tail -1 | grep -oP '\d+' | head -1 || echo "0")
+TESTS_FAILED=$(grep -E "Failures:" /tmp/test-suite-output.log | tail -1 | grep -oP 'Failures: \K\d+' || echo "0")
+
+# Extract test statistics
+TESTS_RUN=$(grep -E "Tests run:" /tmp/test-suite-output.log | tail -1 | grep -oP '\d+' | head -1 || echo "0")
+TESTS_FAILED=$(grep -E "Failures:" /tmp/test-suite-output.log | tail -1 | grep -oP 'Failures: \K\d+' || echo "0")
+
+echo ""
+if [ "$TESTS_RUN" -gt 0 ]; then
+    echo -e "${RED}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${RED}║           ⚠️  INTEGRATION TEST REPORT (RED)  ⚠️               ║${NC}"
+    echo -e "${RED}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${RED}❌ Integration Tests Run: ${TESTS_RUN}${NC}"
+    echo -e "${RED}❌ Tests Failed: ${TESTS_FAILED}${NC}"
+    echo -e "${RED}❌ Status: NOT IMPLEMENTED${NC}"
+    echo ""
+    echo -e "${YELLOW}Missing Features (from integration tests):${NC}"
+    echo ""
+    
+    # Parse and display failed tests as missing features
+    grep "ERROR.*IntegrationTestSpecifications" /tmp/test-suite-output.log | grep -oP 'IntegrationTestSpecifications\$\K.*' | sed 's/\.test/ - /' | sed 's/([^)]*).*$//' | sort -u | while read feature; do
+        echo "  ❌ $feature"
+    done
+    
+    echo ""
+    echo -e "${CYAN}Next Steps: Implement features and watch tests turn GREEN ✅${NC}"
+else
+    echo -e "${YELLOW}⚠️  No integration tests found or test suite compilation failed${NC}"
+fi
+
+echo ""
+
+# ============================================================================
+# PHASE 5: VERIFY JWT AUTHENTICATION ENFORCEMENT
+# ============================================================================
+
+echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}  Phase 5: JWT Authentication Enforcement${NC}"
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
@@ -290,7 +347,7 @@ echo -e "${BLUE}  FINAL VERIFICATION SUMMARY${NC}"
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-echo "✅ Maven Tests:"
+echo "✅ Maven Unit Tests:"
 echo "   Projects: $PROJECTS_PASSED/6 passed"
 echo "   Total: $TOTAL_TESTS tests executed"
 echo ""
@@ -303,6 +360,17 @@ echo "   PostgreSQL: Connected"
 echo "   MinIO: Connected"
 echo ""
 
+if [ "$TESTS_RUN" -gt 0 ]; then
+    echo -e "${RED}❌ Integration Tests: ${TESTS_FAILED}/${TESTS_RUN} FAILED (NOT IMPLEMENTED)${NC}"
+    echo ""
+    echo -e "${YELLOW}Missing Features:${NC}"
+    grep "ERROR.*IntegrationTestSpecifications" /tmp/test-suite-output.log | grep -oP 'IntegrationTestSpecifications\$\K.*' | sed 's/\.test/ - /' | sed 's/([^)]*).*$//' | sort -u | head -10 | while read feature; do
+        echo "    ❌ $feature"
+    done
+    [ "$TESTS_FAILED" -gt 10 ] && echo "    ... and $((TESTS_FAILED - 10)) more"
+    echo ""
+fi
+
 if [ $E2E_RESULT -eq 0 ]; then
     echo -e "${GREEN}✅ E2E Flow: SUCCESSFUL${NC}"
     echo "   Bucket creation: ✅"
@@ -311,15 +379,18 @@ if [ $E2E_RESULT -eq 0 ]; then
     echo "   Storage verification: ✅"
     echo ""
     
-    echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}  ✅✅✅ IRONBUCKET IS PRODUCTION READY ✅✅✅${NC}"
-    echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  ⚠️  IRONBUCKET STATUS: PARTIALLY READY  ⚠️${NC}"
+    echo -e "${YELLOW}════════════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo "All verification phases completed successfully:"
+    echo "Verification phases completed:"
     echo "  1. ✅ Unit Tests: $TOTAL_TESTS passing"
-    echo "  2. ✅ Services: All 9 containers running"
-    echo "  3. ✅ S3 Operations: Upload/Download/List working"
-    echo "  4. ✅ JWT Enforcement: Authentication required for proxy access"
+    echo "  2. ✅ Services: All containers running healthy"
+    echo "  3. ✅ S3 Operations: Basic upload/download working"
+    echo "  4. ❌ Integration Tests: ${TESTS_FAILED}/${TESTS_RUN} NOT IMPLEMENTED"
+    echo "  5. ⚠️  JWT Enforcement: Basic validation active"
+    echo ""
+    echo -e "${CYAN}Next: Implement missing features tracked by integration tests${NC}"
     echo ""
     
     exit 0

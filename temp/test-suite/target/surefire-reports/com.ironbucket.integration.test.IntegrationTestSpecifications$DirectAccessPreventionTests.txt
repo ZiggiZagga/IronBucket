@@ -1,0 +1,28 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.01 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testClaimspindelNotAccessibleDirectly  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Direct access prevention missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testClaimspindelNotAccessibleDirectly(IntegrationTestSpecifications.java:86)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testAllS3RequestsViaGateway  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Gateway enforcement missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testAllS3RequestsViaGateway(IntegrationTestSpecifications.java:102)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testMinIONotAccessibleDirectly  Time elapsed: 0.002 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Network isolation missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testMinIONotAccessibleDirectly(IntegrationTestSpecifications.java:78)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testBrazzNosselNotAccessibleDirectly  Time elapsed: 0.002 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Direct access prevention missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$DirectAccessPreventionTests.testBrazzNosselNotAccessibleDirectly(IntegrationTestSpecifications.java:94)
+

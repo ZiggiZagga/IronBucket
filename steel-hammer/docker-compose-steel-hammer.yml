@@ -112,9 +112,11 @@ services:
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
       - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_SERVER_ADDRESS=0.0.0.0"
+      - "MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health-check"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -146,6 +148,8 @@ services:
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
       - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus"
+      - "MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
@@ -233,7 +237,7 @@ services:
       - ./tests:/tests
       - /tmp/ironbucket-test:/tmp/ironbucket-test
       - ./test-scripts:/scripts:ro
-      - /workspaces/IronBucket/temp:/workspaces/IronBucket/temp:ro
+      - /workspaces/IronBucket/temp:/workspaces/IronBucket/temp
       - /workspaces/IronBucket/.git:/ironbucket/.git:ro
 
     depends_on:

@@ -1,0 +1,22 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.191 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests.testPolicyEvaluation  Time elapsed: 0.045 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Policy evaluation missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests.testPolicyEvaluation(IntegrationTestSpecifications.java:152)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests.testPolicyFallback  Time elapsed: 0.023 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Policy fallback missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests.testPolicyFallback(IntegrationTestSpecifications.java:160)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests.testPolicyCache  Time elapsed: 0.005 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Policy caching missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$PolicyEvaluationTests.testPolicyCache(IntegrationTestSpecifications.java:168)
+

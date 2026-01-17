@@ -1,0 +1,22 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.009 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests.testAuditQueryAPI  Time elapsed: 0.003 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Audit query API missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests.testAuditQueryAPI(IntegrationTestSpecifications.java:197)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests.testAuditDeniedRequests  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Audit denied requests missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests.testAuditDeniedRequests(IntegrationTestSpecifications.java:189)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests.testAuditLogging  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Audit logging missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$AuditLoggingTests.testAuditLogging(IntegrationTestSpecifications.java:181)
+

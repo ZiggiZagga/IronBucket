@@ -1,0 +1,22 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.121 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests.testCompleteDownloadFlow  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - E2E download flow missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests.testCompleteDownloadFlow(IntegrationTestSpecifications.java:284)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests.testCompleteUploadFlow  Time elapsed: 0.025 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - E2E upload flow missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests.testCompleteUploadFlow(IntegrationTestSpecifications.java:276)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests.testPolicyUpdateFlow  Time elapsed: 0.019 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Policy update flow missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$EndToEndFlowTests.testPolicyUpdateFlow(IntegrationTestSpecifications.java:292)
+

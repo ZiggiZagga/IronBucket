@@ -1,0 +1,28 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.032 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testClaimNormalization  Time elapsed: 0.005 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Claim normalization missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testClaimNormalization(IntegrationTestSpecifications.java:57)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testJWTRequired  Time elapsed: 0.008 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - JWT validation missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testJWTRequired(IntegrationTestSpecifications.java:41)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testJWTValidation  Time elapsed: 0.004 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - JWT validation missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testJWTValidation(IntegrationTestSpecifications.java:49)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testTenantIsolation  Time elapsed: 0.004 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Tenant isolation missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$IdentityAndSecurityTests.testTenantIsolation(IntegrationTestSpecifications.java:65)
+

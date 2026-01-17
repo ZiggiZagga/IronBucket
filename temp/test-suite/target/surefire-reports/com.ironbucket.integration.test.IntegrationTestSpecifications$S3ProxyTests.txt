@@ -1,0 +1,28 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.01 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testPutObject  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 PutObject missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testPutObject(IntegrationTestSpecifications.java:123)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testDeleteObject  Time elapsed: 0.002 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 DeleteObject missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testDeleteObject(IntegrationTestSpecifications.java:139)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testGetObject  Time elapsed: 0.002 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 GetObject missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testGetObject(IntegrationTestSpecifications.java:131)
+
+com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testCreateBucket  Time elapsed: 0.001 s  <<< FAILURE!
+org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 CreateBucket missing
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testCreateBucket(IntegrationTestSpecifications.java:115)
+
