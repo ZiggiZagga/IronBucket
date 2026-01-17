@@ -172,13 +172,16 @@ public class S3CompatibilityTest {
             String uploadId = backend.initiateMultipartUpload(bucketName, objectKey);
             assertNotNull(uploadId);
             
-            // Upload parts
-            byte[] part1Data = "Part 1".getBytes();
+            // Upload parts - each part must be at least 5MB (except the last)
+            // Create 5MB + 1MB parts to meet S3 minimum requirements
+            byte[] part1Data = new byte[5 * 1024 * 1024]; // 5 MB
+            java.util.Arrays.fill(part1Data, (byte) 'A');
             String part1Etag = backend.uploadPart(bucketName, objectKey, uploadId, 1, 
                     new ByteArrayInputStream(part1Data), part1Data.length);
             assertNotNull(part1Etag);
             
-            byte[] part2Data = "Part 2".getBytes();
+            byte[] part2Data = new byte[1 * 1024 * 1024]; // 1 MB (last part can be smaller)
+            java.util.Arrays.fill(part2Data, (byte) 'B');
             String part2Etag = backend.uploadPart(bucketName, objectKey, uploadId, 2, 
                     new ByteArrayInputStream(part2Data), part2Data.length);
             assertNotNull(part2Etag);
