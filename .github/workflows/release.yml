@@ -156,7 +156,6 @@ jobs:
             cd temp/$module
             mvn clean package -DskipTests -B
             cd ../..
-            cd ../..
           done
       
       - name: Collect release artifacts
