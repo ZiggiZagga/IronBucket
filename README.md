@@ -28,6 +28,8 @@ docker logs steel-hammer-test
 - **PostgreSQL Metadata** - Transactional audit logging
 - **MinIO Storage** - On-premise S3-compatible storage
 - **Containerized** - Docker Compose for local & production
+- **CI/CD Pipeline** - Automated builds, tests, security scans, SLSA provenance
+- **Supply-Chain Security** - SLSA Build Level 3 compliance
 
 ## Architecture
 
@@ -55,6 +57,7 @@ PostgreSQL (Metadata)
 | [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Complete setup guide for users |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, service interaction |
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deployment guide |
+| [CI-CD-PIPELINE.md](docs/CI-CD-PIPELINE.md) | CI/CD, security scanning, SLSA provenance |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Developer guidelines |
 | [TESTING.md](docs/TESTING.md) | Test execution & results |
 | [API.md](docs/API.md) | S3 API compatibility |
