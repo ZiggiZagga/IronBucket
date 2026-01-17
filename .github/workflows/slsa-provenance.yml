@@ -79,6 +79,7 @@ jobs:
       base64-subjects: "${{ needs.build.outputs.digests }}"
       upload-assets: true
       provenance-name: ironbucket-provenance.intoto.jsonl
+      private-repository: true
 
   verify:
     name: Verify SLSA Provenance
