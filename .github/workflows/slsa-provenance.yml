@@ -54,9 +54,9 @@ jobs:
           cd artifacts
           sha256sum * > checksums.txt
           cat checksums.txt
-          # Create base64 encoded subjects for SLSA (format: "filename:sha256")
-          # Each line: "filename:hexdigest", newline separated, then base64
-          digests=$(cat checksums.txt | awk '{print $2 ":" $1}' | base64 -w0)
+          # SLSA generator expects format: "sha256:HASH filename" (one per line, base64 encoded)
+          # sha256sum output is "HASH filename", so we reformat
+          digests=$(cat checksums.txt | awk '{print "sha256:" $1 " " $2}' | base64 -w0)
           echo "digests=$digests" >> $GITHUB_OUTPUT
       
       - name: Upload artifacts
