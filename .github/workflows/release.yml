@@ -101,11 +101,12 @@ jobs:
       - name: Verify test results
         run: |
           echo "✅ All 231 tests must pass for release"
-          # Fail if any test failed
-          if find . -name "TEST-*.xml" -exec grep -l 'failures="[1-9]' {} \;; then
-            echo "❌ Tests failed"
+          # Check for any test failures or errors (must be exactly 0)
+          if find temp -name "TEST-*.xml" -exec grep -E 'failures="[^0"]|errors="[^0"]' {} +; then
+            echo "❌ Tests failed or had errors"
             exit 1
           fi
+          echo "✅ All tests passed successfully"
 
   build:
     name: Build Release Artifacts
