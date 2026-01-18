@@ -1,0 +1,208 @@
+[WARNING] Unable to find the root directory. Create a .mvn directory in the root directory or add the root="true" attribute on the root project's model to identify it.
+[INFO] Scanning for projects...
+[INFO] Loaded 21943 auto-discovered prefixes for remote repository central (prefixes-central.txt)
+[INFO] 
+[INFO] -------------------------< com.ironbucket:sentinelgear >-------------------------
+[INFO] Building sentinel-gear 4.0.1
+[INFO]   from pom.xml
+[INFO] -------------------------------------[ jar ]-------------------------------------
+[INFO] Loaded 74 auto-discovered prefixes for remote repository apache.snapshots (prefixes-apache.snapshots-c1d4c55f9308e5ac18a4069bed41dca64d85c515.txt)
+[WARNING] Could not transfer metadata /.meta/prefixes.txt from/to plexus.snapshots-9dedea94451709299d055319c137abeb30aacdef (https://oss.sonatype.org/content/repositories/plexus-snapshots): HTTP Status: 503
+[WARNING] Could not transfer metadata /.meta/prefixes.txt from/to shibboleth-repo-b15964db2009ee6a55f6d311cdd7a63fd4592459 (https://build.shibboleth.net/nexus/content/repositories/releases/): Checksum validation failed, no checksums available
+[INFO] Loaded 21943 auto-discovered prefixes for remote repository maven_central (prefixes-maven_central-6796a36b52d2535b4566f823cedfe43d83a8fd07.txt)
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ sentinelgear ---
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sentinelgear ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ sentinelgear ---
+[INFO] skip non existing resourceDirectory /workspaces/IronBucket/temp/Sentinel-Gear/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sentinelgear ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ sentinelgear ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running IronBucket Production Readiness Roadmap
+[INFO] [stdout] ═══════════════════════════════════════════════════════════
+[INFO] [stdout]  IronBucket Production Readiness Test Suite
+[INFO] [stdout]  Status: RED (Tests expected to FAIL initially)
+[INFO] [stdout]  Current Production Readiness: 45%
+[INFO] [stdout] ═══════════════════════════════════════════════════════════
+[INFO] Running P2 MEDIUM - Integration Requirements
+[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.093 s <<< FAILURE! -- in P2 MEDIUM - Integration Requirements
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testPolicyEnforcementE2ETestExists -- Time elapsed: 0.040 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: MEDIUM: Policy enforcement E2E test should exist at: steel-hammer/tests/test-policy-enforcement-e2e.sh ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$MediumPriorityIntegration.testPolicyEnforcementE2ETestExists(ProductionReadinessTest.java:327)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testErrorHandlingE2ETestExists -- Time elapsed: 0.011 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: MEDIUM: Error handling E2E test should exist to validate 401, 403, 404, 500 responses ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$MediumPriorityIntegration.testErrorHandlingE2ETestExists(ProductionReadinessTest.java:337)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testPactumScrollModuleExists -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: MEDIUM: Pactum-Scroll module should exist with shared contracts/DTOs ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$MediumPriorityIntegration.testPactumScrollModuleExists(ProductionReadinessTest.java:347)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testPerformanceTestsExist -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: MEDIUM: Performance tests should exist to validate 1000 req/s throughput, p99 < 500ms latency ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$MediumPriorityIntegration.testPerformanceTestsExist(ProductionReadinessTest.java:372)
+
+[INFO] Running Production Readiness Summary
+[INFO] [stdout] 
+[INFO] [stdout] ═══════════════════════════════════════════════════════════
+[INFO] [stdout]  Production Readiness Score: 0.0%
+[INFO] [stdout] ═══════════════════════════════════════════════════════════
+[INFO] [stdout]  P0 CRITICAL: 0/4 (0.0%)
+[INFO] [stdout]  P1 HIGH:     0/5 (0.0%)
+[INFO] [stdout]  P2 MEDIUM:   0/4 (0.0%)
+[INFO] [stdout] ═══════════════════════════════════════════════════════════
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.041 s <<< FAILURE! -- in Production Readiness Summary
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testOverallProductionReadiness -- Time elapsed: 0.039 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: CRITICAL: Production readiness is 0.0%, must be >= 80% for production deployment! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$ProductionReadinessSummary.testOverallProductionReadiness(ProductionReadinessTest.java:412)
+
+[INFO] Running P0 CRITICAL - Security Requirements
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.036 s <<< FAILURE! -- in P0 CRITICAL - Security Requirements
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testNetworkPolicyFilesExist -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: CRITICAL: NetworkPolicy file must exist at docs/k8s-network-policies.yaml ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$CriticalSecurityRequirements.testNetworkPolicyFilesExist(ProductionReadinessTest.java:53)
+
+[INFO] Running P1 HIGH - Observability Requirements
+[ERROR] Tests run: 5, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.036 s <<< FAILURE! -- in P1 HIGH - Observability Requirements
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testGrafanaDashboardsExist -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: HIGH: Grafana dashboards directory must exist at: steel-hammer/grafana/dashboards/ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$HighPriorityObservability.testGrafanaDashboardsExist(ProductionReadinessTest.java:241)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testAlertRulesExist -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: HIGH: Alert rules must be configured. Create alert-rules.yml with: HighErrorRate, ServiceDown, SecurityBreach alerts ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$HighPriorityObservability.testAlertRulesExist(ProductionReadinessTest.java:264)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testLGTMStackExists -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: HIGH: LGTM stack Docker Compose must exist ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$HighPriorityObservability.testLGTMStackExists(ProductionReadinessTest.java:220)
+
+[INFO] Running P1 HIGH - Test Quality Requirements
+[ERROR] Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.040 s <<< FAILURE! -- in P1 HIGH - Test Quality Requirements
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testScriptsUseBrazzNosselGateway -- Time elapsed: 0.012 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Could not scan test scripts: /workspaces/IronBucket/temp/Sentinel-Gear/steel-hammer
+	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
+	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
+	at com.ironbucket.roadmap.ProductionReadinessTest$HighPriorityTestQuality.testScriptsUseBrazzNosselGateway(ProductionReadinessTest.java:164)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testMultiTenantIsolationTestExists -- Time elapsed: 0.005 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: HIGH: Multi-tenant isolation E2E test must exist at: steel-hammer/tests/test-tenant-isolation.sh. Create test that verifies Alice cannot access Bob's buckets! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$HighPriorityTestQuality.testMultiTenantIsolationTestExists(ProductionReadinessTest.java:194)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testJWTValidationTestsExist -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: HIGH: JWT validation tests must exist ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$HighPriorityTestQuality.testJWTValidationTestsExist(ProductionReadinessTest.java:174)
+
+[ERROR] com.ironbucket.roadmap.ProductionReadinessTest.testAuditTrailE2ETestExists -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: HIGH: Complete audit trail E2E test must exist at: steel-hammer/tests/test-audit-trail-e2e.sh. Create test that validates: auth events, policy decisions, S3 operations are ALL audited! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.ProductionReadinessTest$HighPriorityTestQuality.testAuditTrailE2ETestExists(ProductionReadinessTest.java:205)
+
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.335 s -- in IronBucket Production Readiness Roadmap
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   ProductionReadinessTest.testAlertRulesExist HIGH: Alert rules must be configured. Create alert-rules.yml with: HighErrorRate, ServiceDown, SecurityBreach alerts ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testAuditTrailE2ETestExists HIGH: Complete audit trail E2E test must exist at: steel-hammer/tests/test-audit-trail-e2e.sh. Create test that validates: auth events, policy decisions, S3 operations are ALL audited! ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testErrorHandlingE2ETestExists MEDIUM: Error handling E2E test should exist to validate 401, 403, 404, 500 responses ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testGrafanaDashboardsExist HIGH: Grafana dashboards directory must exist at: steel-hammer/grafana/dashboards/ ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testJWTValidationTestsExist HIGH: JWT validation tests must exist ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testLGTMStackExists HIGH: LGTM stack Docker Compose must exist ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testMultiTenantIsolationTestExists HIGH: Multi-tenant isolation E2E test must exist at: steel-hammer/tests/test-tenant-isolation.sh. Create test that verifies Alice cannot access Bob's buckets! ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testNetworkPolicyFilesExist CRITICAL: NetworkPolicy file must exist at docs/k8s-network-policies.yaml ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testOverallProductionReadiness CRITICAL: Production readiness is 0.0%, must be >= 80% for production deployment! ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testPactumScrollModuleExists MEDIUM: Pactum-Scroll module should exist with shared contracts/DTOs ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testPerformanceTestsExist MEDIUM: Performance tests should exist to validate 1000 req/s throughput, p99 < 500ms latency ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testPolicyEnforcementE2ETestExists MEDIUM: Policy enforcement E2E test should exist at: steel-hammer/tests/test-policy-enforcement-e2e.sh ==> expected: <true> but was: <false>
+[ERROR]   ProductionReadinessTest.testScriptsUseBrazzNosselGateway Could not scan test scripts: /workspaces/IronBucket/temp/Sentinel-Gear/steel-hammer
+[INFO] 
+[ERROR] Tests run: 18, Failures: 13, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ---------------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ---------------------------------------------------------------------------------
+[INFO] Total time:  7.718 s
+[INFO] Finished at: 2026-01-18T11:32:33Z
+[INFO] ---------------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project sentinelgear: There are test failures.
+[ERROR] 
+[ERROR] See /workspaces/IronBucket/temp/Sentinel-Gear/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the '-e' switch
+[ERROR] Re-run Maven using the '-X' switch to enable verbose output
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

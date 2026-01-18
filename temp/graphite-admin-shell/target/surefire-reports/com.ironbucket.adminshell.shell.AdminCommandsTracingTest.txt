@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.ironbucket.adminshell.shell.AdminCommandsTracingTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in com.ironbucket.adminshell.shell.AdminCommandsTracingTest
