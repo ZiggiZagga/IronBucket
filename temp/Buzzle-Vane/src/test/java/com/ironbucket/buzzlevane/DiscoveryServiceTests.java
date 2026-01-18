@@ -3,318 +3,115 @@ package com.ironbucket.buzzlevane;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Buzzle-Vane Discovery Service Tests
  * 
- * Comprehensive test suite for service registration, discovery,
- * health checking, and service mesh integration.
+ * Lightweight test suite for service registry validation.
+ * Uses simple in-memory service registry for testing discovery patterns.
  */
 @DisplayName("Discovery Service Tests")
 public class DiscoveryServiceTests {
     
+    private Map<String, ServiceInstance> serviceRegistry;
+    
     @BeforeEach
     public void setup() {
-        // Initialize discovery service
+        serviceRegistry = new HashMap<>();
     }
     
-    @Nested
-    @DisplayName("Service Registration")
-    class ServiceRegistrationTests {
+    @Test
+    @DisplayName("Service registers successfully")
+    public void testServiceRegistration() {
+        ServiceInstance service = new ServiceInstance("payment-service", "10.0.1.5", 8080);
+        serviceRegistry.put(service.getName(), service);
         
-        @Test
-        @DisplayName("Service registers with discovery")
-        public void testServiceRegistration() {
-            // Test service registration
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Service deregistration")
-        public void testServiceDeregistration() {
-            // Test service deregistration
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Service update registration")
-        public void testServiceUpdate() {
-            // Test service update
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Service registration with metadata")
-        public void testServiceRegistrationWithMetadata() {
-            // Test metadata handling
-            assertTrue(true);
-        }
+        assertTrue(serviceRegistry.containsKey("payment-service"));
+        assertEquals("10.0.1.5", serviceRegistry.get("payment-service").getHost());
     }
     
-    @Nested
-    @DisplayName("Service Discovery")
-    class ServiceDiscoveryTests {
+    @Test
+    @DisplayName("Service deregistration removes entry")
+    public void testServiceDeregistration() {
+        ServiceInstance service = new ServiceInstance("order-service", "10.0.1.6", 8080);
+        serviceRegistry.put(service.getName(), service);
         
-        @Test
-        @DisplayName("Discover service by name")
-        public void testDiscoverByName() {
-            // Test discovery by service name
-            assertTrue(true);
-        }
+        serviceRegistry.remove("order-service");
         
-        @Test
-        @DisplayName("Discover all services")
-        public void testDiscoverAll() {
-            // Test discovering all services
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Discover service with filter")
-        public void testDiscoverWithFilter() {
-            // Test filtered discovery
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Discover non-existent service")
-        public void testDiscoverNonExistent() {
-            // Test handling missing service
-            assertTrue(true);
-        }
+        assertFalse(serviceRegistry.containsKey("order-service"));
     }
     
-    @Nested
-    @DisplayName("Health Checks")
-    class HealthCheckTests {
+    @Test
+    @DisplayName("Service discovery by name")
+    public void testDiscoverByName() {
+        ServiceInstance api = new ServiceInstance("api-service", "10.0.1.7", 8080);
+        serviceRegistry.put(api.getName(), api);
         
-        @Test
-        @DisplayName("Health check passes for healthy service")
-        public void testHealthCheckPass() {
-            // Test passing health check
-            assertTrue(true);
-        }
+        ServiceInstance found = serviceRegistry.get("api-service");
         
-        @Test
-        @DisplayName("Health check fails for unhealthy service")
-        public void testHealthCheckFail() {
-            // Test failing health check
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Health check timeout")
-        public void testHealthCheckTimeout() {
-            // Test timeout handling
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Health check interval")
-        public void testHealthCheckInterval() {
-            // Test health check frequency
-            assertTrue(true);
-        }
+        assertNotNull(found);
+        assertEquals("api-service", found.getName());
+        assertEquals(8080, found.getPort());
     }
     
-    @Nested
-    @DisplayName("Service Mesh Integration")
-    class ServiceMeshIntegrationTests {
+    @Test
+    @DisplayName("Discover non-existent service returns null")
+    public void testDiscoverNonExistent() {
+        ServiceInstance result = serviceRegistry.get("missing-service");
         
-        @Test
-        @DisplayName("Service mesh aware discovery")
-        public void testMeshAwareDiscovery() {
-            // Test mesh integration
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Service subset discovery")
-        public void testSubsetDiscovery() {
-            // Test discovering service subsets
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Service zone-aware discovery")
-        public void testZoneAwareDiscovery() {
-            // Test zone-based discovery
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Service version-aware discovery")
-        public void testVersionAwareDiscovery() {
-            // Test version-based discovery
-            assertTrue(true);
-        }
+        assertNull(result);
     }
     
-    @Nested
-    @DisplayName("Load Balancing")
-    class LoadBalancingTests {
+    @Test
+    @DisplayName("Service registry can hold multiple services")
+    public void testMultipleServices() {
+        serviceRegistry.put("service-a", new ServiceInstance("service-a", "10.0.1.1", 8080));
+        serviceRegistry.put("service-b", new ServiceInstance("service-b", "10.0.1.2", 8081));
+        serviceRegistry.put("service-c", new ServiceInstance("service-c", "10.0.1.3", 8082));
         
-        @Test
-        @DisplayName("Round-robin load balancing")
-        public void testRoundRobinLoadBalancing() {
-            // Test round-robin algorithm
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Least connections load balancing")
-        public void testLeastConnectionsLoadBalancing() {
-            // Test least connections algorithm
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Random load balancing")
-        public void testRandomLoadBalancing() {
-            // Test random algorithm
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Weight-based load balancing")
-        public void testWeightBasedLoadBalancing() {
-            // Test weight-based algorithm
-            assertTrue(true);
-        }
+        assertEquals(3, serviceRegistry.size());
+        assertTrue(serviceRegistry.containsKey("service-b"));
     }
     
-    @Nested
-    @DisplayName("Circuit Breaking")
-    class CircuitBreakerTests {
+    @Test
+    @DisplayName("Service update replaces existing entry")
+    public void testServiceUpdate() {
+        serviceRegistry.put("api", new ServiceInstance("api", "10.0.1.10", 8080));
         
-        @Test
-        @DisplayName("Circuit breaker opens on failure threshold")
-        public void testCircuitBreakerOpen() {
-            // Test circuit breaker opening
-            assertTrue(true);
-        }
+        ServiceInstance updated = new ServiceInstance("api", "10.0.1.20", 9090);
+        serviceRegistry.put(updated.getName(), updated);
         
-        @Test
-        @DisplayName("Circuit breaker half-open state")
-        public void testCircuitBreakerHalfOpen() {
-            // Test half-open state
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Circuit breaker closes on recovery")
-        public void testCircuitBreakerClose() {
-            // Test recovery and closing
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Circuit breaker failure detection")
-        public void testCircuitBreakerFailureDetection() {
-            // Test failure detection
-            assertTrue(true);
-        }
+        assertEquals("10.0.1.20", serviceRegistry.get("api").getHost());
+        assertEquals(9090, serviceRegistry.get("api").getPort());
     }
     
-    @Nested
-    @DisplayName("Multi-Tenant Support")
-    class MultiTenantTests {
+    // Simple service instance model for testing
+    private static class ServiceInstance {
+        private final String name;
+        private final String host;
+        private final int port;
         
-        @Test
-        @DisplayName("Service discovery for single tenant")
-        public void testSingleTenantDiscovery() {
-            // Test tenant-scoped discovery
-            assertTrue(true);
+        public ServiceInstance(String name, String host, int port) {
+            this.name = name;
+            this.host = host;
+            this.port = port;
         }
         
-        @Test
-        @DisplayName("Service isolation between tenants")
-        public void testTenantIsolation() {
-            // Test tenant isolation
-            assertTrue(true);
+        public String getName() {
+            return name;
         }
         
-        @Test
-        @DisplayName("Cross-tenant shared services")
-        public void testCrossTenantSharedServices() {
-            // Test shared service access
-            assertTrue(true);
+        public String getHost() {
+            return host;
         }
         
-        @Test
-        @DisplayName("Tenant-aware routing")
-        public void testTenantAwareRouting() {
-            // Test tenant-based routing
-            assertTrue(true);
-        }
-    }
-    
-    @Nested
-    @DisplayName("Metrics & Monitoring")
-    class MetricsTests {
-        
-        @Test
-        @DisplayName("Record service discovery metrics")
-        public void testDiscoveryMetrics() {
-            // Test metric recording
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Record service health metrics")
-        public void testHealthMetrics() {
-            // Test health metrics
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Record load balancing metrics")
-        public void testLoadBalancingMetrics() {
-            // Test LB metrics
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Record circuit breaker metrics")
-        public void testCircuitBreakerMetrics() {
-            // Test CB metrics
-            assertTrue(true);
-        }
-    }
-    
-    @Nested
-    @DisplayName("Error Handling")
-    class ErrorHandlingTests {
-        
-        @Test
-        @DisplayName("Handle registration failures")
-        public void testRegistrationFailure() {
-            // Test error handling
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Handle discovery service unavailable")
-        public void testDiscoveryUnavailable() {
-            // Test when service is unavailable
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Handle health check failures")
-        public void testHealthCheckFailureHandling() {
-            // Test error handling
-            assertTrue(true);
-        }
-        
-        @Test
-        @DisplayName("Handle communication timeouts")
-        public void testCommunicationTimeout() {
-            // Test timeout handling
-            assertTrue(true);
+        public int getPort() {
+            return port;
         }
     }
 }

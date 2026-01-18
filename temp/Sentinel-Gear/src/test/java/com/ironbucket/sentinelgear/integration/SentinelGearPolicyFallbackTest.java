@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * ✓ Implement code to make test pass
  * ✓ Verify test passes
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("Issue #49: Policy Engine Fallback & Retry")
 class SentinelGearPolicyFallbackTest {
 

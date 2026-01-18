@@ -1,19 +1,25 @@
 package com.ironbucket.buzzlevane.identity;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Buzzle-Vane Service Mesh Identity Tests
@@ -24,10 +30,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BuzzleVaneIdentityTests {
     
     private Key signingKey;
+    private Key invalidSigningKey;
     
     @BeforeEach
     public void setup() {
         signingKey = Keys.hmacShaKeyFor("this-is-a-256-bit-secret-key-for-testing-purposes-only-123456".getBytes(StandardCharsets.UTF_8));
+        invalidSigningKey = Keys.hmacShaKeyFor("this-is-a-different-256-bit-secret-key-for-invalid-signatures".getBytes(StandardCharsets.UTF_8));
     }
     
     private String createTestJWT(Map<String, Object> claims) {
@@ -36,6 +44,16 @@ public class BuzzleVaneIdentityTests {
             .setClaims(claims)
             .setIssuedAt(new Date(now))
             .setExpiration(new Date(now + 3600000))
+            .signWith(signingKey, SignatureAlgorithm.HS256)
+            .compact();
+    }
+    
+    private String createExpiredJWT(Map<String, Object> claims) {
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+            .setClaims(claims)
+            .setIssuedAt(new Date(now - 7200000))
+            .setExpiration(new Date(now - 3600000))
             .signWith(signingKey, SignatureAlgorithm.HS256)
             .compact();
     }
@@ -50,6 +68,14 @@ public class BuzzleVaneIdentityTests {
         return claims;
     }
     
+    private Claims parseToken(String token, Key key) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+    
     @Nested
     @DisplayName("Service-to-Service Authentication")
     class ServiceAuthenticationTests {
@@ -61,7 +87,11 @@ public class BuzzleVaneIdentityTests {
             claims.put("sub", "payment-service");
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("payment-service", parsed.getSubject());
+            assertEquals("service-mesh", parsed.getAudience());
+            assertEquals("https://example.com", parsed.getIssuer());
+            assertTrue(parsed.getExpiration().after(new Date()));
         }
         
         @Test
@@ -72,7 +102,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("isServiceAccount", true);
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("order-service", parsed.getSubject());
+            assertTrue(parsed.get("isServiceAccount", Boolean.class));
         }
         
         @Test
@@ -85,7 +117,28 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("service"));
+            assertTrue(roles.contains("api"));
+        }
+        
+        @Test
+        @DisplayName("Expired JWT is rejected")
+        public void testExpiredJWTRejected() {
+            Map<String, Object> claims = createValidClaims();
+            String token = createExpiredJWT(claims);
+            
+            assertThrows(ExpiredJwtException.class, () -> parseToken(token, signingKey));
+        }
+        
+        @Test
+        @DisplayName("Invalid signature is rejected")
+        public void testInvalidSignatureRejected() {
+            Map<String, Object> claims = createValidClaims();
+            String token = createTestJWT(claims);
+            
+            assertThrows(JwtException.class, () -> parseToken(token, invalidSigningKey));
         }
     }
     
@@ -103,7 +156,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("mesh-router"));
         }
         
         @Test
@@ -116,7 +171,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("mesh-admin"));
         }
         
         @Test
@@ -127,7 +184,11 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:allowed_targets", Arrays.asList("service-a", "service-b"));
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> allowed = (List<String>) parsed.get("mesh:allowed_targets", List.class);
+            assertEquals(2, allowed.size());
+            assertTrue(allowed.contains("service-a"));
+            assertTrue(allowed.contains("service-b"));
         }
     }
     
@@ -142,7 +203,8 @@ public class BuzzleVaneIdentityTests {
             claims.put("tenant", "company-a");
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-a", parsed.get("tenant", String.class));
         }
         
         @Test
@@ -153,7 +215,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("sub", "tenant-service");
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-x", parsed.get("tenant", String.class));
+            assertEquals("tenant-service", parsed.getSubject());
         }
         
         @Test
@@ -164,7 +228,8 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:shared_service", true);
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertTrue(parsed.get("mesh:shared_service", Boolean.class));
         }
     }
     
@@ -182,7 +247,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("health-checker"));
         }
         
         @Test
@@ -195,7 +262,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("circuit-breaker"));
         }
         
         @Test
@@ -208,7 +277,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("metrics-reader"));
         }
     }
     
@@ -226,7 +297,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("load-balancer"));
         }
         
         @Test
@@ -237,7 +310,8 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:subset_routing", true);
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertTrue(parsed.get("mesh:subset_routing", Boolean.class));
         }
         
         @Test
@@ -248,7 +322,8 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:traffic_splitting", true);
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertTrue(parsed.get("mesh:traffic_splitting", Boolean.class));
         }
     }
     
@@ -264,7 +339,8 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:service_name", "api-v1");
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("api-v1", parsed.get("mesh:service_name", String.class));
         }
         
         @Test
@@ -275,7 +351,8 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:version", "v2");
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("v2", parsed.get("mesh:version", String.class));
         }
         
         @Test
@@ -286,7 +363,8 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:zone", "us-east-1");
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("us-east-1", parsed.get("mesh:zone", String.class));
         }
     }
     
@@ -303,7 +381,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:service_name", "order-svc");
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-a", parsed.get("tenant", String.class));
+            assertEquals("order-svc", parsed.get("mesh:service_name", String.class));
         }
         
         @Test
@@ -316,7 +396,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.containsAll(Arrays.asList("load-balancer", "mesh-router")));
         }
         
         @Test
@@ -328,7 +410,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:circuit_breaker_threshold", 50);
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertTrue(parsed.get("mesh:circuit_breaker_enabled", Boolean.class));
+            assertEquals(50, parsed.get("mesh:circuit_breaker_threshold", Integer.class));
         }
         
         @Test
@@ -340,7 +424,9 @@ public class BuzzleVaneIdentityTests {
             claims.put("mesh:max_retries", 3);
             String token = createTestJWT(claims);
             
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertTrue(parsed.get("mesh:retry_enabled", Boolean.class));
+            assertEquals(3, parsed.get("mesh:max_retries", Integer.class));
         }
     }
 }

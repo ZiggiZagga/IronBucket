@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * ✓ Implement code to make test pass
  * ✓ Verify test passes
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("Issue #47: Structured Audit Logging")
 class SentinelGearAuditLoggingTest {
 

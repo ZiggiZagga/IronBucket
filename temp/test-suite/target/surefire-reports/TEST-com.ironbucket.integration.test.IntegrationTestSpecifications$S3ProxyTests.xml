@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.01" tests="4" errors="0" skipped="0" failures="4">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.087" tests="4" errors="0" skipped="0" failures="4">
   <properties>
     <property name="java.specification.version" value="25"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -12,7 +12,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="/opt/java/openjdk/lib"/>
-    <property name="sun.java.command" value="/workspaces/IronBucket/temp/test-suite/target/surefire/surefirebooter-20260117113803390_3.jar /workspaces/IronBucket/temp/test-suite/target/surefire 2026-01-17T11-38-02_810-jvmRun1 surefire-20260117113803390_1tmp surefire_0-20260117113803390_2tmp"/>
+    <property name="sun.java.command" value="/workspaces/IronBucket/temp/test-suite/target/surefire/surefirebooter-20260118155100798_3.jar /workspaces/IronBucket/temp/test-suite/target/surefire 2026-01-18T15-51-00_106-jvmRun1 surefire-20260118155100798_1tmp surefire_0-20260118155100798_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/workspaces/IronBucket/temp/test-suite/target/test-classes:/workspaces/IronBucket/temp/test-suite/target/classes:/root/.m2/repository/org/junit/jupiter/junit-jupiter-api/6.0.1/junit-jupiter-api-6.0.1.jar:/root/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/root/.m2/repository/org/junit/platform/junit-platform-commons/6.0.1/junit-platform-commons-6.0.1.jar:/root/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/root/.m2/repository/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar:/root/.m2/repository/org/junit/jupiter/junit-jupiter-engine/6.0.1/junit-jupiter-engine-6.0.1.jar:/root/.m2/repository/org/junit/platform/junit-platform-engine/6.0.1/junit-platform-engine-6.0.1.jar:/root/.m2/repository/org/assertj/assertj-core/3.27.6/assertj-core-3.27.6.jar:/root/.m2/repository/net/bytebuddy/byte-buddy/1.17.8/byte-buddy-1.17.8.jar:/root/.m2/repository/io/rest-assured/rest-assured/5.3.2/rest-assured-5.3.2.jar:/root/.m2/repository/org/apache/groovy/groovy/5.0.3/groovy-5.0.3.jar:/root/.m2/repository/org/apache/groovy/groovy-xml/5.0.3/groovy-xml-5.0.3.jar:/root/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/root/.m2/repository/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar:/root/.m2/repository/commons-logging/commons-logging/1.3.5/commons-logging-1.3.5.jar:/root/.m2/repository/commons-codec/commons-codec/1.19.0/commons-codec-1.19.0.jar:/root/.m2/repository/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar:/root/.m2/repository/org/hamcrest/hamcrest/3.0/hamcrest-3.0.jar:/root/.m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar:/root/.m2/repository/io/rest-assured/json-path/5.3.2/json-path-5.3.2.jar:/root/.m2/repository/org/apache/groovy/groovy-json/5.0.3/groovy-json-5.0.3.jar:/root/.m2/repository/io/rest-assured/rest-assured-common/5.3.2/rest-assured-common-5.3.2.jar:/root/.m2/repository/io/rest-assured/xml-path/5.3.2/xml-path-5.3.2.jar:/root/.m2/repository/org/apache/commons/commons-lang3/3.19.0/commons-lang3-3.19.0.jar:/root/.m2/repository/org/apache/httpcomponents/client5/httpclient5/5.2.1/httpclient5-5.2.1.jar:/root/.m2/repository/org/apache/httpcomponents/core5/httpcore5/5.3.6/httpcore5-5.3.6.jar:/root/.m2/repository/org/apache/httpcomponents/core5/httpcore5-h2/5.3.6/httpcore5-h2-5.3.6.jar:/root/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -27,7 +27,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
-    <property name="surefire.real.class.path" value="/workspaces/IronBucket/temp/test-suite/target/surefire/surefirebooter-20260117113803390_3.jar"/>
+    <property name="surefire.real.class.path" value="/workspaces/IronBucket/temp/test-suite/target/surefire/surefirebooter-20260118155100798_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="25.0.1+8-LTS"/>
     <property name="user.name" value="root"/>
@@ -55,28 +55,28 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="69.0"/>
   </properties>
-  <testcase name="testPutObject" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.001">
+  <testcase name="testPutObject" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.025">
     <failure message="❌ NOT IMPLEMENTED - S3 PutObject missing" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 PutObject missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
 	at com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testPutObject(IntegrationTestSpecifications.java:123)
 ]]></failure>
   </testcase>
-  <testcase name="testDeleteObject" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.002">
+  <testcase name="testDeleteObject" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.016">
     <failure message="❌ NOT IMPLEMENTED - S3 DeleteObject missing" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 DeleteObject missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
 	at com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testDeleteObject(IntegrationTestSpecifications.java:139)
 ]]></failure>
   </testcase>
-  <testcase name="testGetObject" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.002">
+  <testcase name="testGetObject" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.004">
     <failure message="❌ NOT IMPLEMENTED - S3 GetObject missing" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 GetObject missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
 	at com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests.testGetObject(IntegrationTestSpecifications.java:131)
 ]]></failure>
   </testcase>
-  <testcase name="testCreateBucket" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.001">
+  <testcase name="testCreateBucket" classname="com.ironbucket.integration.test.IntegrationTestSpecifications$S3ProxyTests" time="0.01">
     <failure message="❌ NOT IMPLEMENTED - S3 CreateBucket missing" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - S3 CreateBucket missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)

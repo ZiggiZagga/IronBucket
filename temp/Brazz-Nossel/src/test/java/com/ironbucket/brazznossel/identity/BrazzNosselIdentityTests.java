@@ -1,19 +1,29 @@
 package com.ironbucket.brazznossel.identity;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Brazz-Nossel S3 Gateway Identity Tests
@@ -61,6 +71,14 @@ public class BrazzNosselIdentityTests {
         claims.put("exp", Instant.now().getEpochSecond() + 3600);
         return claims;
     }
+
+    private Claims parseToken(String token, Key key) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
     
     @Nested
     @DisplayName("S3 Gateway JWT Validation")
@@ -71,9 +89,12 @@ public class BrazzNosselIdentityTests {
         public void testValidJWTForS3() {
             Map<String, Object> claims = createValidClaims();
             String token = createTestJWT(claims);
-            
-            assertNotNull(token);
-            assertTrue(token.split("\\.").length == 3);
+            Claims parsed = parseToken(token, signingKey);
+
+            assertEquals("user-123", parsed.getSubject());
+            assertEquals("s3-gateway", parsed.getAudience());
+            assertEquals("https://example.com", parsed.getIssuer());
+            assertTrue(parsed.getExpiration().after(new Date()));
         }
         
         @Test
@@ -81,9 +102,8 @@ public class BrazzNosselIdentityTests {
         public void testExpiredJWTRejected() {
             Map<String, Object> claims = createValidClaims();
             String token = createExpiredJWT(claims);
-            
-            assertNotNull(token);
-            assertTrue(token.split("\\.").length == 3);
+
+            assertThrows(ExpiredJwtException.class, () -> parseToken(token, signingKey));
         }
         
         @Test
@@ -92,8 +112,9 @@ public class BrazzNosselIdentityTests {
             Map<String, Object> claims = createValidClaims();
             claims.put("aud", "s3-gateway");
             String token = createTestJWT(claims);
-            
-            assertNotNull(token);
+
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("s3-gateway", parsed.getAudience());
         }
         
         @Test
@@ -103,8 +124,19 @@ public class BrazzNosselIdentityTests {
             claims.put("sub", "sa-s3-backup-service");
             claims.put("isServiceAccount", true);
             String token = createTestJWT(claims);
-            
-            assertNotNull(token);
+
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("sa-s3-backup-service", parsed.getSubject());
+            assertTrue(parsed.get("isServiceAccount", Boolean.class));
+        }
+
+        @Test
+        @DisplayName("Invalid signature is rejected")
+        public void testInvalidSignatureRejected() {
+            Map<String, Object> claims = createValidClaims();
+            String token = createTestJWT(claims);
+
+            assertThrows(JwtException.class, () -> parseToken(token, invalidSigningKey));
         }
     }
     
@@ -121,7 +153,11 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = parsed.get("realm_access", Map.class) != null
+                    ? (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles")
+                    : List.of();
+            assertTrue(roles.contains("s3-read"));
         }
         
         @Test
@@ -133,7 +169,9 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("s3-write"));
         }
         
         @Test
@@ -145,7 +183,9 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("s3-admin"));
         }
         
         @Test
@@ -158,7 +198,8 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-a", parsed.get("tenant", String.class));
         }
     }
     
@@ -172,8 +213,9 @@ public class BrazzNosselIdentityTests {
             Map<String, Object> claims = createValidClaims();
             claims.put("tenant", "company-a");
             String token = createTestJWT(claims);
-            
-            assertNotNull(token);
+
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-a", parsed.get("tenant", String.class));
         }
         
         @Test
@@ -184,7 +226,12 @@ public class BrazzNosselIdentityTests {
             String token = createTestJWT(claims);
             
             // Token for company-a should not access company-b buckets
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertThrows(JwtException.class, () -> {
+                // Attempt to validate with the wrong signing key should fail
+                parseToken(token, invalidSigningKey);
+            });
+            assertEquals("company-a", parsed.get("tenant", String.class));
         }
         
         @Test
@@ -197,7 +244,10 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-x", parsed.get("tenant", String.class));
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("s3-read"));
         }
     }
     
@@ -212,8 +262,12 @@ public class BrazzNosselIdentityTests {
             claims.put("s3:region", "us-east-1");
             claims.put("s3:allowed_buckets", Arrays.asList("bucket-1", "bucket-2"));
             String token = createTestJWT(claims);
-            
-            assertNotNull(token);
+
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("us-east-1", parsed.get("s3:region", String.class));
+            List<String> allowedBuckets = (List<String>) parsed.get("s3:allowed_buckets", List.class);
+            assertEquals(2, allowedBuckets.size());
+            assertTrue(allowedBuckets.contains("bucket-1"));
         }
         
         @Test
@@ -226,7 +280,12 @@ public class BrazzNosselIdentityTests {
             claims.put("s3:allowed_operations", Arrays.asList("GET", "PUT"));
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertTrue(parsed.get("isServiceAccount", Boolean.class));
+            List<String> allowedBuckets = (List<String>) parsed.get("s3:allowed_buckets", List.class);
+            assertEquals(List.of("lambda-bucket"), allowedBuckets);
+            List<String> ops = (List<String>) parsed.get("s3:allowed_operations", List.class);
+            assertTrue(ops.containsAll(List.of("GET", "PUT")));
         }
         
         @Test
@@ -238,7 +297,9 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.containsAll(List.of("s3-admin", "superadmin")));
         }
     }
     
@@ -254,7 +315,9 @@ public class BrazzNosselIdentityTests {
             claims.put("preferred_username", "user@company-a.com");
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-a", parsed.get("tenant", String.class));
+            assertEquals("user@company-a.com", parsed.get("preferred_username", String.class));
         }
         
         @Test
@@ -263,9 +326,11 @@ public class BrazzNosselIdentityTests {
             Map<String, Object> claims = createValidClaims();
             claims.put("tenant", "company-a");
             claims.put("preferred_username", "user@company-a.com");
+            claims.put("object_key", "bucket-1/path/to/object.txt");
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("bucket-1/path/to/object.txt", parsed.get("object_key", String.class));
         }
         
         @Test
@@ -273,9 +338,11 @@ public class BrazzNosselIdentityTests {
         public void testRequestOperationContext() {
             Map<String, Object> claims = createValidClaims();
             claims.put("preferred_username", "user");
+            claims.put("operation", "DELETE");
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("DELETE", parsed.get("operation", String.class));
         }
     }
     
@@ -294,7 +361,10 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertEquals("company-a", parsed.get("tenant", String.class));
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("s3-read"));
         }
         
         @Test
@@ -308,7 +378,9 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.contains("s3-write"));
         }
         
         @Test
@@ -321,7 +393,11 @@ public class BrazzNosselIdentityTests {
             claims.put("s3:allowed_operations", Arrays.asList("GET", "PUT"));
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            assertTrue(parsed.get("isServiceAccount", Boolean.class));
+            assertEquals("company-ops", parsed.get("tenant", String.class));
+            List<String> ops = (List<String>) parsed.get("s3:allowed_operations", List.class);
+            assertTrue(ops.containsAll(List.of("GET", "PUT")));
         }
         
         @Test
@@ -334,7 +410,9 @@ public class BrazzNosselIdentityTests {
             claims.put("realm_access", realmAccess);
             
             String token = createTestJWT(claims);
-            assertNotNull(token);
+            Claims parsed = parseToken(token, signingKey);
+            List<String> roles = (List<String>) ((Map<?, ?>) parsed.get("realm_access", Map.class)).get("roles");
+            assertTrue(roles.containsAll(List.of("s3-admin", "admin")));
         }
     }
 }

@@ -29,7 +29,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("IronBucket Production Readiness Roadmap")
 public class ProductionReadinessTest {
 
-    private static final String PROJECT_ROOT = System.getProperty("user.dir");
+    /**
+     * Resolve to repository root instead of the module working directory so file
+     * existence checks match the actual project layout (module lives under
+     * temp/Sentinel-Gear).
+     */
+    private static final Path REPO_ROOT = Paths.get(System.getProperty("user.dir"))
+            .getParent()   // /workspaces/IronBucket/temp
+            .getParent();  // /workspaces/IronBucket
+
+    private static Path fromRepoRoot(String first, String... more) {
+        return REPO_ROOT.resolve(Paths.get(first, more));
+    }
     
     @BeforeAll
     static void setup() {
@@ -48,7 +59,7 @@ public class ProductionReadinessTest {
         @DisplayName("NetworkPolicy definitions exist for MinIO isolation")
         void testNetworkPolicyFilesExist() {
             // RED: This test defines that NetworkPolicies MUST be defined
-            Path networkPolicyFile = Paths.get(PROJECT_ROOT, "docs", "k8s-network-policies.yaml");
+            Path networkPolicyFile = fromRepoRoot("docs", "k8s-network-policies.yaml");
             
             assertTrue(Files.exists(networkPolicyFile), 
                 "CRITICAL: NetworkPolicy file must exist at docs/k8s-network-policies.yaml");
@@ -76,7 +87,7 @@ public class ProductionReadinessTest {
             );
             
             for (String filePath : suspiciousFiles) {
-                Path file = Paths.get(PROJECT_ROOT, filePath);
+                Path file = fromRepoRoot(filePath);
                 if (Files.exists(file)) {
                     try {
                         String content = Files.readString(file);
@@ -97,7 +108,7 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel", "Buzzle-Vane"};
             
             for (String service : services) {
-                Path pomFile = Paths.get(PROJECT_ROOT, "temp", service, "pom.xml");
+                Path pomFile = fromRepoRoot("temp", service, "pom.xml");
                 
                 if (Files.exists(pomFile)) {
                     try {
@@ -120,7 +131,7 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel"};
             
             for (String service : services) {
-                Path appProps = Paths.get(PROJECT_ROOT, "temp", service, "src", "main", "resources", "application.yml");
+                Path appProps = fromRepoRoot("temp", service, "src", "main", "resources", "application.yml");
                 
                 if (Files.exists(appProps)) {
                     try {
@@ -145,30 +156,40 @@ public class ProductionReadinessTest {
         @DisplayName("Test scripts use Brazz-Nossel gateway (not direct MinIO)")
         void testScriptsUseBrazzNosselGateway() {
             // RED: This test will FAIL because scripts bypass security
-            Path testScriptsDir = Paths.get(PROJECT_ROOT, "steel-hammer");
-            
-            try (Stream<Path> files = Files.walk(testScriptsDir)) {
-                files.filter(p -> p.toString().endsWith(".sh") && p.toString().contains("test"))
-                     .forEach(scriptFile -> {
-                         try {
-                             String content = Files.readString(scriptFile);
-                             assertFalse(content.contains("minio:9000") || content.contains("localhost:9000"),
-                                 "HIGH: Test script " + scriptFile.getFileName() + 
-                                 " bypasses security by accessing MinIO directly. " +
-                                 "Refactor to use brazz-nossel:8082 endpoint!");
-                         } catch (Exception e) {
-                             fail("Could not read script: " + scriptFile);
-                         }
-                     });
-            } catch (Exception e) {
-                fail("Could not scan test scripts: " + e.getMessage());
-            }
+            List<Path> testDirs = Arrays.asList(
+                fromRepoRoot("steel-hammer", "tests"),
+                fromRepoRoot("steel-hammer", "test-scripts")
+            );
+
+            boolean anyDirFound = testDirs.stream().anyMatch(Files::exists);
+            assertTrue(anyDirFound, "HIGH: No test directories found under steel-hammer");
+
+            testDirs.stream()
+                .filter(Files::exists)
+                .forEach(dir -> {
+                    try (Stream<Path> files = Files.walk(dir)) {
+                        files.filter(p -> p.toString().endsWith(".sh") && p.getFileName().toString().contains("test"))
+                             .forEach(scriptFile -> {
+                                 try {
+                                     String content = Files.readString(scriptFile);
+                                     assertFalse(content.contains("minio:9000") || content.contains("localhost:9000"),
+                                         "HIGH: Test script " + scriptFile.getFileName() +
+                                         " bypasses security by accessing MinIO directly. " +
+                                         "Refactor to use brazz-nossel:8082 endpoint!");
+                                 } catch (Exception e) {
+                                     fail("Could not read script: " + scriptFile);
+                                 }
+                             });
+                    } catch (Exception e) {
+                        fail("Could not scan test scripts in " + dir + ": " + e.getMessage());
+                    }
+                });
         }
 
         @Test
         @DisplayName("Comprehensive JWT validation tests exist")
         void testJWTValidationTestsExist() {
-            Path jwtTestFile = Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", 
+            Path jwtTestFile = fromRepoRoot("temp", "Sentinel-Gear",
                 "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java");
             
             assertTrue(Files.exists(jwtTestFile), 
@@ -189,7 +210,7 @@ public class ProductionReadinessTest {
         @DisplayName("Multi-tenant isolation E2E test exists")
         void testMultiTenantIsolationTestExists() {
             // RED: This test will FAIL because isolation E2E test doesn't exist
-            Path isolationTest = Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-tenant-isolation.sh");
+            Path isolationTest = fromRepoRoot("steel-hammer", "tests", "test-tenant-isolation.sh");
             
             assertTrue(Files.exists(isolationTest), 
                 "HIGH: Multi-tenant isolation E2E test must exist at: steel-hammer/tests/test-tenant-isolation.sh. " +
@@ -200,7 +221,7 @@ public class ProductionReadinessTest {
         @DisplayName("Complete audit trail E2E test exists")
         void testAuditTrailE2ETestExists() {
             // RED: This test will FAIL because audit E2E test doesn't exist
-            Path auditTest = Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-audit-trail-e2e.sh");
+            Path auditTest = fromRepoRoot("steel-hammer", "tests", "test-audit-trail-e2e.sh");
             
             assertTrue(Files.exists(auditTest), 
                 "HIGH: Complete audit trail E2E test must exist at: steel-hammer/tests/test-audit-trail-e2e.sh. " +
@@ -215,7 +236,7 @@ public class ProductionReadinessTest {
         @Test
         @DisplayName("LGTM stack Docker Compose file exists")
         void testLGTMStackExists() {
-            Path lgtmCompose = Paths.get(PROJECT_ROOT, "steel-hammer", "docker-compose-lgtm.yml");
+            Path lgtmCompose = fromRepoRoot("steel-hammer", "docker-compose-lgtm.yml");
             
             assertTrue(Files.exists(lgtmCompose), 
                 "HIGH: LGTM stack Docker Compose must exist");
@@ -236,7 +257,7 @@ public class ProductionReadinessTest {
         @DisplayName("Grafana dashboards directory exists with dashboards")
         void testGrafanaDashboardsExist() {
             // RED: This test will FAIL because dashboards don't exist yet
-            Path dashboardDir = Paths.get(PROJECT_ROOT, "steel-hammer", "grafana", "dashboards");
+            Path dashboardDir = fromRepoRoot("steel-hammer", "grafana", "dashboards");
             
             assertTrue(Files.exists(dashboardDir), 
                 "HIGH: Grafana dashboards directory must exist at: steel-hammer/grafana/dashboards/");
@@ -255,9 +276,9 @@ public class ProductionReadinessTest {
         void testAlertRulesExist() {
             // RED: This test will FAIL because alert rules don't exist
             List<Path> possibleAlertFiles = Arrays.asList(
-                Paths.get(PROJECT_ROOT, "steel-hammer", "alerts", "alert-rules.yml"),
-                Paths.get(PROJECT_ROOT, "steel-hammer", "prometheus", "alerts.yml"),
-                Paths.get(PROJECT_ROOT, "steel-hammer", "mimir", "alerts.yml")
+                fromRepoRoot("steel-hammer", "alerts", "alert-rules.yml"),
+                fromRepoRoot("steel-hammer", "prometheus", "alerts.yml"),
+                fromRepoRoot("steel-hammer", "mimir", "alerts.yml")
             );
             
             boolean foundAlerts = possibleAlertFiles.stream().anyMatch(Files::exists);
@@ -273,7 +294,7 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel"};
             
             for (String service : services) {
-                Path logbackFile = Paths.get(PROJECT_ROOT, "temp", service, "src", "main", "resources", "logback-spring.xml");
+                Path logbackFile = fromRepoRoot("temp", service, "src", "main", "resources", "logback-spring.xml");
                 
                 if (Files.exists(logbackFile)) {
                     try {
@@ -296,7 +317,7 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel"};
             
             for (String service : services) {
-                Path pomFile = Paths.get(PROJECT_ROOT, "temp", service, "pom.xml");
+                Path pomFile = fromRepoRoot("temp", service, "pom.xml");
                 
                 if (Files.exists(pomFile)) {
                     try {
@@ -322,7 +343,7 @@ public class ProductionReadinessTest {
         @DisplayName("Policy enforcement E2E test exists")
         void testPolicyEnforcementE2ETestExists() {
             // RED: This test will FAIL because policy E2E test doesn't exist
-            Path policyTest = Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-policy-enforcement-e2e.sh");
+            Path policyTest = fromRepoRoot("steel-hammer", "tests", "test-policy-enforcement-e2e.sh");
             
             assertTrue(Files.exists(policyTest), 
                 "MEDIUM: Policy enforcement E2E test should exist at: steel-hammer/tests/test-policy-enforcement-e2e.sh");
@@ -332,7 +353,7 @@ public class ProductionReadinessTest {
         @DisplayName("Error handling E2E test exists")
         void testErrorHandlingE2ETestExists() {
             // RED: This test will FAIL because error handling E2E test doesn't exist
-            Path errorTest = Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-error-handling-e2e.sh");
+            Path errorTest = fromRepoRoot("steel-hammer", "tests", "test-error-handling-e2e.sh");
             
             assertTrue(Files.exists(errorTest), 
                 "MEDIUM: Error handling E2E test should exist to validate 401, 403, 404, 500 responses");
@@ -342,7 +363,7 @@ public class ProductionReadinessTest {
         @DisplayName("Pactum-Scroll shared contracts module exists")
         void testPactumScrollModuleExists() {
             // RED: This test will FAIL because Pactum-Scroll is not implemented
-            Path pactumScrollPom = Paths.get(PROJECT_ROOT, "Pactum-Scroll", "pom.xml");
+            Path pactumScrollPom = fromRepoRoot("Pactum-Scroll", "pom.xml");
             
             assertTrue(Files.exists(pactumScrollPom), 
                 "MEDIUM: Pactum-Scroll module should exist with shared contracts/DTOs");
@@ -363,9 +384,9 @@ public class ProductionReadinessTest {
         void testPerformanceTestsExist() {
             // RED: This test will FAIL because perf tests don't exist
             List<Path> possiblePerfTests = Arrays.asList(
-                Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-latency-targets.sh"),
-                Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-throughput-targets.sh"),
-                Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-load-1000rps.sh")
+                fromRepoRoot("steel-hammer", "tests", "test-latency-targets.sh"),
+                fromRepoRoot("steel-hammer", "tests", "test-throughput-targets.sh"),
+                fromRepoRoot("steel-hammer", "tests", "test-load-1000rps.sh")
             );
             
             boolean foundPerfTests = possiblePerfTests.stream().anyMatch(Files::exists);

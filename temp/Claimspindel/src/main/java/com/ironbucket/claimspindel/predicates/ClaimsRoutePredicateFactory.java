@@ -1,6 +1,8 @@
 package com.ironbucket.claimspindel.predicates;
 
 import java.text.ParseException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -36,24 +38,29 @@ public class ClaimsRoutePredicateFactory extends AbstractRoutePredicateFactory<C
 
              String token = authHeader.substring(7);
              try {
-            	 SignedJWT jwt = SignedJWT.parse(token);
-            	 String claimName=config.claimName();
-            	 if("role".equals(claimName)) {
+                 SignedJWT jwt = SignedJWT.parse(token);
+                 Date exp = jwt.getJWTClaimsSet().getExpirationTime();
+                 if (exp == null || exp.toInstant().isBefore(Instant.now())) {
+                     return false;
+                 }
+
+                 String claimName = config.claimName();
+                 if ("role".equals(claimName)) {
                      JsonNode claims = new ObjectMapper().valueToTree(jwt.getJWTClaimsSet().getClaims());
-                     ArrayNode roles = ((ArrayNode)claims.get("realm_access").get("roles"));
-                     boolean hasRole = false;
-                     for(JsonNode checkRoleNode: roles) {
-                    	 hasRole = checkRoleNode.asText().equals(config.expectedValue);
-                    	 if(hasRole) {
-                    		 break;
-                    	 }
+                     JsonNode realmAccess = claims.get("realm_access");
+                     if (realmAccess == null || realmAccess.get("roles") == null) {
+                         return false;
                      }
-                     return hasRole;
-            	 }else {
-            		 return false;
-            	 }
+                     ArrayNode roles = (ArrayNode) realmAccess.get("roles");
+                     for (JsonNode checkRoleNode : roles) {
+                         if (checkRoleNode.asText().equals(config.expectedValue())) {
+                             return true;
+                         }
+                     }
+                     return false;
+                 }
+                 return false;
              } catch (ParseException e) {
-                 e.printStackTrace();
                  return false;
              }
         	 
