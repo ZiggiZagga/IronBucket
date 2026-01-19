@@ -101,9 +101,9 @@ echo "Discovering Maven modules..."
 MAVEN_MODULES=("Sentinel-Gear" "Brazz-Nossel" "Claimspindel" "Buzzle-Vane" "Pactum-Scroll")
 
 for MODULE in "${MAVEN_MODULES[@]}"; do
-    if [ -d "$PROJECT_ROOT/$MODULE" ]; then
+    if [ -d "$PROJECT_ROOT/services/$MODULE" ]; then
         run_test_suite "Maven_${MODULE}" \
-            "cd $PROJECT_ROOT/$MODULE && mvn clean test -q"
+            "cd $PROJECT_ROOT/services/$MODULE && mvn clean test -q"
     else
         echo -e "${YELLOW}⚠️  Skipping $MODULE (not found)${NC}"
         TOTAL_SKIPPED=$((TOTAL_SKIPPED + 1))

@@ -330,10 +330,10 @@ echo ""
 echo -e "${BLUE}=== PHASE 5: Graphite Admin Shell Operator CLI ===${NC}"
 echo ""
 
-if [ -f "/workspaces/IronBucket/temp/graphite-admin-shell/pom.xml" ]; then
+if [ -f "/workspaces/IronBucket/tools/graphite-admin-shell/pom.xml" ]; then
     echo "Running Graphite Admin Shell test suite..."
     
-    cd /workspaces/IronBucket/temp/graphite-admin-shell
+    cd /workspaces/IronBucket/tools/graphite-admin-shell
     
     if mvn clean test -q 2>/dev/null; then
         SHELL_TESTS=$(grep -c "<testcase" target/surefire-reports/TEST-*.xml 2>/dev/null || echo "0")

@@ -170,7 +170,7 @@ run_maven_tests() {
     cd "$TEMP_DIR"
     
     # Include graphite-admin-shell in the list
-    local projects=(Brazz-Nossel Claimspindel Buzzle-Vane Sentinel-Gear Storage-Conductor Vault-Smith graphite-admin-shell)
+    local projects=(services/Brazz-Nossel services/Claimspindel services/Buzzle-Vane services/Sentinel-Gear tools/Storage-Conductor tools/Vault-Smith tools/graphite-admin-shell)
     
     for project in "${projects[@]}"; do
         if [ ! -d "$project" ]; then

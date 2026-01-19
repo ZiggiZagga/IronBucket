@@ -133,7 +133,7 @@ main() {
     local total_tests=0
     local failed_projects=0
 
-    for project in Brazz-Nossel Claimspindel Buzzle-Vane Sentinel-Gear Storage-Conductor Vault-Smith; do
+    for project in services/Brazz-Nossel services/Claimspindel services/Buzzle-Vane services/Sentinel-Gear tools/Storage-Conductor tools/Vault-Smith; do
         if [ ! -d "$project" ]; then
             print_warning "Project not found: $project"
             continue

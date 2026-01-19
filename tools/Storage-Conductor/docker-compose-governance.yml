@@ -77,7 +77,7 @@ services:
   buzzle-vane:
     build:
       context: ../..
-      dockerfile: temp/Buzzle-Vane/Dockerfile
+      dockerfile: services/Buzzle-Vane/Dockerfile
     hostname: buzzle-vane
     container_name: buzzle-vane
     networks:
@@ -97,7 +97,7 @@ services:
   claimspindel:
     build:
       context: ../..
-      dockerfile: temp/Claimspindel/Dockerfile
+      dockerfile: services/Claimspindel/Dockerfile
     hostname: claimspindel
     container_name: claimspindel
     networks:
@@ -153,7 +153,7 @@ services:
   sentinel-gear:
     build:
       context: ../..
-      dockerfile: temp/Sentinel-Gear/Dockerfile
+      dockerfile: services/Sentinel-Gear/Dockerfile
     hostname: sentinel-gear
     container_name: sentinel-gear
     networks:

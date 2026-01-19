@@ -1,9 +1,0 @@
-Buzzle-Vane 0
-Claimspindel 0
-Sentinel-Gear 1
-Brazz-Nossel 0
-Storage-Conductor 1
-Vault-Smith 0
-test-suite 1
-Pactum-Scroll 1
-graphite-admin-shell 0

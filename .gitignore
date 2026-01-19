@@ -1,6 +1,41 @@
-
 # Archived documentation
 .archive/
 
 # Reference repositories for learning
 .reference-repos/
+
+# Build artifacts
+target/
+*.class
+*.jar
+*.war
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+.next/
+dist/
+build/
+
+# Test results and logs
+test-results/
+test-output/
+*.log
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*~
