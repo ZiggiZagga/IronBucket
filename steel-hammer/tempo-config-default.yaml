@@ -3,6 +3,9 @@ server:
   log_level: info
 
 distributor:
+  ring:
+    kvstore:
+      store: inmemory
   receivers:
     otlp:
       protocols:
@@ -14,9 +17,11 @@ distributor:
 ingester:
   max_block_duration: 5m
 
-compactor:
-  compaction:
-    block_retention: 48h
+metrics_generator:
+  registry:
+    external_labels:
+      cluster: docker
+      namespace: ironbucket
 
 storage:
   trace:

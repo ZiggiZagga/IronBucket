@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.ironbucket.storageconductor.S3CompatibilityTest
--------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 10, Time elapsed: 0.034 s -- in com.ironbucket.storageconductor.S3CompatibilityTest

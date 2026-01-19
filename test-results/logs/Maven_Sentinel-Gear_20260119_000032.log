@@ -1,0 +1,1042 @@
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by lombok.permit.Permit
+WARNING: Please consider reporting this to the maintainers of class lombok.permit.Permit
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[[34;1mINFO[0m] [stdout] 00:00:56.072 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ironbucket.sentinelgear.integration.SentinelGearPolicyEnforcementTest]: SentinelGearPolicyEnforcementTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+[[34;1mINFO[0m] [stdout] 00:00:56.289 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ironbucket.sentinelgear.GatewayApp for test class com.ironbucket.sentinelgear.integration.SentinelGearPolicyEnforcementTest
+[[34;1mINFO[0m] [stdout] 00:00:57.018 [main] INFO org.springframework.boot.devtools.restart.RestartApplicationListener -- Restart disabled due to context in which it is running
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout]   .   ____          _            __ _ _
+[[34;1mINFO[0m] [stdout]  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+[[34;1mINFO[0m] [stdout] ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+[[34;1mINFO[0m] [stdout]  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+[[34;1mINFO[0m] [stdout]   '  |____| .__|_| |_|_| |_\__, | / / / /
+[[34;1mINFO[0m] [stdout]  =========|_|==============|___/=/_/_/_/
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout]  :: Spring Boot ::                (v4.0.1)
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:00:58.624+0000  INFO []  INFO --- main - c.i.s.i.SentinelGearPolicyEnforcementTest - Starting SentinelGearPolicyEnforcementTest using Java 25.0.1 with PID 83170 (started by codespace in /workspaces/IronBucket/Sentinel-Gear)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:00:58.627+0000 DEBUG [] DEBUG --- main - c.i.s.i.SentinelGearPolicyEnforcementTest - Running with Spring Boot v4.0.1, Spring v7.0.2
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:00:58.628+0000  INFO []  INFO --- main - c.i.s.i.SentinelGearPolicyEnforcementTest - No active profile set, falling back to 1 default profile: "default"
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:01.912+0000  INFO []  INFO --- main - o.s.cloud.context.scope.GenericScope - BeanFactory id=9197f8f5-6dc9-3b21-adb9-93b61bde6571
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.667+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [After]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Before]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Between]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Cookie]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Header]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Host]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Method]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Path]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Query]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [ReadBody]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [RemoteAddr]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.668+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Version]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.669+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [XForwardedRemoteAddr]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.669+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [Weight]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:04.669+0000  INFO []  INFO --- main - o.s.c.g.r.RouteDefinitionRouteLocator - Loaded RoutePredicateFactory [CloudFoundryRouteService]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.453+0000  INFO []  INFO --- main - o.s.c.n.e.c.DiscoveryClientOptionalArgsConfiguration - Eureka HTTP Client uses RestClient.
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.844+0000  INFO []  INFO --- main - o.s.b.reactor.netty.NettyWebServer - Netty started on port 41475 (http)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.848+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaAutoServiceRegistration - Updating port to 41475
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.855+0000  INFO []  INFO --- main - o.s.c.n.eureka.InstanceInfoFactory - Setting initial instance status as: STARTING
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.885+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Initializing Eureka in region dev-region-1
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.889+0000  INFO []  INFO --- main - c.n.d.s.r.aws.ConfigClusterResolver - Resolving eureka endpoints via configuration
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.906+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Disable delta property : false
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.906+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Single vip registry refresh property : null
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.906+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Force full registry fetch : false
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.906+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Application is null : false
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.906+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Registered Applications size is zero : true
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.906+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Application version is -1: true
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:05.906+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Getting all instance registry info from the eureka server
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.373+0000  INFO []  INFO --- main - c.n.d.s.t.d.RedirectingEurekaHttpClient - Request execution error. endpoint=DefaultEndpoint{ serviceUrl='http://localhost:8761/eureka/}, exception=I/O error on GET request for "http://localhost:8761/eureka/apps/": Connect to http://localhost:8761 failed: Connection refused stacktrace=org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://localhost:8761/eureka/apps/": Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:763)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:615)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchange(DefaultRestClient.java:567)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.RestClient$RequestHeadersSpec.exchange(RestClient.java:750)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.executeAndExtract(DefaultRestClient.java:896)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntityInternal(DefaultRestClient.java:842)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toEntity(DefaultRestClient.java:831)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.getApplicationsInternal(RestClientEurekaHttpClient.java:201)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.getApplications(RestClientEurekaHttpClient.java:137)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$6.execute(EurekaHttpClientDecorator.java:137)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.executeOnNewServer(RedirectingEurekaHttpClient.java:121)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.execute(RedirectingEurekaHttpClient.java:80)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getApplications(EurekaHttpClientDecorator.java:134)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$6.execute(EurekaHttpClientDecorator.java:137)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:120)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getApplications(EurekaHttpClientDecorator.java:134)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$6.execute(EurekaHttpClientDecorator.java:137)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getApplications(EurekaHttpClientDecorator.java:134)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.getAndStoreFullRegistry(DiscoveryClient.java:1046)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.fetchRegistry(DiscoveryClient.java:961)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.<init>(DiscoveryClient.java:410)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.<init>(DiscoveryClient.java:245)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.<init>(DiscoveryClient.java:240)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.CloudEurekaClient.<init>(CloudEurekaClient.java:68)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration$RefreshableEurekaClientConfiguration.eurekaClient(EurekaClientAutoConfiguration.java:324)
+[[34;1mINFO[0m] [stdout] 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:155)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:72)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:152)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:645)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1362)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1194)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$1(AbstractBeanFactory.java:372)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.context.scope.GenericScope$BeanLifecycleWrapper.getBean(GenericScope.java:373)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.context.scope.GenericScope.get(GenericScope.java:177)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:369)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:196)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.aop.target.SimpleBeanTargetSource.getTarget(SimpleBeanTargetSource.java:35)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration.getTargetObject(EurekaRegistration.java:128)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration.getEurekaClient(EurekaRegistration.java:116)
+[[34;1mINFO[0m] [stdout] 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:281)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.context.scope.GenericScope$LockedScopedProxyFactoryBean.invoke(GenericScope.java:480)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration$$SpringCGLIB$$0.getEurekaClient(<generated>)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry.maybeInitializeClient(EurekaServiceRegistry.java:83)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry.register(EurekaServiceRegistry.java:66)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaAutoServiceRegistration.start(EurekaAutoServiceRegistration.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaAutoServiceRegistration.onApplicationEvent(EurekaAutoServiceRegistration.java:152)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaAutoServiceRegistration.onApplicationEvent(EurekaAutoServiceRegistration.java:137)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:180)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:173)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:151)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:447)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:380)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.web.server.reactive.context.WebServerManager.start(WebServerManager.java:57)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.web.server.reactive.context.WebServerStartStopLifecycle.start(WebServerStartStopLifecycle.java:41)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:420)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:409)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.start(DefaultLifecycleProcessor.java:613)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.startBeans(DefaultLifecycleProcessor.java:379)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.onRefresh(DefaultLifecycleProcessor.java:306)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.finishRefresh(AbstractApplicationContext.java:1012)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:623)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.web.server.reactive.context.ReactiveWebServerApplicationContext.refresh(ReactiveWebServerApplicationContext.java:69)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.run(SpringApplication.java:321)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$2(SpringBootContextLoader.java:156)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1465)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:605)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:156)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:115)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:247)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:167)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:172)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$1(ClassBasedTestDescriptor.java:423)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:428)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$0(ClassBasedTestDescriptor.java:422)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:186)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:197)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1716)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:570)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:560)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:153)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:176)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:265)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:632)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeTestInstancePostProcessors(ClassBasedTestDescriptor.java:422)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$instantiateAndPostProcessTestInstance$0(ClassBasedTestDescriptor.java:334)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.instantiateAndPostProcessTestInstance(ClassBasedTestDescriptor.java:333)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$1(ClassBasedTestDescriptor.java:322)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$0(ClassBasedTestDescriptor.java:321)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.execution.TestInstancesProvider.getTestInstances(TestInstancesProvider.java:27)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$prepare$0(TestMethodTestDescriptor.java:127)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:126)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:70)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$prepare$0(NodeTestTask.java:144)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.prepare(NodeTestTask.java:144)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:110)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$2(InterceptingLauncher.java:57)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:56)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58)
+[[34;1mINFO[0m] [stdout] 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.api.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:125)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithCancellationToken(LauncherAdapter.java:68)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:54)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+[[34;1mINFO[0m] [stdout] Caused by: org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:639)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:543)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:594)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.net.Socket.connect(Socket.java:659)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:215)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:497)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:164)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:174)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:144)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:195)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:151)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:112)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:110)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:55)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.classic.HttpClient.executeOpen(HttpClient.java:183)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:99)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:87)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeWithRequest(AbstractBufferingClientHttpRequest.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.InterceptingClientHttpRequest$EndOfChainRequestExecution.execute(InterceptingClientHttpRequest.java:102)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.http.RestClientTransportClientFactory.lambda$newClient$2(RestClientTransportClientFactory.java:98)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.ClientHttpRequestInterceptor.lambda$apply$0(ClientHttpRequestInterceptor.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:73)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:50)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:609)
+[[34;1mINFO[0m] [stdout] 	... 169 more
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.377+0000  WARN []  WARN --- main - c.n.d.s.t.d.RetryableEurekaHttpClient - Request execution failed with message: I/O error on GET request for "http://localhost:8761/eureka/apps/": Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.379+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - DiscoveryClient_SENTINEL-GEAR/sentinel-gear:10.0.2.112:0 - was unable to refresh its cache! This periodic background refresh will be retried in 30 seconds. status = Cannot execute request on any known server stacktrace = com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getApplications(EurekaHttpClientDecorator.java:134)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$6.execute(EurekaHttpClientDecorator.java:137)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.getApplications(EurekaHttpClientDecorator.java:134)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.getAndStoreFullRegistry(DiscoveryClient.java:1046)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.fetchRegistry(DiscoveryClient.java:961)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.<init>(DiscoveryClient.java:410)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.<init>(DiscoveryClient.java:245)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.<init>(DiscoveryClient.java:240)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.CloudEurekaClient.<init>(CloudEurekaClient.java:68)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration$RefreshableEurekaClientConfiguration.eurekaClient(EurekaClientAutoConfiguration.java:324)
+[[34;1mINFO[0m] [stdout] 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:155)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiateWithFactoryMethod(SimpleInstantiationStrategy.java:72)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:152)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:645)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1362)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1194)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$1(AbstractBeanFactory.java:372)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.context.scope.GenericScope$BeanLifecycleWrapper.getBean(GenericScope.java:373)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.context.scope.GenericScope.get(GenericScope.java:177)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:369)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:196)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.aop.target.SimpleBeanTargetSource.getTarget(SimpleBeanTargetSource.java:35)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration.getTargetObject(EurekaRegistration.java:128)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration.getEurekaClient(EurekaRegistration.java:116)
+[[34;1mINFO[0m] [stdout] 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:281)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.context.scope.GenericScope$LockedScopedProxyFactoryBean.invoke(GenericScope.java:480)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:179)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:719)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration$$SpringCGLIB$$0.getEurekaClient(<generated>)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry.maybeInitializeClient(EurekaServiceRegistry.java:83)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry.register(EurekaServiceRegistry.java:66)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaAutoServiceRegistration.start(EurekaAutoServiceRegistration.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaAutoServiceRegistration.onApplicationEvent(EurekaAutoServiceRegistration.java:152)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.serviceregistry.EurekaAutoServiceRegistration.onApplicationEvent(EurekaAutoServiceRegistration.java:137)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:180)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:173)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:151)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:447)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:380)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.web.server.reactive.context.WebServerManager.start(WebServerManager.java:57)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.web.server.reactive.context.WebServerStartStopLifecycle.start(WebServerStartStopLifecycle.java:41)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:420)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:409)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.start(DefaultLifecycleProcessor.java:613)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.startBeans(DefaultLifecycleProcessor.java:379)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.DefaultLifecycleProcessor.onRefresh(DefaultLifecycleProcessor.java:306)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.finishRefresh(AbstractApplicationContext.java:1012)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:623)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.web.server.reactive.context.ReactiveWebServerApplicationContext.refresh(ReactiveWebServerApplicationContext.java:69)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.run(SpringApplication.java:321)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$2(SpringBootContextLoader.java:156)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1465)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:605)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:156)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:115)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:247)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:167)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:172)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$1(ClassBasedTestDescriptor.java:423)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:428)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$0(ClassBasedTestDescriptor.java:422)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:186)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:197)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1716)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:570)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:560)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:153)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:176)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:265)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:632)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeTestInstancePostProcessors(ClassBasedTestDescriptor.java:422)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$instantiateAndPostProcessTestInstance$0(ClassBasedTestDescriptor.java:334)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.instantiateAndPostProcessTestInstance(ClassBasedTestDescriptor.java:333)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$1(ClassBasedTestDescriptor.java:322)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$0(ClassBasedTestDescriptor.java:321)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.execution.TestInstancesProvider.getTestInstances(TestInstancesProvider.java:27)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$prepare$0(TestMethodTestDescriptor.java:127)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:126)
+[[34;1mINFO[0m] [stdout] 	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.prepare(TestMethodTestDescriptor.java:70)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$prepare$0(NodeTestTask.java:144)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.prepare(NodeTestTask.java:144)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:110)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$2(InterceptingLauncher.java:57)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:56)
+[[34;1mINFO[0m] [stdout] 	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:58)
+[[34;1mINFO[0m] [stdout] 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.api.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:125)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithCancellationToken(LauncherAdapter.java:68)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:54)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+[[34;1mINFO[0m] [stdout] 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.381+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Initial registry fetch from primary servers failed
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.382+0000  WARN []  WARN --- main - c.netflix.discovery.DiscoveryClient - Using default backup registry implementation which does not do anything.
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.382+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Initial registry fetch from backup servers failed
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.383+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Starting heartbeat executor: renew interval is: 30
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.385+0000  INFO []  INFO --- main - c.n.discovery.InstanceInfoReplicator - InstanceInfoReplicator onDemand update allowed rate per min is 4
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.388+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Discovery Client initialized at timestamp 1768780866386 with initial instances count: 0
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.396+0000  INFO []  INFO --- DiscoveryClient-InstanceInfoReplicator-%d - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780866396, current=DOWN, previous=STARTING]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.399+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Registering application SENTINEL-GEAR with eureka with status UP
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.400+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780866400, current=UP, previous=DOWN]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.400+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.400+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.398+0000  INFO []  INFO --- DiscoveryClient-InstanceInfoReplicator-%d - c.netflix.discovery.DiscoveryClient - DiscoveryClient_SENTINEL-GEAR/sentinel-gear:10.0.2.112:0: registering service...
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.602+0000  INFO []  INFO --- DiscoveryClient-InstanceInfoReplicator-%d - c.n.d.s.t.d.RedirectingEurekaHttpClient - Request execution error. endpoint=DefaultEndpoint{ serviceUrl='http://localhost:8761/eureka/}, exception=I/O error on POST request for "http://localhost:8761/eureka/apps/SENTINEL-GEAR": Connect to http://localhost:8761 failed: Connection refused stacktrace=org.springframework.web.client.ResourceAccessException: I/O error on POST request for "http://localhost:8761/eureka/apps/SENTINEL-GEAR": Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:763)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:615)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchange(DefaultRestClient.java:567)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.RestClient$RequestHeadersSpec.exchange(RestClient.java:750)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.executeAndExtract(DefaultRestClient.java:896)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toBodilessEntity(DefaultRestClient.java:860)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.register(RestClientEurekaHttpClient.java:64)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.executeOnNewServer(RedirectingEurekaHttpClient.java:121)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.execute(RedirectingEurekaHttpClient.java:80)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:120)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.register(DiscoveryClient.java:828)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator.run(InstanceInfoReplicator.java:125)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator$2.run(InstanceInfoReplicator.java:105)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Thread.run(Thread.java:1474)
+[[34;1mINFO[0m] [stdout] Caused by: org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:639)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:543)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:594)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.net.Socket.connect(Socket.java:659)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:215)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:497)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:164)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:174)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:144)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:195)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:151)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:112)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:110)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:55)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.classic.HttpClient.executeOpen(HttpClient.java:183)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:99)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:87)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeWithRequest(AbstractBufferingClientHttpRequest.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.InterceptingClientHttpRequest$EndOfChainRequestExecution.execute(InterceptingClientHttpRequest.java:102)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.http.RestClientTransportClientFactory.lambda$newClient$2(RestClientTransportClientFactory.java:98)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.ClientHttpRequestInterceptor.lambda$apply$0(ClientHttpRequestInterceptor.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:73)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:50)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:609)
+[[34;1mINFO[0m] [stdout] 	... 24 more
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.603+0000  WARN []  WARN --- DiscoveryClient-InstanceInfoReplicator-%d - c.n.d.s.t.d.RetryableEurekaHttpClient - Request execution failed with message: I/O error on POST request for "http://localhost:8761/eureka/apps/SENTINEL-GEAR": Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.606+0000  WARN []  WARN --- DiscoveryClient-InstanceInfoReplicator-%d - c.netflix.discovery.DiscoveryClient - DiscoveryClient_SENTINEL-GEAR/sentinel-gear:10.0.2.112:0 - registration failed Cannot execute request on any known server
+[[34;1mINFO[0m] [stdout] com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.register(DiscoveryClient.java:828)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator.run(InstanceInfoReplicator.java:125)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator$2.run(InstanceInfoReplicator.java:105)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Thread.run(Thread.java:1474)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.607+0000  WARN []  WARN --- DiscoveryClient-InstanceInfoReplicator-%d - c.n.discovery.InstanceInfoReplicator - There was a problem with the instance info replicator
+[[34;1mINFO[0m] [stdout] com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.register(DiscoveryClient.java:828)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator.run(InstanceInfoReplicator.java:125)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator$2.run(InstanceInfoReplicator.java:105)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Thread.run(Thread.java:1474)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.638+0000  INFO []  INFO --- DiscoveryClient-InstanceInfoReplicator-%d - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780866638, current=DOWN, previous=UP]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.638+0000  WARN []  WARN --- DiscoveryClient-InstanceInfoReplicator-%d - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.638+0000  INFO []  INFO --- DiscoveryClient-InstanceInfoReplicator-%d - c.netflix.discovery.DiscoveryClient - DiscoveryClient_SENTINEL-GEAR/sentinel-gear:10.0.2.112:0: registering service...
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.665+0000  INFO []  INFO --- DiscoveryClient-InstanceInfoReplicator-%d - c.n.d.s.t.d.RedirectingEurekaHttpClient - Request execution error. endpoint=DefaultEndpoint{ serviceUrl='http://localhost:8761/eureka/}, exception=I/O error on POST request for "http://localhost:8761/eureka/apps/SENTINEL-GEAR": Connect to http://localhost:8761 failed: Connection refused stacktrace=org.springframework.web.client.ResourceAccessException: I/O error on POST request for "http://localhost:8761/eureka/apps/SENTINEL-GEAR": Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:763)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:615)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchange(DefaultRestClient.java:567)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.RestClient$RequestHeadersSpec.exchange(RestClient.java:750)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.executeAndExtract(DefaultRestClient.java:896)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultResponseSpec.toBodilessEntity(DefaultRestClient.java:860)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.http.RestClientEurekaHttpClient.register(RestClientEurekaHttpClient.java:64)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.executeOnNewServer(RedirectingEurekaHttpClient.java:121)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RedirectingEurekaHttpClient.execute(RedirectingEurekaHttpClient.java:80)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:120)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.register(DiscoveryClient.java:828)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator.run(InstanceInfoReplicator.java:125)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator$2.run(InstanceInfoReplicator.java:105)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Thread.run(Thread.java:1474)
+[[34;1mINFO[0m] [stdout] Caused by: org.apache.hc.client5.http.HttpHostConnectException: Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:639)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:543)
+[[34;1mINFO[0m] [stdout] 	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:594)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.net.Socket.connect(Socket.java:659)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.io.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:215)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:497)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:164)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalExecRuntime.connectEndpoint(InternalExecRuntime.java:174)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ConnectExec.execute(ConnectExec.java:144)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ProtocolExec.execute(ProtocolExec.java:195)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ContentCompressionExec.execute(ContentCompressionExec.java:151)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec.execute(HttpRequestRetryExec.java:112)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.RedirectExec.execute(RedirectExec.java:110)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.ExecChainElement.execute(ExecChainElement.java:51)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:87)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.impl.classic.CloseableHttpClient.execute(CloseableHttpClient.java:55)
+[[34;1mINFO[0m] [stdout] 	at org.apache.hc.client5.http.classic.HttpClient.executeOpen(HttpClient.java:183)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:99)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:87)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeWithRequest(AbstractBufferingClientHttpRequest.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.InterceptingClientHttpRequest$EndOfChainRequestExecution.execute(InterceptingClientHttpRequest.java:102)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.cloud.netflix.eureka.http.RestClientTransportClientFactory.lambda$newClient$2(RestClientTransportClientFactory.java:98)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.ClientHttpRequestInterceptor.lambda$apply$0(ClientHttpRequestInterceptor.java:89)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.InterceptingClientHttpRequest.executeInternal(InterceptingClientHttpRequest.java:73)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:50)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:80)
+[[34;1mINFO[0m] [stdout] 	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:609)
+[[34;1mINFO[0m] [stdout] 	... 24 more
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.666+0000  WARN []  WARN --- DiscoveryClient-InstanceInfoReplicator-%d - c.n.d.s.t.d.RetryableEurekaHttpClient - Request execution failed with message: I/O error on POST request for "http://localhost:8761/eureka/apps/SENTINEL-GEAR": Connect to http://localhost:8761 failed: Connection refused
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.666+0000  WARN []  WARN --- DiscoveryClient-InstanceInfoReplicator-%d - c.netflix.discovery.DiscoveryClient - DiscoveryClient_SENTINEL-GEAR/sentinel-gear:10.0.2.112:0 - registration failed Cannot execute request on any known server
+[[34;1mINFO[0m] [stdout] com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.register(DiscoveryClient.java:828)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator.run(InstanceInfoReplicator.java:125)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator$2.run(InstanceInfoReplicator.java:105)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Thread.run(Thread.java:1474)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.666+0000  WARN []  WARN --- DiscoveryClient-InstanceInfoReplicator-%d - c.n.discovery.InstanceInfoReplicator - There was a problem with the instance info replicator
+[[34;1mINFO[0m] [stdout] com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$1.execute(EurekaHttpClientDecorator.java:59)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:76)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.register(EurekaHttpClientDecorator.java:56)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.DiscoveryClient.register(DiscoveryClient.java:828)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator.run(InstanceInfoReplicator.java:125)
+[[34;1mINFO[0m] [stdout] 	at com.netflix.discovery.InstanceInfoReplicator$2.run(InstanceInfoReplicator.java:105)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+[[34;1mINFO[0m] [stdout] 	at java.base/java.lang.Thread.run(Thread.java:1474)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.771+0000  INFO []  INFO --- main - o.s.b.a.e.web.EndpointLinksResolver - Exposing 4 endpoints beneath base path '/actuator'
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.853+0000  INFO []  INFO --- main - o.s.b.reactor.netty.NettyWebServer - Netty started on port 8081 (http)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:06.889+0000  INFO []  INFO --- main - c.i.s.i.SentinelGearPolicyEnforcementTest - Started SentinelGearPolicyEnforcementTest in 9.893 seconds (process running for 13.049)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.677+0000  INFO []  INFO --- main - o.s.b.reactor.netty.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.680+0000  INFO []  INFO --- netty-shutdown - o.s.b.reactor.netty.GracefulShutdown - Graceful shutdown complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.681+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Unregistering application SENTINEL-GEAR with eureka with status DOWN
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.699+0000  INFO []  INFO --- main - o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.ironbucket.sentinelgear.integration.BuzzleVaneDiscoveryLifecycleTest]: BuzzleVaneDiscoveryLifecycleTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.705+0000  INFO []  INFO --- main - o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.ironbucket.sentinelgear.GatewayApp for test class com.ironbucket.sentinelgear.integration.BuzzleVaneDiscoveryLifecycleTest
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.712+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Registering application SENTINEL-GEAR with eureka with status UP
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.712+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780868712, current=UP, previous=DOWN]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.712+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.713+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.723+0000  INFO []  INFO --- main - o.s.b.reactor.netty.NettyWebServer - Netty started on port 8081 (http)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.955+0000  INFO []  INFO --- main - o.s.b.reactor.netty.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.956+0000  INFO []  INFO --- netty-shutdown - o.s.b.reactor.netty.GracefulShutdown - Graceful shutdown complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.960+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Unregistering application SENTINEL-GEAR with eureka with status DOWN
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.960+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780868960, current=DOWN, previous=UP]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.960+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:08.994+0000  INFO []  INFO --- main - o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.ironbucket.sentinelgear.integration.SentinelGearAuditLoggingTest]: SentinelGearAuditLoggingTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.018+0000  INFO []  INFO --- main - o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.ironbucket.sentinelgear.GatewayApp for test class com.ironbucket.sentinelgear.integration.SentinelGearAuditLoggingTest
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.045+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Registering application SENTINEL-GEAR with eureka with status UP
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.045+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869045, current=UP, previous=DOWN]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.045+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.045+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.082+0000  INFO []  INFO --- main - o.s.b.reactor.netty.NettyWebServer - Netty started on port 8081 (http)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.293+0000  INFO []  INFO --- main - o.s.b.reactor.netty.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.295+0000  INFO []  INFO --- netty-shutdown - o.s.b.reactor.netty.GracefulShutdown - Graceful shutdown complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.295+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Unregistering application SENTINEL-GEAR with eureka with status DOWN
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.296+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869296, current=DOWN, previous=UP]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.296+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.308+0000  INFO []  INFO --- main - o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.ironbucket.sentinelgear.integration.SentinelGearIdentityPropagationTest]: SentinelGearIdentityPropagationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.311+0000  INFO []  INFO --- main - o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.ironbucket.sentinelgear.GatewayApp for test class com.ironbucket.sentinelgear.integration.SentinelGearIdentityPropagationTest
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.324+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Registering application SENTINEL-GEAR with eureka with status UP
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.325+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869325, current=UP, previous=DOWN]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.325+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.325+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.347+0000  INFO []  INFO --- main - o.s.b.reactor.netty.NettyWebServer - Netty started on port 8081 (http)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.438+0000  INFO []  INFO --- main - o.s.b.reactor.netty.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.439+0000  INFO []  INFO --- netty-shutdown - o.s.b.reactor.netty.GracefulShutdown - Graceful shutdown complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.439+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Unregistering application SENTINEL-GEAR with eureka with status DOWN
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.439+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869439, current=DOWN, previous=UP]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.439+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.452+0000  INFO []  INFO --- main - o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.ironbucket.sentinelgear.integration.SentinelGearPolicyFallbackTest]: SentinelGearPolicyFallbackTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.455+0000  INFO []  INFO --- main - o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.ironbucket.sentinelgear.GatewayApp for test class com.ironbucket.sentinelgear.integration.SentinelGearPolicyFallbackTest
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.467+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Registering application SENTINEL-GEAR with eureka with status UP
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.467+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869467, current=UP, previous=DOWN]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.467+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.469+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.480+0000  INFO []  INFO --- main - o.s.b.reactor.netty.NettyWebServer - Netty started on port 8081 (http)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.789+0000  INFO []  INFO --- main - o.s.b.reactor.netty.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.789+0000  INFO []  INFO --- netty-shutdown - o.s.b.reactor.netty.GracefulShutdown - Graceful shutdown complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.790+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Unregistering application SENTINEL-GEAR with eureka with status DOWN
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.790+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869790, current=DOWN, previous=UP]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.790+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.798+0000  INFO []  INFO --- main - o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.ironbucket.sentinelgear.integration.SentinelGearProxyDelegationTest]: SentinelGearProxyDelegationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.806+0000  INFO []  INFO --- main - o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.ironbucket.sentinelgear.GatewayApp for test class com.ironbucket.sentinelgear.integration.SentinelGearProxyDelegationTest
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.813+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Registering application SENTINEL-GEAR with eureka with status UP
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.818+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869818, current=UP, previous=DOWN]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.818+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.818+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.837+0000  INFO []  INFO --- main - o.s.b.reactor.netty.NettyWebServer - Netty started on port 8081 (http)
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.899+0000  INFO []  INFO --- main - o.s.b.reactor.netty.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.900+0000  INFO []  INFO --- netty-shutdown - o.s.b.reactor.netty.GracefulShutdown - Graceful shutdown complete
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.900+0000  INFO []  INFO --- main - o.s.c.n.e.s.EurekaServiceRegistry - Unregistering application SENTINEL-GEAR with eureka with status DOWN
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.900+0000  INFO []  INFO --- main - c.netflix.discovery.DiscoveryClient - Saw local status change event StatusChangeEvent [timestamp=1768780869900, current=DOWN, previous=UP]
+[[34;1mINFO[0m] [stdout] 2026-01-19T00:01:09.900+0000  WARN []  WARN --- main - c.n.discovery.InstanceInfoReplicator - Ignoring onDemand update due to rate limiter
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  IronBucket S3 Feature Completeness Test Suite
+[[34;1mINFO[0m] [stdout]  Testing: Complete S3 API implementation
+[[34;1mINFO[0m] [stdout]  Status: RED (Features expected to be missing initially)
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  S3 API Completeness Score: 0.0%
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  Core Operations:        0/7 (0.0%)
+[[34;1mINFO[0m] [stdout]  Multipart Upload:       0/6 (0.0%)
+[[34;1mINFO[0m] [stdout]  Versioning:             0/5 (0.0%)
+[[34;1mINFO[0m] [stdout]  Advanced Features:      0/11 (0.0%)
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  Target: 80% for production S3 compatibility
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m1[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 0.062 s[1;31m <<< FAILURE![m -- in [1mS3 API Completeness Summary[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.S3FeaturesTest.testS3APICoverageComplete -- Time elapsed: 0.049 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: S3 API completeness is 0.0%, must be >= 80% for full S3 compatibility! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.S3FeaturesTest$S3APICompletenessSummary.testS3APICoverageComplete(S3FeaturesTest.java:743)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m6[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 0.035 s[1;31m <<< FAILURE![m -- in [1mPhase 2 - Multipart Upload (P1 HIGH)[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.S3FeaturesTest.testInitiateMultipartUploadImplemented -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: S3ProxyService must exist ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.S3FeaturesTest$Phase2MultipartUpload.testInitiateMultipartUploadImplemented(S3FeaturesTest.java:183)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m7[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 0.052 s[1;31m <<< FAILURE![m -- in [1mPhase 1 MVP - Core S3 Operations (P0 CRITICAL)[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.S3FeaturesTest.testCreateBucketImplemented -- Time elapsed: 0.008 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: CRITICAL: S3Controller must exist ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.S3FeaturesTest$Phase1CoreS3Operations.testCreateBucketImplemented(S3FeaturesTest.java:53)
+
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  Graphite-Forge GraphQL Feature Completeness Test Suite
+[[34;1mINFO[0m] [stdout]  Testing: Complete GraphQL management API
+[[34;1mINFO[0m] [stdout]  Status: RED (Service expected to be missing initially)
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout] 
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  GraphQL API Completeness Score: 0.0%
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  Core Schema & Mutations: 0/8 (0.0%)
+[[34;1mINFO[0m] [stdout]  Audit & Compliance:      0/4 (0.0%)
+[[34;1mINFO[0m] [stdout]  Identity Management:     0/6 (0.0%)
+[[34;1mINFO[0m] [stdout]  Advanced Features:       0/8 (0.0%)
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[34;1mINFO[0m] [stdout]  Target: 75% for production GraphQL management API
+[[34;1mINFO[0m] [stdout] ═══════════════════════════════════════════════════════════
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m1[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 0.013 s[1;31m <<< FAILURE![m -- in [1mGraphQL API Completeness Summary[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GraphQLFeaturesTest.testGraphQLAPICoverageComplete -- Time elapsed: 0.009 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: GraphQL API completeness is 0.0%, must be >= 75% for full management plane! ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GraphQLFeaturesTest$GraphQLAPICompletenessSummary.testGraphQLAPICoverageComplete(GraphQLFeaturesTest.java:739)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m5[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 0.031 s[1;31m <<< FAILURE![m -- in [1mPhase 1 MVP - Core GraphQL Schema (P0 CRITICAL)[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GraphQLFeaturesTest.testGraphQLSchemaExists -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: CRITICAL: GraphQL schema file must exist at /workspaces/IronBucket/Sentinel-Gear/temp/Graphite-Forge/src/main/resources/graphql/schema.graphqls ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GraphQLFeaturesTest$Phase1CoreGraphQLSchema.testGraphQLSchemaExists(GraphQLFeaturesTest.java:53)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m4[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 0.012 s[1;31m <<< FAILURE![m -- in [1mPhase 1 MVP - Policy Management Mutations (P0 CRITICAL)[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GraphQLFeaturesTest.testCreatePolicyImplemented -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: CRITICAL: PolicyMutationResolver must exist ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GraphQLFeaturesTest$Phase1PolicyManagementMutations.testCreatePolicyImplemented(GraphQLFeaturesTest.java:227)
+
+[[34;1mINFO[0m] [stdout] ===========================================================
+[[34;1mINFO[0m] [stdout]  IronBucket Governance/Integrity/Resilience Test Suite
+[[34;1mINFO[0m] [stdout]  Status: RED (acts as specification until features land)
+[[34;1mINFO[0m] [stdout] ===========================================================
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m3[m, [1;31mFailures: [0;1;31m3[m, Errors: 0, Skipped: 0, Time elapsed: 0.017 s[1;31m <<< FAILURE![m -- in [1mMultipart, Streaming, and Partial Writes[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testAdapterCrashDuringWriteRollsBack -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Immediate: add chaos test that kills adapter mid-write and asserts atomic commit or rollback with no corrupt objects ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$MultipartStreamingAndPartialWrites.testAdapterCrashDuringWriteRollsBack(GovernanceIntegrityResilienceTest.java:184)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testLargeObjectStreamingLatencyBudget -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add performance test comparing proxy vs presigned paths for large object streaming latency ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$MultipartStreamingAndPartialWrites.testLargeObjectStreamingLatencyBudget(GovernanceIntegrityResilienceTest.java:201)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testMultipartAbortCleansOrphans -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Implement multipart cleanup job that deletes orphan parts and prevents billing leaks after abort ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$MultipartStreamingAndPartialWrites.testMultipartAbortCleansOrphans(GovernanceIntegrityResilienceTest.java:167)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m3[m, [1;31mFailures: [0;1;31m3[m, Errors: 0, Skipped: 0, Time elapsed: 0.012 s[1;31m <<< FAILURE![m -- in [1mMigration, Replication, and Cutover[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testMetadataReconciliationAfterPartition -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add post-partition reconciliation test that drives inventory diff to zero and raises conflicts as alerts ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$MigrationReplicationAndCutover.testMetadataReconciliationAfterPartition(GovernanceIntegrityResilienceTest.java:259)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testDualWriteCutoverConsistent -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Implement dual write service that mirrors objects during cutover and validates consistency before switching ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$MigrationReplicationAndCutover.testDualWriteCutoverConsistent(GovernanceIntegrityResilienceTest.java:224)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testCrossRegionReplicationOrdering -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add replication validator that detects gaps, reordering, or lost versions across regions ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$MigrationReplicationAndCutover.testCrossRegionReplicationOrdering(GovernanceIntegrityResilienceTest.java:242)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m3[m, [1;31mFailures: [0;1;31m3[m, Errors: 0, Skipped: 0, Time elapsed: 0.030 s[1;31m <<< FAILURE![m -- in [1mData Integrity and Metadata[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testMetadataDriftOnMigrationDetected -- Time elapsed: 0.011 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Immediate: add migration/backfill test that compares keys, versions, ACLs, tags, and checksums between index and backend ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$DataIntegrityAndMetadata.testMetadataDriftOnMigrationDetected(GovernanceIntegrityResilienceTest.java:109)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testChecksumAlgorithmTranslation -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add checksum translation layer to normalize/backfill digests across differing backend algorithms ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$DataIntegrityAndMetadata.testChecksumAlgorithmTranslation(GovernanceIntegrityResilienceTest.java:127)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testVersioningAndDeleteMarkersPreserved -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add e2e that migrates buckets with versioning enabled and asserts delete markers and versions are preserved ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$DataIntegrityAndMetadata.testVersioningAndDeleteMarkersPreserved(GovernanceIntegrityResilienceTest.java:144)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m3[m, [1;31mFailures: [0;1;31m3[m, Errors: 0, Skipped: 0, Time elapsed: 0.026 s[1;31m <<< FAILURE![m -- in [1mOperational Fragility and Upgrades[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testDiskFullAndSlowIOHandled -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add chaos test that simulates disk pressure and slow I/O and asserts clear errors/backpressure ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$OperationalFragilityAndUpgrades.testDiskFullAndSlowIOHandled(GovernanceIntegrityResilienceTest.java:375)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testControlPlaneHARollingUpgrade -- Time elapsed: 0.011 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add HA test that simulates leader failover and rolling upgrades without data loss or corruption ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$OperationalFragilityAndUpgrades.testControlPlaneHARollingUpgrade(GovernanceIntegrityResilienceTest.java:340)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testAdapterUpgradeWithSchemaChange -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add upgrade test that validates backward compatibility or automated migration for adapter schema changes ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$OperationalFragilityAndUpgrades.testAdapterUpgradeWithSchemaChange(GovernanceIntegrityResilienceTest.java:358)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m3[m, [1;31mFailures: [0;1;31m3[m, Errors: 0, Skipped: 0, Time elapsed: 0.030 s[1;31m <<< FAILURE![m -- in [1mGovernance and Bypass[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testQuotaAndTenantIsolation -- Time elapsed: 0.010 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Define quota enforcement service that blocks excess writes and isolates tenants even via indirect paths ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$GovernanceAndBypass.testQuotaAndTenantIsolation(GovernanceIntegrityResilienceTest.java:87)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testDirectBackendAdminDetection -- Time elapsed: 0.001 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Immediate: backend admin actions must emit auditable events bound to operator identity and attestation ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$GovernanceAndBypass.testDirectBackendAdminDetection(GovernanceIntegrityResilienceTest.java:69)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testPolicyBypassAttemptDetected -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Immediate: add e2e that attempts direct backend writes and proves control plane denial plus reconciliation ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$GovernanceAndBypass.testPolicyBypassAttemptDetected(GovernanceIntegrityResilienceTest.java:51)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m3[m, [1;31mFailures: [0;1;31m3[m, Errors: 0, Skipped: 0, Time elapsed: 0.036 s[1;31m <<< FAILURE![m -- in [1mSecurity and Observability[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testReconciliationAndDriftMonitoring -- Time elapsed: 0.010 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add periodic drift monitoring that inventories control plane vs backend and files tickets for discrepancies ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$SecurityAndObservability.testReconciliationAndDriftMonitoring(GovernanceIntegrityResilienceTest.java:431)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testTamperAndReplayDetection -- Time elapsed: 0.006 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add tamper/replay detection that rejects forged payloads and raises high-priority alerts ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$SecurityAndObservability.testTamperAndReplayDetection(GovernanceIntegrityResilienceTest.java:398)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testAuditCompletenessAndRetention -- Time elapsed: 0.010 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Audit pipeline config must exist to enforce retention and completeness ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$SecurityAndObservability.testAuditCompletenessAndRetention(GovernanceIntegrityResilienceTest.java:415)
+
+[[34;1mINFO[0m] [stdout] Immediate coverage: 0/4
+[[34;1mINFO[0m] [stdout] High coverage: 0/3
+[[34;1mINFO[0m] [stdout] Medium coverage: 0/5
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m1[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 0.030 s[1;31m <<< FAILURE![m -- in [1mPriority Coverage Summary[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testPriorityCoverageScoreboard -- Time elapsed: 0.021 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Immediate scenarios incomplete: /workspaces/IronBucket/Sentinel-Gear/steel-hammer/tests/test-policy-bypass.sh, /workspaces/IronBucket/Sentinel-Gear/steel-hammer/tests/test-metadata-drift.sh, /workspaces/IronBucket/Sentinel-Gear/steel-hammer/tests/test-adapter-crash-during-write.sh, /workspaces/IronBucket/Sentinel-Gear/temp/Sentinel-Gear/src/test/java/com/ironbucket/sentinelgear/security/PresignedUrlSecurityTest.java ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$PriorityCoverageSummary.testPriorityCoverageScoreboard(GovernanceIntegrityResilienceTest.java:487)
+
+[[31;1mERROR[0m] [1;31mTests [0;1mrun: [0;1m3[m, [1;31mFailures: [0;1;31m3[m, Errors: 0, Skipped: 0, Time elapsed: 0.026 s[1;31m <<< FAILURE![m -- in [1mAPI Semantics and Edge Cases[m
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testAclAndCorsEdgeCasesCovered -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add edge-case coverage for complex ACL grants and browser CORS preflight behavior ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$ApiSemanticsAndEdgeCases.testAclAndCorsEdgeCasesCovered(GovernanceIntegrityResilienceTest.java:318)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testPresignedUrlTTLReplayProtected -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Immediate: add presigned URL tests for expiry, replay prevention, signed headers, and audit logging ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$ApiSemanticsAndEdgeCases.testPresignedUrlTTLReplayProtected(GovernanceIntegrityResilienceTest.java:300)
+
+[[31;1mERROR[0m] com.ironbucket.roadmap.GovernanceIntegrityResilienceTest.testListPaginationDelimiterParity -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Add integration test that compares ListObjectsV2 pagination/delimiter semantics across backends ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:69)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:41)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:228)
+	at com.ironbucket.roadmap.GovernanceIntegrityResilienceTest$ApiSemanticsAndEdgeCases.testListPaginationDelimiterParity(GovernanceIntegrityResilienceTest.java:282)
+
+[[31;1mERROR[0m] [1;31mFailures: [m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testAclAndCorsEdgeCasesCovered Add edge-case coverage for complex ACL grants and browser CORS preflight behavior ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testAdapterCrashDuringWriteRollsBack Immediate: add chaos test that kills adapter mid-write and asserts atomic commit or rollback with no corrupt objects ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testAdapterUpgradeWithSchemaChange Add upgrade test that validates backward compatibility or automated migration for adapter schema changes ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testAuditCompletenessAndRetention Audit pipeline config must exist to enforce retention and completeness ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testChecksumAlgorithmTranslation Add checksum translation layer to normalize/backfill digests across differing backend algorithms ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testControlPlaneHARollingUpgrade Add HA test that simulates leader failover and rolling upgrades without data loss or corruption ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testCrossRegionReplicationOrdering Add replication validator that detects gaps, reordering, or lost versions across regions ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testDirectBackendAdminDetection Immediate: backend admin actions must emit auditable events bound to operator identity and attestation ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testDiskFullAndSlowIOHandled Add chaos test that simulates disk pressure and slow I/O and asserts clear errors/backpressure ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testDualWriteCutoverConsistent Implement dual write service that mirrors objects during cutover and validates consistency before switching ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testLargeObjectStreamingLatencyBudget Add performance test comparing proxy vs presigned paths for large object streaming latency ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testListPaginationDelimiterParity Add integration test that compares ListObjectsV2 pagination/delimiter semantics across backends ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testMetadataDriftOnMigrationDetected Immediate: add migration/backfill test that compares keys, versions, ACLs, tags, and checksums between index and backend ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testMetadataReconciliationAfterPartition Add post-partition reconciliation test that drives inventory diff to zero and raises conflicts as alerts ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testMultipartAbortCleansOrphans Implement multipart cleanup job that deletes orphan parts and prevents billing leaks after abort ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testPolicyBypassAttemptDetected Immediate: add e2e that attempts direct backend writes and proves control plane denial plus reconciliation ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testPresignedUrlTTLReplayProtected Immediate: add presigned URL tests for expiry, replay prevention, signed headers, and audit logging ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testPriorityCoverageScoreboard Immediate scenarios incomplete: /workspaces/IronBucket/Sentinel-Gear/steel-hammer/tests/test-policy-bypass.sh, /workspaces/IronBucket/Sentinel-Gear/steel-hammer/tests/test-metadata-drift.sh, /workspaces/IronBucket/Sentinel-Gear/steel-hammer/tests/test-adapter-crash-during-write.sh, /workspaces/IronBucket/Sentinel-Gear/temp/Sentinel-Gear/src/test/java/com/ironbucket/sentinelgear/security/PresignedUrlSecurityTest.java ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testQuotaAndTenantIsolation Define quota enforcement service that blocks excess writes and isolates tenants even via indirect paths ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testReconciliationAndDriftMonitoring Add periodic drift monitoring that inventories control plane vs backend and files tickets for discrepancies ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testTamperAndReplayDetection Add tamper/replay detection that rejects forged payloads and raises high-priority alerts ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GovernanceIntegrityResilienceTest.testVersioningAndDeleteMarkersPreserved Add e2e that migrates buckets with versioning enabled and asserts delete markers and versions are preserved ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GraphQLFeaturesTest.testCreatePolicyImplemented CRITICAL: PolicyMutationResolver must exist ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GraphQLFeaturesTest.testGraphQLAPICoverageComplete GraphQL API completeness is 0.0%, must be >= 75% for full management plane! ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  GraphQLFeaturesTest.testGraphQLSchemaExists CRITICAL: GraphQL schema file must exist at /workspaces/IronBucket/Sentinel-Gear/temp/Graphite-Forge/src/main/resources/graphql/schema.graphqls ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  S3FeaturesTest.testCreateBucketImplemented CRITICAL: S3Controller must exist ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  S3FeaturesTest.testInitiateMultipartUploadImplemented S3ProxyService must exist ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31m  S3FeaturesTest.testS3APICoverageComplete S3 API completeness is 0.0%, must be >= 80% for full S3 compatibility! ==> expected: <true> but was: <false>[m
+[[31;1mERROR[0m] [1;31mTests run: 131, Failures: 28, Errors: 0, Skipped: 0[m
+[[31;1mERROR[0m] Failed to execute goal [32morg.apache.maven.plugins:maven-surefire-plugin:3.5.4:test[0m [1m(default-test)[0m on project [36msentinelgear[0m: [31;1mThere are test failures.[m
+[[31;1mERROR[0m] [31;1m[m
+[[31;1mERROR[0m] [31;1mSee /workspaces/IronBucket/Sentinel-Gear/target/surefire-reports for the individual test results.[m
+[[31;1mERROR[0m] [31;1mSee dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.[0m[m
+[[31;1mERROR[0m] [0m-> [1m[Help 1][0m[m
+[[31;1mERROR[0m] 
+[[31;1mERROR[0m] To see the full stack trace of the errors, re-run Maven with the '[1m-e[0m' switch
+[[31;1mERROR[0m] Re-run Maven using the '[1m-X[0m' switch to enable verbose output
+[[31;1mERROR[0m] 
+[[31;1mERROR[0m] For more information about the errors and possible solutions, please read the following articles:
+[[31;1mERROR[0m] [1m[Help 1][0m http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

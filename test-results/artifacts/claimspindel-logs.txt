@@ -1,0 +1,100 @@
+2026-01-19T00:12:38.934+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition matched: s3-admin-route
+2026-01-19T00:12:47.750+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:12:47.750+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:12:47.751+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:47.753+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:12:47.753+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/**'
+2026-01-19T00:12:47.753+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:12:47.753+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:12:47.753+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:12:47.755+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@20805ab0'
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/**'
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:12:57.883+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:12:57.884+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@6666d1fe'
+2026-01-19T00:13:07.255+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.255+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:13:07.256+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.256+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:07.256+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/**'
+2026-01-19T00:13:07.256+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.256+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:07.256+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.257+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@1a0ce761'
+2026-01-19T00:13:07.350+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.350+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:13:07.350+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.351+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:07.351+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/**'
+2026-01-19T00:13:07.351+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.351+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:07.353+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.354+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@14cded21'
+2026-01-19T00:13:07.412+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.412+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:13:07.412+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.413+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:07.413+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/**'
+2026-01-19T00:13:07.413+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.413+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:07.413+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.414+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@698c99b'
+2026-01-19T00:13:07.473+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.474+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/info' doesn't match 'POST /logout'
+2026-01-19T00:13:07.474+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.474+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:07.474+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/info'; against '/actuator/**'
+2026-01-19T00:13:07.474+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.474+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/info' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:07.474+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.475+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@7bc3f3cc'
+2026-01-19T00:13:07.489+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.489+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/metrics' doesn't match 'POST /logout'
+2026-01-19T00:13:07.490+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.490+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:07.490+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/metrics'; against '/actuator/**'
+2026-01-19T00:13:07.490+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.490+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/metrics' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:07.490+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.491+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@3e71beb3'
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health/liveness' doesn't match 'POST /logout'
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health/liveness'; against '/actuator/**'
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health/liveness' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:07.507+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.508+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@64e4bcd9'
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/metrics' doesn't match 'POST /logout'
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/metrics'; against '/actuator/**'
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/metrics' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:07.544+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.545+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@1c063617'
+2026-01-19T00:13:08.050+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:08.052+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:13:08.052+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:08.053+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:08.053+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/**'
+2026-01-19T00:13:08.053+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:08.053+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:08.053+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:08.062+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@345d689a'
+2026-01-19T00:13:08.389+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:08.390+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/metrics' doesn't match 'POST /logout'
+2026-01-19T00:13:08.390+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:08.390+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/**', method=null}
+2026-01-19T00:13:08.390+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/metrics'; against '/actuator/**'
+2026-01-19T00:13:08.390+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:08.390+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/metrics' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x00000000034afd70@4a0e588c
+2026-01-19T00:13:08.390+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:08.391+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@61cced19'

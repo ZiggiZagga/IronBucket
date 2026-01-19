@@ -12,31 +12,32 @@ processors:
     send_batch_size: 1024
 
 exporters:
-  debug:
-    verbosity: detailed
-
+  logging:
+    loglevel: debug
+  
   otlp:
-    endpoint: tempo:4317
-    tls:
-      insecure: true
-
+    client:
+      endpoint: tempo:4317
+      tls:
+        insecure: true
+  
   prometheusremotewrite:
-    endpoint: "http://mimir:9009/api/v1/push"
-    resource_to_telemetry_conversion:
-      enabled: true
-
+    endpoint: http://mimir:9009/api/prom/push
+  
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, otlp]
+      exporters: [logging, otlp]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, prometheusremotewrite]
+      exporters: [logging, prometheusremotewrite]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [logging, loki]

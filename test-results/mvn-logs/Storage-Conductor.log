@@ -1,0 +1,29 @@
+[[33;1mWARNING[0m] Unable to find the root directory. Create a .mvn directory in the root directory or add the root="true" attribute on the root project's model to identify it.
+[[34;1mINFO[0m] Scanning for projects...
+[[34;1mINFO[0m] Loaded 21943 auto-discovered prefixes for remote repository central (prefixes-central.txt)
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m---------------------< [36;22mcom.ironbucket:storage-conductor[39;1m >----------------------[0m
+[[34;1mINFO[0m] [1mBuilding Storage-Conductor 4.0.1[0m
+[[34;1mINFO[0m]   from pom.xml
+[[34;1mINFO[0m] [1m------------------------------------[ jar ]------------------------------------[0m
+[[34;1mINFO[0m] Loaded 74 auto-discovered prefixes for remote repository apache.snapshots (prefixes-apache.snapshots-c1d4c55f9308e5ac18a4069bed41dca64d85c515.txt)
+[[33;1mWARNING[0m] Could not transfer metadata /.meta/prefixes.txt from/to plexus.snapshots-9dedea94451709299d055319c137abeb30aacdef (https://oss.sonatype.org/content/repositories/plexus-snapshots): HTTP Status: 503
+[[33;1mWARNING[0m] The POM for com.ironbucket:vault-smith:jar:4.0.1 is missing, no dependency information available
+[[34;1mINFO[0m] Loaded 74 auto-discovered prefixes for remote repository apache-snapshots (prefixes-apache-snapshots-0dfdae0970a51303f565f44df55dc23e9ee13faf.txt)
+[[34;1mINFO[0m] [1m-------------------------------------------------------------------------------[0m
+[[34;1mINFO[0m] [31;1mBUILD FAILURE[0m
+[[34;1mINFO[0m] [1m-------------------------------------------------------------------------------[0m
+[[34;1mINFO[0m] Total time:  3.315 s
+[[34;1mINFO[0m] Finished at: 2026-01-18T17:59:10Z
+[[34;1mINFO[0m] [1m-------------------------------------------------------------------------------[0m
+[[31;1mERROR[0m] Failed to execute goal on project [36mstorage-conductor[0m: [31;1mCould not resolve dependencies for project com.ironbucket:storage-conductor:jar:4.0.1[m
+[[31;1mERROR[0m] [31;1mdependency: com.ironbucket:vault-smith:jar:4.0.1 (compile)[m
+[[31;1mERROR[0m] [31;1m	Prefix com/ironbucket/vault-smith/4.0.1/vault-smith-4.0.1.jar NOT allowed from central (https://repo.maven.apache.org/maven2, default, releases)[m
+[[31;1mERROR[0m] [31;1m[0m: The following artifacts could not be resolved: com.ironbucket:vault-smith:jar:4.0.1 (absent): Prefix com/ironbucket/vault-smith/4.0.1/vault-smith-4.0.1.jar NOT allowed from central (https://repo.maven.apache.org/maven2, default, releases)[m
+[[31;1mERROR[0m] [0m-> [1m[Help 1][0m[m
+[[31;1mERROR[0m] 
+[[31;1mERROR[0m] To see the full stack trace of the errors, re-run Maven with the '[1m-e[0m' switch
+[[31;1mERROR[0m] Re-run Maven using the '[1m-X[0m' switch to enable verbose output
+[[31;1mERROR[0m] 
+[[31;1mERROR[0m] For more information about the errors and possible solutions, please read the following articles:
+[[31;1mERROR[0m] [1m[Help 1][0m http://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException

@@ -1,0 +1,66 @@
+[[33;1mWARNING[0m] Unable to find the root directory. Create a .mvn directory in the root directory or add the root="true" attribute on the root project's model to identify it.
+[[34;1mINFO[0m] Scanning for projects...
+[[34;1mINFO[0m] Loaded 21943 auto-discovered prefixes for remote repository central (prefixes-central.txt)
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m-------------------------< [36;22mcom.ironbucket:buzzlevane[39;1m >-------------------------[0m
+[[34;1mINFO[0m] [1mBuilding buzzle-vane 4.0.1[0m
+[[34;1mINFO[0m]   from pom.xml
+[[34;1mINFO[0m] [1m------------------------------------[ jar ]------------------------------------[0m
+[[34;1mINFO[0m] Loaded 74 auto-discovered prefixes for remote repository apache.snapshots (prefixes-apache.snapshots-c1d4c55f9308e5ac18a4069bed41dca64d85c515.txt)
+[[33;1mWARNING[0m] Could not transfer metadata /.meta/prefixes.txt from/to plexus.snapshots-9dedea94451709299d055319c137abeb30aacdef (https://oss.sonatype.org/content/repositories/plexus-snapshots): HTTP Status: 503
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m--- [32;22mclean:3.5.0:clean[0m [1m(default-clean)[0m @ [36mbuzzlevane[39;1m ---[0m
+[[34;1mINFO[0m] Deleting /workspaces/IronBucket/Buzzle-Vane/target
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m--- [32;22mresources:3.3.1:resources[0m [1m(default-resources)[0m @ [36mbuzzlevane[39;1m ---[0m
+[[34;1mINFO[0m] Copying 3 resources from src/main/resources to target/classes
+[[34;1mINFO[0m] Copying 1 resource from src/main/resources to target/classes
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m--- [32;22mcompiler:3.14.1:compile[0m [1m(default-compile)[0m @ [36mbuzzlevane[39;1m ---[0m
+[[34;1mINFO[0m] Recompiling the module because of [1mchanged source code[m.
+[[34;1mINFO[0m] Compiling 5 source files with javac [debug parameters release 25] to target/classes
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m--- [32;22mresources:3.3.1:testResources[0m [1m(default-testResources)[0m @ [36mbuzzlevane[39;1m ---[0m
+[[34;1mINFO[0m] skip non existing resourceDirectory /workspaces/IronBucket/Buzzle-Vane/src/test/resources
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m--- [32;22mcompiler:3.14.1:testCompile[0m [1m(default-testCompile)[0m @ [36mbuzzlevane[39;1m ---[0m
+[[34;1mINFO[0m] Recompiling the module because of [1mchanged dependency[m.
+[[34;1mINFO[0m] Compiling 2 source files with javac [debug parameters release 25] to target/test-classes
+[[34;1mINFO[0m] /workspaces/IronBucket/Buzzle-Vane/src/test/java/com/ironbucket/buzzlevane/identity/BuzzleVaneIdentityTests.java: /workspaces/IronBucket/Buzzle-Vane/src/test/java/com/ironbucket/buzzlevane/identity/BuzzleVaneIdentityTests.java uses unchecked or unsafe operations.
+[[34;1mINFO[0m] /workspaces/IronBucket/Buzzle-Vane/src/test/java/com/ironbucket/buzzlevane/identity/BuzzleVaneIdentityTests.java: Recompile with -Xlint:unchecked for details.
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m--- [32;22msurefire:3.5.4:test[0m [1m(default-test)[0m @ [36mbuzzlevane[39;1m ---[0m
+[[34;1mINFO[0m] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] -------------------------------------------------------
+[[34;1mINFO[0m]  T E S T S
+[[34;1mINFO[0m] -------------------------------------------------------
+[[34;1mINFO[0m] Running [1mDiscovery Service Tests[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m6[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.151 s -- in [1mDiscovery Service Tests[m
+[[34;1mINFO[0m] Running com.ironbucket.buzzlevane.identity.[1mBuzzleVaneIdentityTests[m
+[[34;1mINFO[0m] Running [1mService Discovery Integration[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m3[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.543 s -- in [1mService Discovery Integration[m
+[[34;1mINFO[0m] Running [1mMesh Integration Flow Tests[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m4[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.072 s -- in [1mMesh Integration Flow Tests[m
+[[34;1mINFO[0m] Running [1mLoad Balancing Authorization[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m3[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.056 s -- in [1mLoad Balancing Authorization[m
+[[34;1mINFO[0m] Running [1mMesh Routing Authorization[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m3[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.053 s -- in [1mMesh Routing Authorization[m
+[[34;1mINFO[0m] Running [1mService Mesh Multi-Tenant Isolation[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m3[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s -- in [1mService Mesh Multi-Tenant Isolation[m
+[[34;1mINFO[0m] Running [1mService-to-Service Authentication[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m5[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.079 s -- in [1mService-to-Service Authentication[m
+[[34;1mINFO[0m] Running [1mCircuit Breaker & Health Check Authorization[m
+[[34;1mINFO[0m] [1;32mTests run: [0;1;32m3[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.096 s -- in [1mCircuit Breaker & Health Check Authorization[m
+[[34;1mINFO[0m] [1mTests run: [0;1m0[m, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.981 s -- in com.ironbucket.buzzlevane.identity.[1mBuzzleVaneIdentityTests[m
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] Results:
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1;32mTests run: 30, Failures: 0, Errors: 0, Skipped: 0[m
+[[34;1mINFO[0m] 
+[[34;1mINFO[0m] [1m-------------------------------------------------------------------------------[0m
+[[34;1mINFO[0m] [32;1mBUILD SUCCESS[0m
+[[34;1mINFO[0m] [1m-------------------------------------------------------------------------------[0m
+[[34;1mINFO[0m] Total time:  11.091 s
+[[34;1mINFO[0m] Finished at: 2026-01-18T17:58:12Z
+[[34;1mINFO[0m] [1m-------------------------------------------------------------------------------[0m

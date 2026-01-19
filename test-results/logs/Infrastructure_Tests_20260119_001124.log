@@ -1,0 +1,133 @@
+[0;35m╔════════════════════════════════════════════════════════════════╗[0m
+[0;35m║                                                                ║[0m
+[0;35m║  IronBucket Complete Test Suite Orchestrator                  ║[0m
+[0;35m║                                                                ║[0m
+[0;35m║  Running ALL Tests + Generating Comprehensive Report          ║[0m
+[0;35m║                                                                ║[0m
+[0;35m╚════════════════════════════════════════════════════════════════╝[0m
+
+Report Directory: /tmp/ironbucket-complete-test-suite
+Start Time: Mon Jan 19 00:13:07 UTC 2026
+
+[0;34m═══════════════════════════════════════════════════════════════[0m
+[0;34mSUITE 1: Infrastructure & Connectivity[0m
+[0;34m═══════════════════════════════════════════════════════════════[0m
+
+[1.1] Gateway Accessibility... [0;32m✅ PASS[0m
+[1.2] Keycloak Accessibility... [0;32m✅ PASS[0m
+[1.3] Service Registry Accessibility... [0;32m✅ PASS[0m
+[1.4] MinIO S3 Storage... [0;32m✅ PASS[0m
+
+[0;34m═══════════════════════════════════════════════════════════════[0m
+[0;34mSUITE 2: Service Discovery & Registration[0m
+[0;34m═══════════════════════════════════════════════════════════════[0m
+
+[2.1] Sentinel-Gear Eureka Registration... [0;32m✅ PASS[0m
+[2.2] Brazz-Nossel Eureka Registration... [0;32m✅ PASS[0m
+[2.3] Claimspindel Eureka Registration... [0;32m✅ PASS[0m
+[2.4] Buzzle-Vane Eureka Registration... [0;31m❌ FAIL[0m
+
+[0;34m═══════════════════════════════════════════════════════════════[0m
+[0;34mSUITE 3: Service Health Endpoints[0m
+[0;34m═══════════════════════════════════════════════════════════════[0m
+
+[3.1] Sentinel-Gear Health... [0;32m✅ PASS[0m
+[3.2] Brazz-Nossel Health... [0;32m✅ PASS[0m
+[3.3] Claimspindel Health... [0;32m✅ PASS[0m
+
+[0;34m═══════════════════════════════════════════════════════════════[0m
+[0;34mSUITE 4: Observability Stack[0m
+[0;34m═══════════════════════════════════════════════════════════════[0m
+
+[4.1] Loki Readiness... [0;32m✅ PASS[0m
+[4.2] Loki Labels Available... [0;32m✅ PASS[0m
+[4.3] Tempo Readiness... [0;32m✅ PASS[0m
+[4.4] Mimir Metrics Query... [0;31m❌ FAIL[0m
+
+[0;34m═══════════════════════════════════════════════════════════════[0m
+[0;34mSUITE 5: Gateway & Request Routing[0m
+[0;34m═══════════════════════════════════════════════════════════════[0m
+
+[5.1] Gateway Info Endpoint... [0;32m✅ PASS[0m
+[5.2] Gateway Metrics Exposure... [0;32m✅ PASS[0m
+[5.3] Gateway Health Details... [0;32m✅ PASS[0m
+
+[0;34m═══════════════════════════════════════════════════════════════[0m
+[0;34mSUITE 6: Collect Observability Artifacts[0m
+[0;34m═══════════════════════════════════════════════════════════════[0m
+
+Collecting logs from Loki...
+Collecting traces from Tempo...
+Collecting metrics from Mimir...
+Collecting gateway metrics...
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+
+[0;34m═══════════════════════════════════════════════════════════════[0m
+[0;34mGenerating Comprehensive Report[0m
+[0;34m═══════════════════════════════════════════════════════════════[0m
+
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+sh: LAST_CATEGORY: unknown operand
+[0;32m✅ HTML Report generated: /tmp/ironbucket-complete-test-suite/reports/index.html[0m
+
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+sh: LAST_CAT: unknown operand
+[0;32m✅ Markdown Report generated: /tmp/ironbucket-complete-test-suite/reports/README.md[0m
+
+[0;35m═══════════════════════════════════════════════════════════════[0m
+
+[0;36mCOMPLETE TEST SUITE FINISHED[0m
+
+  [0;32m✅ Total Tests: 18[0m
+  [0;32m✅ Passed: 16[0m
+  [0;31m❌ Failed: 2[0m
+
+[0;36mReports Available:[0m
+  📊 HTML: /tmp/ironbucket-complete-test-suite/reports/index.html
+  📝 Markdown: /tmp/ironbucket-complete-test-suite/reports/README.md
+
+[0;36mAll Data:[0m
+  📁 /tmp/ironbucket-complete-test-suite/
+
+[0;35m═══════════════════════════════════════════════════════════════[0m

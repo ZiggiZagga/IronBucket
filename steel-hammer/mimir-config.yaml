@@ -1,8 +1,37 @@
+multitenancy_enabled: false
+
 server:
   http_listen_port: 9009
   grpc_listen_port: 9096
+  log_level: info
+
+common:
+  storage:
+    backend: filesystem
+    filesystem:
+      dir: /data/blocks
 
 blocks_storage:
-  backend: local
-  tsdb:
-    dir: /data/tsdb
+  backend: filesystem
+  filesystem:
+    dir: /data/blocks
+
+compactor:
+  data_dir: /data/compactor
+
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/ruler
+
+ingester:
+  ring:
+    kvstore:
+      store: inmemory
+    replication_factor: 1
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+    kvstore:
+      store: inmemory

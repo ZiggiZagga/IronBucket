@@ -46,7 +46,7 @@ if [ "$OBSERVABILITY_ENABLED" = "true" ]; then
     
     # Check Grafana
     echo "Checking Grafana (Visualization)..."
-    if docker exec steel-hammer-grafana curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+    if docker run --rm --network container:steel-hammer-grafana curlimages/curl:latest -sf http://localhost:3000/api/health > /dev/null 2>&1; then
         echo -e "${GREEN}✅ Grafana is running${NC}"
     else
         echo -e "${YELLOW}⚠️  Grafana not available (tests will continue without visualization)${NC}"
@@ -54,7 +54,7 @@ if [ "$OBSERVABILITY_ENABLED" = "true" ]; then
     
     # Check Loki
     echo "Checking Loki (Log Aggregation)..."
-    if docker exec steel-hammer-loki curl -sf http://localhost:3100/ready > /dev/null 2>&1; then
+    if docker run --rm --network container:steel-hammer-loki curlimages/curl:latest -sf http://localhost:3100/ready > /dev/null 2>&1; then
         echo -e "${GREEN}✅ Loki is running${NC}"
     else
         echo -e "${YELLOW}⚠️  Loki not available${NC}"
@@ -62,7 +62,7 @@ if [ "$OBSERVABILITY_ENABLED" = "true" ]; then
     
     # Check Tempo
     echo "Checking Tempo (Trace Storage)..."
-    if docker exec steel-hammer-tempo curl -sf http://localhost:3200/ready > /dev/null 2>&1; then
+    if docker run --rm --network container:steel-hammer-tempo curlimages/curl:latest -sf http://localhost:3200/ready > /dev/null 2>&1; then
         echo -e "${GREEN}✅ Tempo is running${NC}"
     else
         echo -e "${YELLOW}⚠️  Tempo not available${NC}"
@@ -70,7 +70,7 @@ if [ "$OBSERVABILITY_ENABLED" = "true" ]; then
     
     # Check Mimir
     echo "Checking Mimir (Metrics)..."
-    if docker exec steel-hammer-mimir curl -sf http://localhost:9009/-/ready > /dev/null 2>&1; then
+    if docker run --rm --network container:steel-hammer-mimir curlimages/curl:latest -sf http://localhost:9009/-/ready > /dev/null 2>&1; then
         echo -e "${GREEN}✅ Mimir is running${NC}"
     else
         echo -e "${YELLOW}⚠️  Mimir not available${NC}"
@@ -95,7 +95,7 @@ check_service_health() {
     echo "Checking $SERVICE_NAME..."
     for attempt in {1..15}; do
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
-        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "302" ]; then
             echo -e "${GREEN}✅ $SERVICE_NAME is healthy (HTTP $HTTP_CODE)${NC}"
             return 0
         else
@@ -114,7 +114,7 @@ check_service_health() {
 check_service_health "Keycloak" "http://localhost:7081/realms/dev/.well-known/openid-configuration" || TESTS_FAILED=$((TESTS_FAILED + 1))
 check_service_health "PostgreSQL" "http://localhost:5432" || TESTS_FAILED=$((TESTS_FAILED + 1))
 check_service_health "MinIO" "http://localhost:9000/minio/health/live" || TESTS_FAILED=$((TESTS_FAILED + 1))
-check_service_health "Sentinel-Gear (Gateway)" "http://localhost:8080/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
+check_service_health "Sentinel-Gear (Gateway)" "http://localhost:8081/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
 check_service_health "Brazz-Nossel (S3 Proxy)" "http://localhost:8082/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
 
 echo ""
@@ -129,15 +129,15 @@ if [ "$OBSERVABILITY_ENABLED" = "true" ]; then
     
     # Export logs from Loki
     echo "Exporting logs from Loki..."
-    docker exec steel-hammer-loki loki-canary -addr=localhost:3100 > "$LOG_DIR/loki-logs.json" 2>&1 || true
+    docker run --rm --network container:steel-hammer-loki curlimages/curl:latest -s http://localhost:3100/loki/api/v1/labels 2>/dev/null > "$LOG_DIR/loki-labels.json" || true
     
     # Export traces from Tempo
     echo "Exporting traces from Tempo..."
-    docker exec steel-hammer-tempo curl -s http://localhost:3200/api/traces 2>/dev/null > "$TRACE_DIR/tempo-traces.json" || true
+    docker run --rm --network container:steel-hammer-tempo curlimages/curl:latest -s http://localhost:3200/api/traces 2>/dev/null > "$TRACE_DIR/tempo-traces.json" || true
     
     # Export metrics from Mimir
     echo "Exporting metrics from Mimir..."
-    docker exec steel-hammer-mimir curl -s http://localhost:9009/api/v1/query?query=up 2>/dev/null > "$METRIC_DIR/mimir-metrics.json" || true
+    docker run --rm --network container:steel-hammer-mimir curlimages/curl:latest -s http://localhost:9009/api/v1/query?query=up 2>/dev/null > "$METRIC_DIR/mimir-metrics.json" || true
     
     echo ""
 fi

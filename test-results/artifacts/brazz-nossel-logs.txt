@@ -1,0 +1,100 @@
+2026-01-19T00:12:37.634+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x0000000025596758@15286ff8
+2026-01-19T00:12:37.634+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:12:37.635+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@184c2b6d'
+2026-01-19T00:12:39.315+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition ReactiveCompositeDiscoveryClient_CLAIMSPINDEL applying {pattern=/claimspindel/**} to Path
+2026-01-19T00:12:39.317+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition ReactiveCompositeDiscoveryClient_CLAIMSPINDEL applying filter {regexp=/claimspindel/?(?<remaining>.*), replacement=/${remaining}} to RewritePath
+2026-01-19T00:12:39.319+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition matched: ReactiveCompositeDiscoveryClient_CLAIMSPINDEL
+2026-01-19T00:12:39.320+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition ReactiveCompositeDiscoveryClient_SENTINEL-GEAR applying {pattern=/sentinel-gear/**} to Path
+2026-01-19T00:12:39.321+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition ReactiveCompositeDiscoveryClient_SENTINEL-GEAR applying filter {regexp=/sentinel-gear/?(?<remaining>.*), replacement=/${remaining}} to RewritePath
+2026-01-19T00:12:39.321+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition matched: ReactiveCompositeDiscoveryClient_SENTINEL-GEAR
+2026-01-19T00:12:39.322+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition ReactiveCompositeDiscoveryClient_BRAZZ-NOSSEL applying {pattern=/brazz-nossel/**} to Path
+2026-01-19T00:12:39.324+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition ReactiveCompositeDiscoveryClient_BRAZZ-NOSSEL applying filter {regexp=/brazz-nossel/?(?<remaining>.*), replacement=/${remaining}} to RewritePath
+2026-01-19T00:12:39.325+0000 DEBUG [] DEBUG --- DiscoveryClient-CacheRefreshExecutor-%d - o.s.c.g.r.RouteDefinitionRouteLocator - RouteDefinition matched: ReactiveCompositeDiscoveryClient_BRAZZ-NOSSEL
+2026-01-19T00:12:47.797+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=POST}
+2026-01-19T00:12:47.801+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /login'
+2026-01-19T00:12:47.801+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:47.801+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /default-ui.css'
+2026-01-19T00:12:47.802+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=GET}
+2026-01-19T00:12:47.802+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /login'
+2026-01-19T00:12:47.802+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:47.802+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=GET}
+2026-01-19T00:12:47.802+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /logout'
+2026-01-19T00:12:47.802+0000 DEBUG [] DEBUG --- reactor-http-epoll-3 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using EndpointRequestMatcher includes=[health], excludes=[], includeLinks=false
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/health/**', method=null}
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/health/**'
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using AdditionalPathsEndpointServerWebExchangeMatcher endpoints=[health], webServerNamespace=server
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x0000000025596758@15286ff8
+2026-01-19T00:12:47.805+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:12:47.809+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@24ac685c'
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=POST}
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /login'
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /default-ui.css'
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=GET}
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /login'
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=GET}
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /logout'
+2026-01-19T00:12:57.942+0000 DEBUG [] DEBUG --- reactor-http-epoll-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using EndpointRequestMatcher includes=[health], excludes=[], includeLinks=false
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/health/**', method=null}
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/health/**'
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:12:57.943+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using AdditionalPathsEndpointServerWebExchangeMatcher endpoints=[health], webServerNamespace=server
+2026-01-19T00:12:57.944+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:12:57.944+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x0000000025596758@15286ff8
+2026-01-19T00:12:57.944+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:12:57.945+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@1d59656c'
+2026-01-19T00:13:07.380+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=POST}
+2026-01-19T00:13:07.380+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /login'
+2026-01-19T00:13:07.380+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.381+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /default-ui.css'
+2026-01-19T00:13:07.381+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=GET}
+2026-01-19T00:13:07.382+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /login'
+2026-01-19T00:13:07.382+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.382+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=GET}
+2026-01-19T00:13:07.382+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /logout'
+2026-01-19T00:13:07.382+0000 DEBUG [] DEBUG --- reactor-http-epoll-4 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.383+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:07.383+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:13:07.383+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:07.384+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using EndpointRequestMatcher includes=[health], excludes=[], includeLinks=false
+2026-01-19T00:13:07.386+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/health/**', method=null}
+2026-01-19T00:13:07.386+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/health/**'
+2026-01-19T00:13:07.386+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.386+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using AdditionalPathsEndpointServerWebExchangeMatcher endpoints=[health], webServerNamespace=server
+2026-01-19T00:13:07.386+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:07.386+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x0000000025596758@15286ff8
+2026-01-19T00:13:07.387+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:07.390+0000 DEBUG [] DEBUG --- parallel-2 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@14e38363'
+2026-01-19T00:13:08.212+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=POST}
+2026-01-19T00:13:08.213+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /login'
+2026-01-19T00:13:08.213+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:08.213+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /default-ui.css'
+2026-01-19T00:13:08.214+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/login', method=GET}
+2026-01-19T00:13:08.215+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /login'
+2026-01-19T00:13:08.215+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:08.215+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=GET}
+2026-01-19T00:13:08.215+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'GET /logout'
+2026-01-19T00:13:08.215+0000 DEBUG [] DEBUG --- reactor-http-epoll-2 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:08.219+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/logout', method=POST}
+2026-01-19T00:13:08.220+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Request 'GET /actuator/health' doesn't match 'POST /logout'
+2026-01-19T00:13:08.221+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - No matches found
+2026-01-19T00:13:08.225+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using EndpointRequestMatcher includes=[health], excludes=[], includeLinks=false
+2026-01-19T00:13:08.226+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using PathMatcherServerWebExchangeMatcher{pattern='/actuator/health/**', method=null}
+2026-01-19T00:13:08.226+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.PathPatternParserServerWebExchangeMatcher - Checking match of request : '/actuator/health'; against '/actuator/health/**'
+2026-01-19T00:13:08.226+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:08.226+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - Trying to match using AdditionalPathsEndpointServerWebExchangeMatcher endpoints=[health], webServerNamespace=server
+2026-01-19T00:13:08.226+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.u.m.OrServerWebExchangeMatcher - matched
+2026-01-19T00:13:08.226+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.DelegatingReactiveAuthorizationManager - Checking authorization on '/actuator/health' using org.springframework.security.config.web.server.ServerHttpSecurity$AuthorizeExchangeSpec$Access$$Lambda/0x0000000025596758@15286ff8
+2026-01-19T00:13:08.226+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.a.AuthorizationWebFilter - Authorization successful
+2026-01-19T00:13:08.232+0000 DEBUG [] DEBUG --- parallel-1 - o.s.s.w.s.c.WebSessionServerSecurityContextRepository - No SecurityContext found in WebSession: 'org.springframework.web.server.session.InMemoryWebSessionStore$InMemoryWebSession@3f38e7b5'
