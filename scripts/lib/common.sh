@@ -407,10 +407,13 @@ run_maven_modules() {
 
         print_step "Testing ${module}"
         set +e  # Disable exit on error for Maven builds
-        # Use timeout to prevent hanging builds (max 3 minutes per module)
-        timeout 180 bash -c "cd \"$module\" && mvn clean test 2>&1" > "$maven_log" 2>&1
+        
+        # Run Maven directly without timeout wrapper (timeout + bash -c was causing deadlock)
+        # Maven will handle its own process lifecycle
+        (cd "$module" && mvn clean test 2>&1) > "$maven_log" 2>&1
         local mvn_exit=$?
-        # Also append to main log file
+        
+        # Append to main log file
         cat "$maven_log" >> "$LOG_FILE" 2>/dev/null || true
         
         if [ $mvn_exit -eq 0 ]; then
