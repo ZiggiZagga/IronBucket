@@ -1,0 +1,51 @@
+---
+# Ingress: Allow MinIO from Brazz-Nossel only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minio-allow-ingress
+  namespace: default
+  labels:
+    app: minio
+    tier: infrastructure
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow only from Brazz-Nossel
+  - from:
+    - podSelector:
+        matchLabels:
+          app: brazz-nossel
+    ports:
+    - protocol: TCP
+      port: 9000
+
+---
+# Egress: MinIO minimal outbound
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minio-allow-egress
+  namespace: default
+  labels:
+    app: minio
+    tier: infrastructure
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53

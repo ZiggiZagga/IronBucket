@@ -1,0 +1,60 @@
+---
+# Ingress: Allow PostgreSQL from Claimspindel and Brazz-Nossel
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-allow-ingress
+  namespace: default
+  labels:
+    app: postgres
+    tier: infrastructure
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow from Claimspindel
+  - from:
+    - podSelector:
+        matchLabels:
+          app: claimspindel
+    ports:
+    - protocol: TCP
+      port: 5432
+  
+  # Allow from Brazz-Nossel
+  - from:
+    - podSelector:
+        matchLabels:
+          app: brazz-nossel
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# Egress: PostgreSQL minimal outbound
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-allow-egress
+  namespace: default
+  labels:
+    app: postgres
+    tier: infrastructure
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53

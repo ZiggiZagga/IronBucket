@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.02 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests
-com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testDistributedTracing  Time elapsed: 0.004 s  <<< FAILURE!
+Tests run: 3, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.031 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$ObservabilityTests.testDistributedTracing  Time elapsed: 0.008 s  <<< FAILURE!
 org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Distributed tracing missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)

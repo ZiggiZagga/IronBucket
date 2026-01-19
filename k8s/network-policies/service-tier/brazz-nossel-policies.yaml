@@ -1,0 +1,78 @@
+---
+# Ingress: Allow Brazz-Nossel to accept only from Sentinel-Gear
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: brazz-nossel-allow-ingress
+  namespace: default
+  labels:
+    app: brazz-nossel
+    tier: service
+spec:
+  podSelector:
+    matchLabels:
+      app: brazz-nossel
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow only from Sentinel-Gear
+  - from:
+    - podSelector:
+        matchLabels:
+          app: sentinel-gear
+    ports:
+    - protocol: TCP
+      port: 8082
+
+---
+# Egress: Allow Brazz-Nossel to reach MinIO and PostgreSQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: brazz-nossel-allow-egress
+  namespace: default
+  labels:
+    app: brazz-nossel
+    tier: service
+spec:
+  podSelector:
+    matchLabels:
+      app: brazz-nossel
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Allow to MinIO (9000) - S3 storage
+  - to:
+    - podSelector:
+        matchLabels:
+          app: minio
+    ports:
+    - protocol: TCP
+      port: 9000
+  
+  # Allow to PostgreSQL (5432) - Audit logging
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  
+  # Allow to Buzzle-Vane (8083) - Service discovery
+  - to:
+    - podSelector:
+        matchLabels:
+          app: buzzle-vane
+    ports:
+    - protocol: TCP
+      port: 8083

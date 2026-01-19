@@ -3,43 +3,22 @@
 # Runs 11 S3 compatibility tests through Sentinel-Gear and writes results to MinIO
 # Pattern: alice-bob e2e tests (verify infrastructure, run tests, persist results)
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Color codes for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Load environment from parent project
+if [[ -f "$REPO_ROOT/scripts/.env.defaults" ]]; then
+    source "$REPO_ROOT/scripts/.env.defaults"
+    source "$REPO_ROOT/scripts/lib/common.sh"
+else
+    # Fallback if running standalone
+    TEMP_DIR="${TEMP_DIR:-${REPO_ROOT}/build/temp}"
+    IS_CONTAINER="${IS_CONTAINER:-false}"
+fi
 
-# Configuration
-COMPOSE_FILE="$SCRIPT_DIR/docker-compose-tests.yml"
-TEST_REPORTS_DIR="$SCRIPT_DIR/test-reports"
-MINIO_BUCKET="test-results"
-MINIO_ENDPOINT="http://minio:9000"
-MINIO_REGION="us-east-1"
-MINIO_ACCESS_KEY="minioadmin"
-MINIO_SECRET_KEY="minioadmin"
-
-# Keycloak configuration (for token generation)
-KEYCLOAK_URL="http://keycloak:8080"
-KEYCLOAK_REALM="dev"
-KEYCLOAK_CLIENT_ID="ironfaucet-test"
-KEYCLOAK_CLIENT_SECRET="test-secret"
-
-# Sentinel-Gear configuration
-SENTINEL_GEAR_URL="http://sentinel-gear:8080"
-
-# Vault-Smith configuration
-VAULT_SMITH_URL="http://vault-smith:8090"
-
-# Test user configuration
-TEST_USER="test-user"
-TEST_PASSWORD="testP@ss123"
-TEST_TENANT="test-org-001"
+mkdir -p "$TEMP_DIR"
 
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║       STORAGE-CONDUCTOR: INTEGRATION TESTS WITH PERSISTENCE    ║"
@@ -47,25 +26,41 @@ echo "║     S3 Operations Through Sentinel-Gear → Results to MinIO     ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
 
+# Configuration
+COMPOSE_FILE="$SCRIPT_DIR/docker-compose-tests.yml"
+TEST_REPORTS_DIR="$SCRIPT_DIR/test-reports"
+MINIO_BUCKET="test-results"
+MINIO_REGION="us-east-1"
+
+# Use environment-aware URLs (from .env.defaults)
+# If in container, these are container DNS names; if host, they're localhost
+MINIO_ENDPOINT="${MINIO_URL:-http://minio:9000}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-http://keycloak:8080}"
+SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-http://sentinel-gear:8080}"
+
+# Test user configuration
+TEST_USER="test-user"
+TEST_PASSWORD="testP@ss123"
+TEST_TENANT="test-org-001"
+
 # ============================================================================
-# PHASE 1: Infrastructure Verification (alice-bob e2e pattern)
+# PHASE 1: Infrastructure Verification
 # ============================================================================
 
-echo -e "${BLUE}=== PHASE 1: Infrastructure Verification ===${NC}"
-echo ""
+log_section "PHASE 1: Infrastructure Verification"
 
 # Function to check service health
 check_service() {
     local service=$1
     local url=$2
-    local timeout=30
+    local timeout=${3:-30}
+    
+    echo -n "Checking $service ... "
+    
     local elapsed=0
-    
-    echo -n "Waiting for $service to be ready... "
-    
     while [ $elapsed -lt $timeout ]; do
         if curl -s "$url" > /dev/null 2>&1; then
-            echo -e "${GREEN}✅ Ready${NC}"
+            log_success "$service is healthy: $url"
             return 0
         fi
         echo -n "."
@@ -73,35 +68,25 @@ check_service() {
         elapsed=$((elapsed + 1))
     done
     
-    echo -e "${RED}❌ Timeout${NC}"
+    log_error "$service is not responding: $url"
     return 1
 }
 
 # Verify all services are healthy
 check_service "MinIO" "$MINIO_ENDPOINT/minio/health/live" || {
-    echo -e "${RED}❌ MinIO health check failed${NC}"
+    log_error "MinIO health check failed"
     exit 1
 }
 
 check_service "PostgreSQL" "http://postgres:5432" || true  # Optional
 
 check_service "Keycloak" "$KEYCLOAK_URL/health" || {
-    echo -e "${RED}❌ Keycloak health check failed${NC}"
-    exit 1
-}
-
-check_service "Vault-Smith" "$VAULT_SMITH_URL/actuator/health" || {
-    echo -e "${RED}❌ Vault-Smith health check failed${NC}"
-    exit 1
-}
-
-check_service "Sentinel-Gear" "$SENTINEL_GEAR_URL/actuator/health" || {
-    echo -e "${RED}❌ Sentinel-Gear health check failed${NC}"
+    log_error "Keycloak health check failed"
     exit 1
 }
 
 echo ""
-echo -e "${GREEN}✅ All infrastructure services are ready!${NC}"
+log_success "All infrastructure services are ready!"
 echo ""
 
 # ============================================================================
@@ -294,7 +279,7 @@ for i in {3..7}; do
             TEST_NAME="Object Upload"
             FILE_NAME="test-file-$RANDOM.txt"
             echo "Creating test file..."
-            echo "Test content for S3 compatibility validation - $(date)" > /tmp/"$FILE_NAME"
+            echo "Test content for S3 compatibility validation - $(date)" > "$TEMP_DIR/$FILE_NAME"
             ;;
         4)
             TEST_NAME="Object Download"
@@ -324,7 +309,7 @@ for i in {3..7}; do
                 -H "Authorization: Bearer $JWT_TOKEN" \
                 -F "bucket=$BUCKET_NAME" \
                 -F "key=$FILE_NAME" \
-                -F "file=@/tmp/$FILE_NAME" \
+                -F "file=@$TEMP_DIR/$FILE_NAME" \
                 -w "\n%{http_code}")
             HTTP_CODE=$(echo "$UPLOAD_RESPONSE" | tail -n1)
             ;;

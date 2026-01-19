@@ -1,20 +1,20 @@
 -------------------------------------------------------------------------------
 Test set: com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.023 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests
-com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testForbidden  Time elapsed: 0.006 s  <<< FAILURE!
+Tests run: 4, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.035 s <<< FAILURE! - in com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests
+com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testForbidden  Time elapsed: 0.005 s  <<< FAILURE!
 org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Forbidden handling missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
 	at com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testForbidden(IntegrationTestSpecifications.java:255)
 
-com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testServerError  Time elapsed: 0.003 s  <<< FAILURE!
+com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testServerError  Time elapsed: 0.002 s  <<< FAILURE!
 org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Server error handling missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)
 	at com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testServerError(IntegrationTestSpecifications.java:263)
 
-com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testBadRequest  Time elapsed: 0.003 s  <<< FAILURE!
+com.ironbucket.integration.test.IntegrationTestSpecifications$ErrorHandlingTests.testBadRequest  Time elapsed: 0.004 s  <<< FAILURE!
 org.opentest4j.AssertionFailedError: ❌ NOT IMPLEMENTED - Bad request handling missing
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:42)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:143)

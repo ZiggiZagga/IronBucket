@@ -1,0 +1,2 @@
+subjectAltName = DNS:sentinel-gear,DNS:localhost,DNS:sentinel-gear.ironbucket.local,IP:127.0.0.1
+extendedKeyUsage = serverAuth,clientAuth

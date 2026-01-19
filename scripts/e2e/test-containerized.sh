@@ -3,7 +3,20 @@
 # Spin up containerized services and run e2e tests
 # Based on alice-bob-test.sh pattern for proven working approach
 
-set -e
+set -euo pipefail
+
+# Load shared env + helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [[ -f "$ROOT_DIR/.env.defaults" ]]; then
+    source "$ROOT_DIR/.env.defaults"
+fi
+if [[ -f "$ROOT_DIR/lib/common.sh" ]]; then
+    source "$ROOT_DIR/lib/common.sh"
+    if declare -F register_error_trap >/dev/null; then
+        register_error_trap
+    fi
+fi
 
 # ============================================================================
 # CONFIGURATION
@@ -16,16 +29,19 @@ BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$ROOT_DIR}"
 STEEL_HAMMER_DIR="$PROJECT_ROOT/steel-hammer"
-TEMP_DIR="$PROJECT_ROOT/temp"
-LOG_FILE="$PROJECT_ROOT/test-execution-$(date +%Y%m%d-%H%M%S).log"
+TEMP_DIR="${TEMP_DIR:-${PROJECT_ROOT}/build/temp}"
+LOG_DIR="${LOG_DIR:-${PROJECT_ROOT}/test-results/logs}"
+LOG_FILE="$LOG_DIR/test-execution-$(date +%Y%m%d-%H%M%S).log"
 
-# Service configuration
-KEYCLOAK_URL="http://localhost:7081"
-MINIO_URL="http://localhost:9000"
-POSTGRES_HOST="localhost"
-WAIT_TIMEOUT=120
+mkdir -p "$TEMP_DIR" "$LOG_DIR"
+
+# Service configuration (container-aware via .env.defaults)
+KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:7081}"
+MINIO_URL="${MINIO_URL:-http://localhost:9000}"
+POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
+WAIT_TIMEOUT=${WAIT_TIMEOUT:-120}
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -78,7 +94,7 @@ wait_for_service() {
     local elapsed=0
 
     while [ $elapsed -lt $timeout ]; do
-        if curl -s "$url" > /dev/null 2>&1; then
+        if curl --fail --silent --max-time 5 --retry 3 --retry-delay 2 "$url" > /dev/null 2>&1; then
             print_success "$name is ready"
             return 0
         fi
@@ -142,12 +158,13 @@ main() {
         echo -n "  Testing $project... "
         cd "$project"
 
-        if mvn clean test -q 2>&1 | tee -a "$LOG_FILE" > /tmp/maven-${project}.log; then
-            local count=$(grep -oP 'Tests run: \K[0-9]+' /tmp/maven-${project}.log | tail -1 || echo "0")
+        local maven_log="$LOG_DIR/maven-${project//\//-}.log"
+        if mvn clean test -q 2>&1 | tee -a "$LOG_FILE" > "$maven_log"; then
+            local count=$(grep -oP 'Tests run: \K[0-9]+' "$maven_log" | tail -1 || echo "0")
             echo -e "${GREEN}✅ ($count tests)${NC}"
             total_tests=$((total_tests + count))
         else
-            local failures=$(grep -oP 'Failures: \K[0-9]+' /tmp/maven-${project}.log | tail -1 || echo "unknown")
+            local failures=$(grep -oP 'Failures: \K[0-9]+' "$maven_log" | tail -1 || echo "unknown")
             if [ "$failures" = "0" ] || [ "$failures" = "unknown" ]; then
                 echo -e "${YELLOW}⏭️  (no tests or skipped)${NC}"
             else

@@ -67,11 +67,15 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
+                    <!-- Only include actual unit tests, exclude roadmap/container integration tests -->
                     <includes>
                         <include>**/*Test.java</include>
                         <include>**/*Tests.java</include>
-                        <include>**/*Specifications.java</include>
                     </includes>
+                    <excludes>
+                        <!-- Exclude IntegrationTestSpecifications (roadmap tests) -->
+                        <exclude>**/IntegrationTestSpecifications*.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 

@@ -27,6 +27,18 @@
 
 set -e
 
+# Load shared environment and helpers (fallback to local defaults)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/.env.defaults" ]]; then
+  source "$SCRIPT_DIR/.env.defaults"
+fi
+if [[ -f "$SCRIPT_DIR/lib/common.sh" ]]; then
+  source "$SCRIPT_DIR/lib/common.sh"
+fi
+
+# Allow unset variables in this script (common.sh sets -u)
+set +u
+
 # ============================================================================
 # COLOR DEFINITIONS
 # ============================================================================
@@ -45,11 +57,11 @@ NC='\033[0m' # No Color
 # CONFIGURATION
 # ============================================================================
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-TEST_RESULTS_DIR="${PROJECT_ROOT}/test-results"
-REPORTS_DIR="${TEST_RESULTS_DIR}/reports"
-LOGS_DIR="${TEST_RESULTS_DIR}/logs"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-${PROJECT_ROOT}/test-results}"
+LOG_DIR="${LOG_DIR:-${TEST_RESULTS_DIR}/logs}"
+REPORTS_DIR="${REPORTS_DIR:-${TEST_RESULTS_DIR}/reports}"
+LOGS_DIR="${LOG_DIR}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 REPORT_ID="test-report-${TIMESTAMP}"
 

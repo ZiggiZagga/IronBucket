@@ -1,0 +1,69 @@
+---
+# Ingress: Allow Buzzle-Vane (Eureka) to accept from all services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: buzzle-vane-allow-ingress
+  namespace: default
+  labels:
+    app: buzzle-vane
+    tier: service
+spec:
+  podSelector:
+    matchLabels:
+      app: buzzle-vane
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow from Sentinel-Gear
+  - from:
+    - podSelector:
+        matchLabels:
+          app: sentinel-gear
+    ports:
+    - protocol: TCP
+      port: 8083
+  
+  # Allow from Claimspindel
+  - from:
+    - podSelector:
+        matchLabels:
+          app: claimspindel
+    ports:
+    - protocol: TCP
+      port: 8083
+  
+  # Allow from Brazz-Nossel
+  - from:
+    - podSelector:
+        matchLabels:
+          app: brazz-nossel
+    ports:
+    - protocol: TCP
+      port: 8083
+
+---
+# Egress: Buzzle-Vane is read-only, minimal egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: buzzle-vane-allow-egress
+  namespace: default
+  labels:
+    app: buzzle-vane
+    tier: service
+spec:
+  podSelector:
+    matchLabels:
+      app: buzzle-vane
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53

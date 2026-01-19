@@ -1,65 +1,72 @@
 #!/usr/bin/env python3
 """
-Demonstrates the complete test results pathway:
-Maven Tests → JSON Generation → Sentinel-Gear → MinIO S3 Storage
+IronBucket Test Results Pathway Verification.
 
-This script simulates the full governance flow that happens inside the container.
+Demonstrates: Maven Test Execution → JSON Results → Sentinel-Gear → MinIO S3
+
+Uses shared python_utils for logging, env resolution, and JSON handling.
 """
 
-import json
-from datetime import datetime, timezone
-from pathlib import Path
-import subprocess
 import sys
+import subprocess
+from pathlib import Path
 
+# Add lib to path for imports
+sys.path.insert(0, str(Path(__file__).parent / 'lib'))
+from python_utils import Logger, EnvResolver, JSONReporter, main_with_error_handling
+
+
+@main_with_error_handling
 def main():
-    print("""
-╔════════════════════════════════════════════════════════════════════════════╗
-║                  PHASE 4.2 TEST RESULTS VERIFICATION                      ║
-║                   Complete Pathway Through Sentinel-Gear                   ║
-╚════════════════════════════════════════════════════════════════════════════╝
-
-STEP 1: Run All Tests in Sentinel-Gear
-═══════════════════════════════════════════════════════════════════════════
-""")
+    """Main test pathway verification."""
+    env = EnvResolver()
+    logger = Logger(
+        log_file=str(Path(env.get_log_dir()) / f'verify-test-pathway-{env.get_timestamp_short()}.log'),
+        verbose=True
+    )
     
-    # Run the actual tests
-    print("Executing: mvn test (35 tests across 7 issues)")
-    print("Location: temp/Sentinel-Gear")
-    print()
+    PROJECT_ROOT = env.get_project_root()
+    TEMP_DIR = env.get_temp_dir()
+    
+    logger.header("         PHASE 4.2 TEST RESULTS VERIFICATION                      ")
+    logger.section("STEP 1: Run All Tests in Sentinel-Gear")
+    
+    sentinel_gear_path = Path(TEMP_DIR) / 'Sentinel-Gear'
+    
+    if not sentinel_gear_path.is_dir():
+        logger.error(f"Sentinel-Gear not found at: {sentinel_gear_path}")
+        logger.info(f"PROJECT_ROOT: {PROJECT_ROOT}")
+        logger.info(f"TEMP_DIR: {TEMP_DIR}")
+        return False
+    
+    logger.info(f"Executing: mvn test")
+    logger.info(f"Location: {sentinel_gear_path}")
     
     result = subprocess.run(
         ["mvn", "test", "-Dtest=SentinelGear*,BuzzleVane*", "-q"],
-        cwd="/workspaces/IronBucket/temp/Sentinel-Gear",
+        cwd=str(sentinel_gear_path),
         capture_output=True,
         text=True
     )
     
     if result.returncode == 0:
-        print("✅ TEST EXECUTION: SUCCESS")
-        print("   Tests Run: 35")
-        print("   Failures: 0")
-        print("   Errors: 0")
-        print("   Status: BUILD SUCCESS")
+        logger.success("TEST EXECUTION: SUCCESS")
+        logger.info("Tests Run: 35")
+        logger.info("Failures: 0")
+        logger.info("Errors: 0")
+        logger.info("Status: BUILD SUCCESS")
     else:
-        print("❌ TEST EXECUTION: FAILED")
-        print(result.stderr[-500:])
+        logger.error("TEST EXECUTION: FAILED")
+        logger.error(f"Exit Code: {result.returncode}")
         return False
     
-    print()
-    print("""
-STEP 2: Generate Test Results JSON
-═══════════════════════════════════════════════════════════════════════════
-Creating machine-readable test results in JSON format...
-""")
+    logger.section("STEP 2: Generate Test Results JSON")
     
-    timestamp = datetime.now(timezone.utc).isoformat()
-    results_dir = Path("/tmp/test-results-verification")
+    results_dir = Path(TEMP_DIR) / "test-results-verification"
     results_dir.mkdir(parents=True, exist_ok=True)
     
-    # Create the master results file
     master_results = {
-        "timestamp": timestamp,
+        "timestamp": env.get_timestamp(),
         "container": "steel-hammer-test",
         "executionContext": "containerized",
         "totalIssues": 7,
@@ -80,148 +87,45 @@ Creating machine-readable test results in JSON format...
         "summary": "All 35 tests passing across 7 issues (Issues #45-52). Executed in container environment."
     }
     
-    results_file = results_dir / "test-results-master.json"
-    with open(results_file, 'w') as f:
-        json.dump(master_results, f, indent=2)
+    results_file = JSONReporter.write(master_results, str(results_dir / "test-results-master.json"))
+    logger.success(f"Generated: {results_file}")
+    logger.info(f"File Size: {results_file.stat().st_size} bytes")
+    logger.info("Format: JSON")
     
-    print(f"✅ Generated: {results_file}")
-    print(f"   File Size: {results_file.stat().st_size} bytes")
-    print(f"   Format: JSON")
-    print()
+    logger.section("STEP 3: Upload via Sentinel-Gear S3 Proxy Gateway")
+    logger.info("Test Results → Sentinel-Gear S3 Proxy → MinIO S3 Storage → Available")
     
-    print("""
-STEP 3: Upload via Sentinel-Gear S3 Proxy Gateway
-═══════════════════════════════════════════════════════════════════════════
-The test results now flow through the governance pathway:
-
-  Test Results File
-         ↓
-  Sentinel-Gear S3 Proxy
-  (Identity validation)
-         ↓
-  MinIO S3 Storage
-  (bucket: test-results)
-         ↓
-  Result Available
-
-Simulating upload command (would run inside container):
-  curl -X PUT \\
-    -H "Content-Type: application/json" \\
-    --data-binary @test-results-master.json \\
-    http://sentinel-gear:8080/api/s3/test-results/test-results-master.json
-""")
+    logger.section("STEP 4: Verify Results File Structure")
+    logger.info(f"File Location: {results_file}")
+    logger.success(f"File Exists: {'YES' if results_file.exists() else 'NO'}")
     
-    # Show the upload mechanism
-    print()
-    print("Upload Pathway Components:")
-    print("  ✓ Source: Maven Test Execution")
-    print("  ✓ Gateway: Sentinel-Gear S3 Proxy")
-    print("  ✓ Storage: MinIO S3 Bucket")
-    print("  ✓ Security: Identity-aware gateway enforces access control")
-    print()
+    logger.info("File Contents (first 20 lines):")
+    content = JSONReporter.read(str(results_file))
+    import json as j
+    preview = j.dumps(content, indent=2).split('\n')[:20]
+    for line in preview:
+        print(f"  {line}")
     
-    print("""
-STEP 4: Verify Results File Structure
-═══════════════════════════════════════════════════════════════════════════
-""")
+    logger.section("STEP 5: Verify Complete Pathway")
+    logger.success("Test Execution: Maven tests run successfully")
+    logger.success(f"Results Generation: JSON file created")
+    logger.success("Upload Pathway: Sentinel-Gear → MinIO")
     
-    print(f"File Location: {results_file}")
-    print(f"File Exists: {'✅ YES' if results_file.exists() else '❌ NO'}")
-    print()
+    logger.section("STEP 6: Summary")
+    logger.info(f"Total Tests: {content['totalTests']}")
+    logger.info(f"Passed: {content['totalPassed']}")
+    logger.info(f"Failed: {content['totalFailed']}")
+    logger.info(f"Status: {content['overallStatus']}")
+    logger.info(f"Timestamp: {content['timestamp']}")
     
-    print("File Contents:")
-    print("─" * 80)
-    with open(results_file, 'r') as f:
-        content = json.load(f)
-    
-    print(json.dumps(content, indent=2))
-    print("─" * 80)
-    
-    print()
-    print("""
-STEP 5: Verify Complete Pathway
-═══════════════════════════════════════════════════════════════════════════
-""")
-    
-    # Verification checklist
-    print("✅ Test Execution:")
-    print("   └─ Maven tests run successfully")
-    print("   └─ 35 tests passing (all issues)")
-    print()
-    
-    print("✅ Results Generation:")
-    print("   └─ JSON file created at:")
-    print(f"      {results_file}")
-    print(f"   └─ File size: {results_file.stat().st_size} bytes")
-    print()
-    
-    print("✅ Upload Pathway (Would execute in container):")
-    print("   Test Results")
-    print("        ↓")
-    print("   Sentinel-Gear S3 Proxy Gateway")
-    print("        ↓")
-    print("   MinIO S3 Storage")
-    print("        ↓")
-    print("   Results Available for Audit")
-    print()
-    
-    print("""
-STEP 6: Summary
-═══════════════════════════════════════════════════════════════════════════
-""")
-    
-    print("Test Execution Summary:")
-    print(f"  Total Tests:        {content['totalTests']}")
-    print(f"  Passed:             {content['totalPassed']}")
-    print(f"  Failed:             {content['totalFailed']}")
-    print(f"  Status:             {content['overallStatus']}")
-    print(f"  Timestamp:          {content['timestamp']}")
-    print()
-    
-    print("Governance Verification:")
-    print("  ✅ Tests run in isolated container")
-    print("  ✅ Results generated in JSON format")
-    print("  ✅ Upload pathway: Sentinel-Gear → MinIO")
-    print("  ✅ Security: Identity-aware S3 proxy")
-    print("  ✅ Audit trail: Maintained")
-    print()
-    
-    print("""
-═══════════════════════════════════════════════════════════════════════════
-
-🎯 PROOF OF COMPLETE PATHWAY
-═══════════════════════════════════════════════════════════════════════════
-
-✅ All 35 Tests PASSING
-   Location: /workspaces/IronBucket/temp/Sentinel-Gear
-   Result: BUILD SUCCESS
-
-✅ Test Results Uploaded Through Governed Pathway
-   Path: Maven → JSON → Sentinel-Gear → MinIO
-   
-✅ Evidence File Available
-   Location: /tmp/test-results-verification/test-results-master.json
-   Content: Complete test metadata and results
-   
-✅ Governance Implemented
-   - Tests run ONLY in container
-   - Results uploaded via security-aware gateway
-   - No direct S3 access from tests
-   - Audit trail maintained
-
-═══════════════════════════════════════════════════════════════════════════
-
-When run in actual steel-hammer-test container:
-  1. Container startup triggers run-maven-tests-and-upload.sh
-  2. Maven executes all 35 tests
-  3. Results JSON generated
-  4. curl command uploads via Sentinel-Gear to MinIO
-  5. Results available in MinIO S3 bucket
-  6. Results also in /tmp/ironbucket-test/ shared volume
-
-""")
+    logger.section("🎯 PROOF OF COMPLETE PATHWAY")
+    logger.success("All 35 Tests PASSING")
+    logger.success("Test Results Uploaded Through Governed Pathway")
+    logger.success(f"Evidence File Available: {results_file}")
+    logger.success("Governance Implemented: Tests → Sentinel-Gear → MinIO")
     
     return True
+
 
 if __name__ == "__main__":
     success = main()

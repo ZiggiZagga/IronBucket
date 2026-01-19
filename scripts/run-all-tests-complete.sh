@@ -3,33 +3,15 @@
 # ONE COMMAND to run ALL tests + generate comprehensive report
 # Includes: Maven tests, E2E tests, Alice-Bob scenario, Observability validation
 
-set -e
+set -euo pipefail
 
-# ============================================================================
-# COLORS & FORMATTING
-# ============================================================================
+# Load environment and common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/.env.defaults"
+source "$SCRIPT_DIR/lib/common.sh"
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
-
-START_TIME=$(date +%s)
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-PROJECT_ROOT="/workspaces/IronBucket"
-REPORT_DIR="${PROJECT_ROOT}/test-results/reports"
-LOG_DIR="${PROJECT_ROOT}/test-results/logs"
-ARTIFACT_DIR="${PROJECT_ROOT}/test-results/artifacts"
-
-mkdir -p "$REPORT_DIR" "$LOG_DIR" "$ARTIFACT_DIR"
+# Register error trap
+register_error_trap
 
 # Test counters
 TOTAL_TESTS=0
@@ -54,7 +36,7 @@ echo -e "${MAGENTA}║                                                          
 echo -e "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo "Start Time: $(date)"
-echo "Report Directory: $REPORT_DIR"
+echo "Report Directory: $REPORTS_DIR"
 echo ""
 
 # ============================================================================
@@ -98,17 +80,34 @@ run_test_suite() {
 log_section "PHASE 1: Maven Backend Tests"
 
 echo "Discovering Maven modules..."
-MAVEN_MODULES=("Sentinel-Gear" "Brazz-Nossel" "Claimspindel" "Buzzle-Vane" "Pactum-Scroll")
+MAVEN_MODULES=(
+    services/Sentinel-Gear
+    services/Brazz-Nossel
+    services/Claimspindel
+    services/Buzzle-Vane
+    services/Pactum-Scroll
+)
 
-for MODULE in "${MAVEN_MODULES[@]}"; do
-    if [ -d "$PROJECT_ROOT/services/$MODULE" ]; then
-        run_test_suite "Maven_${MODULE}" \
-            "cd $PROJECT_ROOT/services/$MODULE && mvn clean test -q"
+run_maven_modules "${MAVEN_MODULES[@]}"
+
+MAVEN_BACKEND_SUMMARY="$LOG_DIR/maven-backend-summary-${TIMESTAMP}.log"
+printf "%s\n" "${MAVEN_SUMMARY[@]}" > "$MAVEN_BACKEND_SUMMARY"
+
+if [[ ${MAVEN_FOUND_COUNT:-0} -eq 0 ]]; then
+    echo -e "${YELLOW}⚠️  No Maven modules found under services/${NC}"
+    TOTAL_SKIPPED=$((TOTAL_SKIPPED + 1))
+else
+    TOTAL_TESTS=$((TOTAL_TESTS + MAVEN_TOTAL_TESTS))
+    TOTAL_PASSED=$((TOTAL_PASSED + MAVEN_TOTAL_PASSED))
+    TOTAL_FAILED=$((TOTAL_FAILED + MAVEN_TOTAL_FAILED))
+
+    if [[ ${MAVEN_TOTAL_FAILED:-0} -gt 0 ]]; then
+        TEST_RESULTS+=("❌ Maven Backend (${MAVEN_FOUND_COUNT}/${MAVEN_EXPECTED_COUNT})")
+        FAILED_TESTS+=("Maven_Backend|$MAVEN_BACKEND_SUMMARY")
     else
-        echo -e "${YELLOW}⚠️  Skipping $MODULE (not found)${NC}"
-        TOTAL_SKIPPED=$((TOTAL_SKIPPED + 1))
+        TEST_RESULTS+=("✅ Maven Backend (${MAVEN_FOUND_COUNT}/${MAVEN_EXPECTED_COUNT})")
     fi
-done
+fi
 
 # ============================================================================
 # PHASE 2: INFRASTRUCTURE TESTS (In Container)

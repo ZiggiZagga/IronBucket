@@ -22,7 +22,6 @@
 
   <properties>
     <java.version>25</java.version>
-    <jclouds.version>2.7.0</jclouds.version>
     <spring-cloud.version>2025.1.0</spring-cloud.version>
     <maven.compiler.release>25</maven.compiler.release>
   </properties>
@@ -40,39 +39,7 @@
       <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
     </dependency>
 
-    <!-- JClouds Core -->
-    <dependency>
-      <groupId>org.apache.jclouds</groupId>
-      <artifactId>jclouds-core</artifactId>
-      <version>${jclouds.version}</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <!-- JClouds Blob Store -->
-    <dependency>
-      <groupId>org.apache.jclouds</groupId>
-      <artifactId>jclouds-blobstore</artifactId>
-      <version>${jclouds.version}</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <!-- JClouds S3 API -->
-    <dependency>
-      <groupId>org.apache.jclouds.api</groupId>
-      <artifactId>s3</artifactId>
-      <version>${jclouds.version}</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <!-- JClouds AWS S3 provider -->
-    <dependency>
-      <groupId>org.apache.jclouds.provider</groupId>
-      <artifactId>aws-s3</artifactId>
-      <version>${jclouds.version}</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <!-- AWS SDK v2 as fallback -->
+    <!-- AWS SDK v2 for S3 operations -->
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>

@@ -3,7 +3,15 @@
 # Runs inside steel-hammer-test container
 # Tests all 6 Maven projects AND validates E2E file upload to MinIO
 
-set -e
+set -euo pipefail
+
+# Load shared env/common if mounted (works inside steel-hammer-test)
+if [[ -f /workspaces/IronBucket/scripts/.env.defaults ]]; then
+    source /workspaces/IronBucket/scripts/.env.defaults
+    if [[ -f /workspaces/IronBucket/scripts/lib/common.sh ]]; then
+        source /workspaces/IronBucket/scripts/lib/common.sh
+    fi
+fi
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -27,11 +35,14 @@ echo -e "${GREEN}✓ Running inside Docker container${NC}"
 echo ""
 
 # Configuration
-TEMP_DIR="/workspaces/IronBucket/temp"
-RESULTS_DIR="/tmp/ironbucket-test-results"
-LOG_FILE="/tmp/test-execution.log"
+TEMP_DIR="${TEMP_DIR:-/workspaces/IronBucket/build/temp}"
+LOG_DIR="${LOG_DIR:-/workspaces/IronBucket/test-results/logs}"
+RESULTS_DIR="${RESULTS_DIR:-${TEMP_DIR}/results}"
+LOG_FILE="${LOG_FILE:-${LOG_DIR}/test-execution.log}"
 MINIO_URL="${MINIO_URL:-http://steel-hammer-minio:9000}"
-MINIO_BUCKET="test-results"
+MINIO_BUCKET="${MINIO_BUCKET:-test-results}"
+
+mkdir -p "$TEMP_DIR" "$RESULTS_DIR" "$LOG_DIR"
 
 mkdir -p "$RESULTS_DIR"
 
@@ -77,15 +88,15 @@ for project in Brazz-Nossel Claimspindel Buzzle-Vane Sentinel-Gear Storage-Condu
     echo -n "Testing $project... "
     cd "$PROJECT_DIR"
 
-    if mvn clean test 2>&1 | tee -a "$LOG_FILE" > /tmp/test-${project}.log; then
+    if mvn clean test 2>&1 | tee -a "$LOG_FILE" > "$LOG_DIR/test-${project}.log"; then
         # Extract test count from Maven output
-        TEST_COUNT=$(grep "Tests run:" /tmp/test-${project}.log | tail -1 | awk '{for(i=1;i<=NF;i++) if($i=="run:") print $(i+1)}' || echo "0")
+        TEST_COUNT=$(grep "Tests run:" "$LOG_DIR/test-${project}.log" | tail -1 | awk '{for(i=1;i<=NF;i++) if($i=="run:") print $(i+1)}' || echo "0")
         echo -e "${GREEN}✅ ($TEST_COUNT tests passed)${NC}"
         TOTAL_TESTS=$((TOTAL_TESTS + TEST_COUNT))
         PROJECTS_PASSED=$((PROJECTS_PASSED + 1))
     else
         # Check for failures
-        FAILURES=$(grep "Failures:" /tmp/test-${project}.log | tail -1 | awk '{for(i=1;i<=NF;i++) if($i=="Failures:") print $(i+1)}' || echo "0")
+        FAILURES=$(grep "Failures:" "$LOG_DIR/test-${project}.log" | tail -1 | awk '{for(i=1;i<=NF;i++) if($i=="Failures:") print $(i+1)}' || echo "0")
         if [ "$FAILURES" = "0" ] || [ -z "$FAILURES" ]; then
             echo -e "${YELLOW}⏭️  (no tests or skipped)${NC}"
         else
@@ -113,7 +124,7 @@ echo ""
 
 # Check MinIO
 echo -n "Checking MinIO... "
-if curl -s "$MINIO_URL/minio/health/live" > /dev/null 2>&1; then
+if curl --silent --fail --max-time 8 --retry 3 --retry-delay 2 "$MINIO_URL/minio/health/live" > /dev/null 2>&1; then
     echo -e "${GREEN}✅ MinIO is healthy${NC}"
 else
     echo -e "${RED}❌ MinIO is NOT responding${NC}"
@@ -130,7 +141,7 @@ fi
 
 # Check Keycloak
 echo -n "Checking Keycloak... "
-if curl -s "http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" > /dev/null 2>&1; then
+if curl --silent --fail --max-time 8 --retry 3 --retry-delay 2 "http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Keycloak is responding${NC}"
 else
     echo -e "${YELLOW}⚠️  Keycloak not available yet (still starting)${NC}"
@@ -148,7 +159,7 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 
 # Create test file
-TEST_FILE="/tmp/ironbucket-e2e-test.txt"
+TEST_FILE="${TEMP_DIR}/ironbucket-e2e-test.txt"
 TEST_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 TEST_CONTENT="IronBucket E2E Test Upload - $TEST_TIMESTAMP"
 
@@ -162,7 +173,7 @@ echo "Uploading file to MinIO bucket 'test-results'..."
 echo ""
 
 # Create Python script for S3 operations
-cat > /tmp/s3_upload.py << 'EOFPYTHON'
+cat > "$LOG_DIR/s3_upload.py" << 'EOFPYTHON'
 import boto3
 import sys
 import os
@@ -172,8 +183,8 @@ from botocore.config import Config
 endpoint = os.getenv('MINIO_URL', 'http://steel-hammer-minio:9000')
 access_key = 'minioadmin'
 secret_key = 'minioadmin'
-bucket_name = 'test-results'
-file_path = '/tmp/ironbucket-e2e-test.txt'
+bucket_name = os.getenv('MINIO_BUCKET', 'test-results')
+file_path = os.getenv('TEST_FILE', '/tmp/ironbucket-e2e-test.txt')
 upload_key = f'ironbucket-e2e-test-{int(__import__("time").time())}.txt'
 
 try:
@@ -206,7 +217,7 @@ try:
     print(f"✓ File verified in MinIO ({file_size} bytes)")
     
     # Save upload key for later reference
-    with open('/tmp/upload_key.txt', 'w') as f:
+    with open(os.getenv('UPLOAD_KEY_PATH', '/tmp/upload_key.txt'), 'w') as f:
         f.write(upload_key)
     
     sys.exit(0)
@@ -218,15 +229,16 @@ EOFPYTHON
 
 # Execute Python upload script
 echo "  Uploading file to MinIO..."
-if python3 /tmp/s3_upload.py 2>&1 | tee /tmp/upload-result.log; then
+export TEST_FILE UPLOAD_KEY_PATH="$LOG_DIR/upload_key.txt"
+if python3 "$LOG_DIR/s3_upload.py" 2>&1 | tee "$LOG_DIR/upload-result.log"; then
     echo -e "  ${GREEN}✅ File uploaded successfully${NC}"
-    UPLOAD_KEY=$(cat /tmp/upload_key.txt)
+    UPLOAD_KEY=$(cat "$LOG_DIR/upload_key.txt")
     echo -e "     Bucket: $MINIO_BUCKET"
     echo -e "     Key: $UPLOAD_KEY"
     echo ""
 else
     echo -e "  ${RED}❌ Upload failed${NC}"
-    cat /tmp/upload-result.log
+    cat "$LOG_DIR/upload-result.log"
     exit 1
 fi
 

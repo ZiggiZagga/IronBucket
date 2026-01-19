@@ -6,19 +6,18 @@
 # - File Upload (Real S3 proxy)
 # - Security (Deny-overrides-allow policy semantics)
 
-set -e
+set -euo pipefail
 
-# Color codes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Load environment and common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../.env.defaults"
+source "$SCRIPT_DIR/../lib/common.sh"
 
-# Configuration
-KEYCLOAK_URL="http://localhost:7081"
-MINIO_URL="http://localhost:9000"
-POSTGRES_HOST="localhost"
+# Register error trap
+register_error_trap
+
+# Override service URLs if needed for this script
+# (They are already set from .env.defaults based on IS_CONTAINER)
 
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║                                                                  ║${NC}"
@@ -122,11 +121,11 @@ fi
 echo ""
 echo "Step 2.2: Alice creates test bucket and uploads file..."
 
-# Create test directory
-mkdir -p /tmp/ironbucket-test
+# Create test directory in project temp (not /tmp)
+mkdir -p "$TEMP_DIR/ironbucket-test"
 
 # Create Alice's secret file
-echo "THIS IS ALICE'S CONFIDENTIAL DOCUMENT - DO NOT SHARE WITH BOB!" > /tmp/ironbucket-test/alice-secret.txt
+echo "THIS IS ALICE'S CONFIDENTIAL DOCUMENT - DO NOT SHARE WITH BOB!" > "$TEMP_DIR/ironbucket-test/alice-secret.txt"
 
 echo -e "${GREEN}✅ Alice's file created: 'alice-secret.txt'${NC}"
 echo "   Content: 'THIS IS ALICE'S CONFIDENTIAL DOCUMENT - DO NOT SHARE WITH BOB!'"

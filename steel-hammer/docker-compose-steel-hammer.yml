@@ -68,8 +68,12 @@ services:
       - steel-hammer-keycloak
       - steel-hammer-postgres
 
+    volumes:
+      - ../certs:/certs:ro
+
     environment:
-      - "SPRING_PROFILES_ACTIVE=docker"
+      - "SPRING_PROFILES_ACTIVE=docker${MTLS_PROFILE:-}"
+      - "CERT_BASE_PATH=file:/certs"
       - "SPRING_APPLICATION_NAME=buzzle-vane"
       - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
@@ -77,7 +81,7 @@ services:
       - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8083/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -104,8 +108,13 @@ services:
       - steel-hammer-postgres
       - steel-hammer-buzzle-vane
 
+    volumes:
+      # Mount certificates for mTLS (if --with-mtls flag is used)
+      - ../certs:/certs:ro
+
     environment:
-      - "SPRING_PROFILES_ACTIVE=docker"
+      - "SPRING_PROFILES_ACTIVE=docker${MTLS_PROFILE:-}"
+      - "CERT_BASE_PATH=file:/certs"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=sentinel-gear"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
@@ -116,7 +125,7 @@ services:
       - "MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health-check"]
+      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8081/actuator/health-check"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -140,8 +149,11 @@ services:
       - steel-hammer-buzzle-vane
       - steel-hammer-sentinel-gear
 
+    volumes:
+      - ../certs:/certs:ro
+
     environment:
-      - "SPRING_PROFILES_ACTIVE=docker"
+      - "CERT_BASE_PATH=file:/certs"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=claimspindel"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
@@ -152,7 +164,7 @@ services:
       - "MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8081/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -177,8 +189,12 @@ services:
       - steel-hammer-claimspindel
       - steel-hammer-minio
 
+    volumes:
+      - ../certs:/certs:ro
+
     environment:
-      - "SPRING_PROFILES_ACTIVE=docker"
+      - "SPRING_PROFILES_ACTIVE=docker${MTLS_PROFILE:-}"
+      - "CERT_BASE_PATH=file:/certs"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "MINIO_ACCESS_KEY=minioadmin"
       - "MINIO_SECRET_KEY=minioadmin"
@@ -189,7 +205,7 @@ services:
       - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8082/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -237,6 +253,7 @@ services:
       - ./tests:/tests
       - /tmp/ironbucket-test:/tmp/ironbucket-test
       - ./test-scripts:/scripts:ro
+      - ../scripts:/workspaces/IronBucket/scripts:ro
       - /workspaces/IronBucket/temp:/workspaces/IronBucket/temp
       - /workspaces/IronBucket/.git:/ironbucket/.git:ro
 

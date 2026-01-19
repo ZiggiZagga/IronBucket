@@ -13,6 +13,19 @@
 
 set -euo pipefail
 
+# Load shared env/common if available
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+if [[ -f "$ROOT_DIR/scripts/.env.defaults" ]]; then
+    source "$ROOT_DIR/scripts/.env.defaults"
+fi
+if [[ -f "$ROOT_DIR/scripts/lib/common.sh" ]]; then
+    source "$ROOT_DIR/scripts/lib/common.sh"
+fi
+
+LOG_DIR="${LOG_DIR:-${ROOT_DIR}/test-results/logs}"
+mkdir -p "$LOG_DIR"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -68,12 +81,12 @@ test_alice_bob_e2e_complete() {
     
     # Check if comprehensive E2E test exists and passes
     if [ -f "steel-hammer/tests/e2e-alice-bob-container.sh" ]; then
-        if bash steel-hammer/tests/e2e-alice-bob-container.sh &> /tmp/alice-bob-test.log; then
+        if bash steel-hammer/tests/e2e-alice-bob-container.sh &> "$LOG_DIR/alice-bob-test.log"; then
             log_test_pass "Alice & Bob E2E test passes"
         else
             log_test_fail "Alice & Bob E2E test FAILS" \
                 "HIGH" \
-                "E2E workflow has failures. Check /tmp/alice-bob-test.log for details."
+                "E2E workflow has failures. Check $LOG_DIR/alice-bob-test.log for details."
         fi
     else
         log_test_fail "Alice & Bob E2E test NOT found" \
@@ -89,7 +102,7 @@ test_multi_tenant_isolation() {
     # This test MUST exist to validate tenant isolation
     
     if [ -f "steel-hammer/tests/test-tenant-isolation.sh" ]; then
-        if bash steel-hammer/tests/test-tenant-isolation.sh &> /tmp/tenant-isolation-test.log; then
+        if bash steel-hammer/tests/test-tenant-isolation.sh &> "$LOG_DIR/tenant-isolation-test.log"; then
             log_test_pass "Tenant isolation properly enforced"
         else
             log_test_fail "Tenant isolation test FAILS" \
@@ -110,7 +123,7 @@ test_policy_enforcement_e2e() {
     # Keycloak -> Sentinel-Gear -> Claimspindel -> Brazz-Nossel -> MinIO
     
     if [ -f "steel-hammer/tests/test-policy-enforcement-e2e.sh" ]; then
-        if bash steel-hammer/tests/test-policy-enforcement-e2e.sh &> /tmp/policy-e2e-test.log; then
+        if bash steel-hammer/tests/test-policy-enforcement-e2e.sh &> "$LOG_DIR/policy-e2e-test.log"; then
             log_test_pass "Policy enforcement works end-to-end"
         else
             log_test_fail "Policy enforcement E2E test FAILS" \
@@ -134,7 +147,7 @@ test_audit_trail_complete() {
     # - User context (tenant, user, timestamp)
     
     if [ -f "steel-hammer/tests/test-audit-trail-e2e.sh" ]; then
-        if bash steel-hammer/tests/test-audit-trail-e2e.sh &> /tmp/audit-trail-test.log; then
+        if bash steel-hammer/tests/test-audit-trail-e2e.sh &> "$LOG_DIR/audit-trail-test.log"; then
             log_test_pass "Complete audit trail generated"
         else
             log_test_fail "Audit trail incomplete" \
@@ -156,7 +169,7 @@ test_service_discovery_integration() {
     
     if [ -f "temp/Buzzle-Vane/src/test/java/com/ironbucket/buzzlevane/DiscoveryServiceTests.java" ]; then
         cd temp/Buzzle-Vane
-        if mvn test -Dtest=DiscoveryServiceTests -q &> /tmp/discovery-test.log; then
+        if mvn test -Dtest=DiscoveryServiceTests -q &> "$LOG_DIR/discovery-test.log"; then
             log_test_pass "Service discovery integration works"
         else
             log_test_fail "Service discovery integration FAILS" \
@@ -183,7 +196,7 @@ test_jwt_propagation_e2e() {
     
     if [ -f "temp/Sentinel-Gear/src/test/java/com/ironbucket/sentinelgear/integration/SentinelGearIdentityPropagationTest.java" ]; then
         cd temp/Sentinel-Gear
-        if mvn test -Dtest=SentinelGearIdentityPropagationTest -q &> /tmp/jwt-propagation-test.log; then
+        if mvn test -Dtest=SentinelGearIdentityPropagationTest -q &> "$LOG_DIR/jwt-propagation-test.log"; then
             log_test_pass "JWT propagation works E2E"
         else
             log_test_fail "JWT propagation E2E FAILS" \
@@ -208,7 +221,7 @@ test_error_handling_e2e() {
     # - 500 Internal Error with proper logging
     
     if [ -f "steel-hammer/tests/test-error-handling-e2e.sh" ]; then
-        if bash steel-hammer/tests/test-error-handling-e2e.sh &> /tmp/error-handling-test.log; then
+        if bash steel-hammer/tests/test-error-handling-e2e.sh &> "$LOG_DIR/error-handling-test.log"; then
             log_test_pass "Error handling consistent E2E"
         else
             log_test_fail "Error handling E2E inconsistent" \
@@ -227,7 +240,7 @@ test_rate_limiting_e2e() {
     
     # Test that rate limits are enforced per tenant
     if [ -f "steel-hammer/tests/test-rate-limiting-e2e.sh" ]; then
-        if bash steel-hammer/tests/test-rate-limiting-e2e.sh &> /tmp/rate-limiting-test.log; then
+        if bash steel-hammer/tests/test-rate-limiting-e2e.sh &> "$LOG_DIR/rate-limiting-test.log"; then
             log_test_pass "Rate limiting works E2E"
         else
             log_test_fail "Rate limiting NOT enforced" \
@@ -250,7 +263,7 @@ test_data_consistency_e2e() {
     # - Policy cache is updated when policies change
     
     if [ -f "steel-hammer/tests/test-data-consistency-e2e.sh" ]; then
-        if bash steel-hammer/tests/test-data-consistency-e2e.sh &> /tmp/data-consistency-test.log; then
+        if bash steel-hammer/tests/test-data-consistency-e2e.sh &> "$LOG_DIR/data-consistency-test.log"; then
             log_test_pass "Data consistency maintained E2E"
         else
             log_test_fail "Data consistency issues detected" \
@@ -273,7 +286,7 @@ test_latency_targets_met() {
     
     # Test that latency is acceptable under normal load
     if [ -f "steel-hammer/tests/test-latency-targets.sh" ]; then
-        if bash steel-hammer/tests/test-latency-targets.sh &> /tmp/latency-test.log; then
+        if bash steel-hammer/tests/test-latency-targets.sh &> "$LOG_DIR/latency-test.log"; then
             log_test_pass "Latency targets met (p99 < 500ms)"
         else
             log_test_fail "Latency targets NOT met" \
@@ -292,7 +305,7 @@ test_throughput_targets_met() {
     
     # Test that system can handle target throughput
     if [ -f "steel-hammer/tests/test-throughput-targets.sh" ]; then
-        if bash steel-hammer/tests/test-throughput-targets.sh &> /tmp/throughput-test.log; then
+        if bash steel-hammer/tests/test-throughput-targets.sh &> "$LOG_DIR/throughput-test.log"; then
             log_test_pass "Throughput targets met (≥1000 req/s)"
         else
             log_test_fail "Throughput targets NOT met" \
@@ -315,7 +328,7 @@ test_service_restart_resilience() {
     
     # Test that system handles service restarts gracefully
     if [ -f "steel-hammer/tests/test-service-restart-resilience.sh" ]; then
-        if bash steel-hammer/tests/test-service-restart-resilience.sh &> /tmp/restart-resilience-test.log; then
+        if bash steel-hammer/tests/test-service-restart-resilience.sh &> "$LOG_DIR/restart-resilience-test.log"; then
             log_test_pass "System handles service restarts gracefully"
         else
             log_test_fail "Service restart causes issues" \
@@ -334,7 +347,7 @@ test_database_connection_resilience() {
     
     # Test that system handles database connection issues
     if [ -f "steel-hammer/tests/test-db-resilience.sh" ]; then
-        if bash steel-hammer/tests/test-db-resilience.sh &> /tmp/db-resilience-test.log; then
+        if bash steel-hammer/tests/test-db-resilience.sh &> "$LOG_DIR/db-resilience-test.log"; then
             log_test_pass "System handles DB connection issues"
         else
             log_test_fail "DB connection issues cause failures" \
