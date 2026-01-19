@@ -11,6 +11,7 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║          IronBucket E2E Verification with Service Traces       ║${NC}"
 echo -e "${BLUE}║   Verifies: Tests + Services + HTTP Flow + MinIO Storage       ║${NC}"
@@ -146,6 +147,16 @@ echo -e "${BLUE}═════════════════════�
 echo -e "${BLUE}  Phase 4: E2E HTTP Flow - Upload Through Brazz-Nossel Proxy${NC}"
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
 echo ""
+
+if ! python3 - <<'PY' >/dev/null 2>&1; then
+import importlib.util, sys
+sys.exit(0 if importlib.util.find_spec("boto3") else 1)
+PY
+then
+    echo -e "${YELLOW}⏭️  Skipping HTTP flow: boto3 not installed on host. Install with: python3 -m pip install --user boto3 botocore${NC}"
+    echo ""
+    exit 0
+fi
 
 # Create test file
 TEST_FILE="/tmp/ironbucket-e2e-http-test.txt"

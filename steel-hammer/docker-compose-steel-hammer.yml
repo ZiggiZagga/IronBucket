@@ -19,6 +19,12 @@ services:
 
     restart: always
 
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
 
   steel-hammer-keycloak:
     networks:
@@ -53,6 +59,12 @@ services:
     depends_on:
       - steel-hammer-postgres
 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7081/realms/dev/.well-known/openid-configuration"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   steel-hammer-buzzle-vane:
     networks:
       - steel-hammer-network
@@ -76,12 +88,13 @@ services:
       - "CERT_BASE_PATH=file:/certs"
       - "SPRING_APPLICATION_NAME=buzzle-vane"
       - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "HEALTH_CHECK_URL=http://steel-hammer-buzzle-vane:8083/actuator/health"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8083/actuator/health"]
+      test: ["CMD", "/bin/sh", "-c", "curl -kf $${HEALTH_CHECK_URL}"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -118,14 +131,15 @@ services:
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=sentinel-gear"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_SERVER_ADDRESS=0.0.0.0"
       - "MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always"
+      - "HEALTH_CHECK_URL=http://steel-hammer-sentinel-gear:8081/actuator/health-check"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8081/actuator/health-check"]
+      test: ["CMD", "/bin/sh", "-c", "curl -kf $${HEALTH_CHECK_URL}"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -157,14 +171,15 @@ services:
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=claimspindel"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus"
       - "MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always"
+      - "HEALTH_CHECK_URL=http://steel-hammer-claimspindel:8081/actuator/health"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8081/actuator/health"]
+      test: ["CMD", "/bin/sh", "-c", "curl -kf $${HEALTH_CHECK_URL}"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -200,12 +215,13 @@ services:
       - "MINIO_SECRET_KEY=minioadmin"
       - "SPRING_APPLICATION_NAME=brazz-nossel"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://localhost:4317"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "HEALTH_CHECK_URL=http://steel-hammer-brazz-nossel:8082/actuator/health"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "${HEALTH_CHECK_PROTOCOL:-http}://localhost:8082/actuator/health"]
+      test: ["CMD", "/bin/sh", "-c", "curl -kf $${HEALTH_CHECK_URL}"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -233,7 +249,7 @@ services:
       - "MINIO_ROOT_PASSWORD=minioadmin"
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://steel-hammer-minio:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -254,16 +270,26 @@ services:
       - /tmp/ironbucket-test:/tmp/ironbucket-test
       - ./test-scripts:/scripts:ro
       - ../scripts:/workspaces/IronBucket/scripts:ro
+      - ../services:/workspaces/IronBucket/services:ro
+      - ../tools:/workspaces/IronBucket/tools:ro
+      - ../docs:/workspaces/IronBucket/docs:ro
+      - ../README.md:/workspaces/IronBucket/README.md:ro
       - /workspaces/IronBucket/temp:/workspaces/IronBucket/temp
       - /workspaces/IronBucket/.git:/ironbucket/.git:ro
 
     depends_on:
-      - steel-hammer-keycloak
-      - steel-hammer-postgres
-      - steel-hammer-sentinel-gear
-      - steel-hammer-claimspindel
-      - steel-hammer-brazz-nossel
-      - steel-hammer-buzzle-vane
+      steel-hammer-keycloak:
+        condition: service_healthy
+      steel-hammer-postgres:
+        condition: service_healthy
+      steel-hammer-sentinel-gear:
+        condition: service_healthy
+      steel-hammer-claimspindel:
+        condition: service_healthy
+      steel-hammer-brazz-nossel:
+        condition: service_healthy
+      steel-hammer-buzzle-vane:
+        condition: service_healthy
 
     environment:
       - "KEYCLOAK_URL=http://steel-hammer-keycloak:7081"
@@ -276,7 +302,7 @@ services:
 
     # Test will run automatically when container starts
     # Runs complete E2E verification: Maven tests + services + S3 + JWT
-    entrypoint: ["/bin/sh", "-c", "sleep 120 && /scripts/run-e2e-complete.sh"]
+    entrypoint: ["/bin/sh", "-c", "/scripts/run-e2e-complete.sh"]
 
     restart: "no"
     logging:
@@ -288,3 +314,23 @@ services:
 networks:
   steel-hammer-network:
     driver: bridge
+
+
+
+# Eureka Service
+  steel-hammer-eureka:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-eureka
+    container_name: steel-hammer-eureka
+    build:
+      context: ../services/Eureka-Server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://steel-hammer-eureka:8761/eureka"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always

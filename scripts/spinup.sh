@@ -335,7 +335,7 @@ run_docker_e2e_tests() {
     
     # Run standalone E2E test (Alice & Bob scenario)
     echo "Running E2E Test: Alice & Bob Multi-Tenant Scenario..."
-    if bash e2e-test-standalone.sh >> "$LOG_FILE" 2>&1; then
+    if bash scripts/e2e/e2e-test-standalone.sh >> "$LOG_FILE" 2>&1; then
         print_success "E2E Alice & Bob test passed"
     else
         print_warning "E2E Alice & Bob test had failures (check logs)"
