@@ -137,16 +137,16 @@ run_test_suite "E2E_Alice_Bob_Scenario" \
 log_section "PHASE 4: Observability Stack Validation"
 
 run_test_suite "Observability_Loki" \
-    "docker exec steel-hammer-test-client curl -sf http://steel-hammer-loki:3100/ready"
+    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-loki:3100/ready"
 
 run_test_suite "Observability_Tempo" \
-    "docker exec steel-hammer-test-client curl -sf http://steel-hammer-tempo:3200/ready"
+    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-tempo:3200/ready"
 
 run_test_suite "Observability_Grafana" \
-    "docker exec steel-hammer-test-client curl -sf http://steel-hammer-grafana:3000/api/health"
+    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-grafana:3000/api/health"
 
 run_test_suite "Observability_Loki_Labels" \
-    "docker exec steel-hammer-test-client curl -sf http://steel-hammer-loki:3100/loki/api/v1/labels | grep -q 'container'"
+    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-loki:3100/loki/api/v1/labels | grep -q 'container'"
 
 # ============================================================================
 # PHASE 5: COLLECT OBSERVABILITY ARTIFACTS
@@ -155,13 +155,13 @@ run_test_suite "Observability_Loki_Labels" \
 log_section "PHASE 5: Collect Observability Artifacts"
 
 echo "Collecting Loki logs..."
-docker exec steel-hammer-test-client curl -s http://steel-hammer-loki:3100/loki/api/v1/labels > "$ARTIFACT_DIR/loki-labels.json" 2>&1 || true
+docker exec steel-hammer-sentinel-gear curl -s http://steel-hammer-loki:3100/loki/api/v1/labels > "$ARTIFACT_DIR/loki-labels.json" 2>&1 || true
 
 echo "Collecting Tempo traces..."
-docker exec steel-hammer-test-client curl -s http://steel-hammer-tempo:3200/api/traces > "$ARTIFACT_DIR/tempo-traces.json" 2>&1 || true
+docker exec steel-hammer-sentinel-gear curl -s http://steel-hammer-tempo:3200/api/traces > "$ARTIFACT_DIR/tempo-traces.json" 2>&1 || true
 
 echo "Collecting Gateway metrics..."
-docker exec steel-hammer-test-client curl -s http://steel-hammer-sentinel-gear:8080/actuator/metrics > "$ARTIFACT_DIR/gateway-metrics.json" 2>&1 || true
+docker exec steel-hammer-sentinel-gear curl -s http://localhost:8080/actuator/metrics > "$ARTIFACT_DIR/gateway-metrics.json" 2>&1 || true
 
 echo "Collecting service logs..."
 for SERVICE in sentinel-gear brazz-nossel claimspindel buzzle-vane; do
