@@ -1,0 +1,17 @@
+server:
+  port: 0
+
+management:
+  server:
+    port: 0
+
+spring:
+  cloud:
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
