@@ -211,7 +211,7 @@ jobs:
       - name: Generate provenance digests
         id: hash
         run: |
-          digests=$(awk '{print "sha256:" $1 " " $2}' release/SHA256SUMS | base64 -w0)
+          digests=$(base64 -w0 release/SHA256SUMS)
           echo "digests=$digests" >> "$GITHUB_OUTPUT"
       
       - name: Upload release artifacts
@@ -232,6 +232,7 @@ jobs:
     with:
       base64-subjects: "${{ needs.build.outputs.digests }}"
       upload-assets: false
+      private-repository: true
 
   publish:
     name: Create GitHub Release
