@@ -36,10 +36,15 @@
     {
       "username": "bob",
       "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Builder",
+      "email": "bob@ironbucket.dev",
       "credentials": [
         {
           "type": "password",
-          "value": "bobP@ss"
+          "value": "bobP@ss",
+          "temporary": false
         }
       ],
       "groups": ["devgroup"],
@@ -48,10 +53,15 @@
     {
       "username": "alice",
       "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Admin",
+      "email": "alice@ironbucket.dev",
       "credentials": [
         {
           "type": "password",
-          "value": "aliceP@ss"
+          "value": "aliceP@ss",
+          "temporary": false
         }
       ],
       "groups": ["admingroup"],

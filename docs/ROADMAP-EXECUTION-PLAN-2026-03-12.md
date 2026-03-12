@@ -59,6 +59,11 @@ The plan focuses on converting roadmap assertions into implementation increments
   to run `mvn test -Pintegration` and report behavioral/integration failures independently of roadmap scaffold checks.
 - Behavioral gate is now strict and blocking on all configured refs after integration baseline stabilization.
 
+### ✅ Phase F — Full Orchestrator Stability Verification (Completed)
+- End-to-end orchestrator run is now green at 157/157 (`scripts/run-all-tests-complete.sh`).
+- Alice/Bob scenario is stabilized for containerized execution path used by the orchestrator.
+- Transient upstream readiness responses in E2E path are now handled with bounded retries (502/503/504) to reduce flaky false negatives.
+
 ---
 
 ## Execution Sequence

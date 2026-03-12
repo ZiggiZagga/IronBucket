@@ -20,9 +20,27 @@ TOTAL_FAILED=0
 TOTAL_SKIPPED=0
 
 # Test tracking arrays
-declare -a TEST_RESULTS
-declare -a FAILED_TESTS
+declare -a TEST_RESULTS=()
+declare -a FAILED_TESTS=()
 START_TIME=$(date +%s)
+STACK_NETWORK=""
+
+ensure_stack_running() {
+    if docker ps --format '{{.Names}}' | grep -q '^steel-hammer-loki$'; then
+        return 0
+    fi
+
+    echo -e "${YELLOW}⚠️  LGTM stack not running. Starting docker-compose-lgtm.yml...${NC}"
+    (cd "$PROJECT_ROOT/steel-hammer" && docker compose -f docker-compose-lgtm.yml up -d --build)
+}
+
+resolve_stack_network() {
+    STACK_NETWORK="$(docker inspect steel-hammer-loki --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' | head -n1 | tr -d '\r')"
+    if [[ -z "$STACK_NETWORK" ]]; then
+        echo -e "${RED}❌ Could not resolve stack network from steel-hammer-loki${NC}"
+        exit 1
+    fi
+}
 
 # ============================================================================
 # HEADER
@@ -74,6 +92,20 @@ run_test_suite() {
     echo ""
 }
 
+has_failed_suite() {
+    local target_suite="$1"
+    local failure
+
+    for failure in "${FAILED_TESTS[@]}"; do
+        IFS='|' read -r suite_name _ <<< "$failure"
+        if [[ "$suite_name" == "$target_suite" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 # ============================================================================
 # PHASE 1: MAVEN TESTS (Backend)
 # ============================================================================
@@ -116,8 +148,34 @@ fi
 
 log_section "PHASE 2: Infrastructure & Service Tests"
 
+ensure_stack_running
+resolve_stack_network
+
 run_test_suite "Infrastructure_Tests" \
-    "docker exec steel-hammer-test-client sh /scripts/run-all-tests.sh"
+        "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 sh -ec '
+                check_with_retry() {
+                    name=\"\$1\"; url=\"\$2\"; attempts=\"\${3:-60}\"; delay=\"\${4:-2}\";
+                    i=1
+                    while [ \$i -le \$attempts ]; do
+                        if curl -fsS \"\$url\" >/dev/null 2>&1; then
+                            echo \"OK: \$name\"
+                            return 0
+                        fi
+                        sleep \$delay
+                        i=\$((i+1))
+                    done
+                    echo \"FAIL: \$name\"
+                    return 1
+                }
+                check_with_retry keycloak http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration 90 2 &&
+                check_with_retry gateway http://steel-hammer-sentinel-gear:8080/actuator/health 60 2 &&
+                check_with_retry claimspindel http://steel-hammer-claimspindel:8081/actuator/health 60 2 &&
+                check_with_retry brazz http://steel-hammer-brazz-nossel:8082/actuator/health 60 2 &&
+                check_with_retry eureka http://steel-hammer-buzzle-vane:8083/eureka/apps 60 2 &&
+                check_with_retry loki http://steel-hammer-loki:3100/ready 60 2 &&
+                check_with_retry tempo http://steel-hammer-tempo:3200/ready 60 2 &&
+                check_with_retry mimir http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo 60 2
+        '"
 
 # ============================================================================
 # PHASE 3: E2E ALICE-BOB SCENARIO (Adapted for Container)
@@ -127,8 +185,21 @@ log_section "PHASE 3: E2E Alice-Bob Multi-Tenant Scenario"
 
 # Copy Alice-Bob test into container and run
 run_test_suite "E2E_Alice_Bob_Scenario" \
-    "docker cp $PROJECT_ROOT/e2e-alice-bob-test.sh steel-hammer-test-client:/tmp/ && \
-     docker exec steel-hammer-test-client sh /tmp/e2e-alice-bob-test.sh"
+    "docker run --rm --network $STACK_NETWORK \
+        -v $PROJECT_ROOT:/workspace \
+        -w /workspace/scripts/e2e \
+        -e KEYCLOAK_URL=http://steel-hammer-keycloak:7081 \
+        -e MINIO_URL=http://steel-hammer-minio:9000 \
+        -e POSTGRES_HOST=steel-hammer-postgres \
+        -e SENTINEL_GEAR_URL=http://steel-hammer-sentinel-gear:8080 \
+        -e BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082 \
+        debian:bookworm-slim sh -lc 'apt-get update -qq && apt-get install -y -qq bash curl jq postgresql-client >/dev/null && bash ./e2e-alice-bob-test.sh'"
+
+if has_failed_suite "E2E_Alice_Bob_Scenario"; then
+    echo -e "${RED}❌ E2E_Alice_Bob_Scenario failed — stopping test run immediately as configured.${NC}"
+    echo "Fix E2E_Alice_Bob_Scenario issues and re-run scripts/run-all-tests-complete.sh"
+    exit 1
+fi
 
 # ============================================================================
 # PHASE 4: OBSERVABILITY VALIDATION
@@ -137,16 +208,19 @@ run_test_suite "E2E_Alice_Bob_Scenario" \
 log_section "PHASE 4: Observability Stack Validation"
 
 run_test_suite "Observability_Loki" \
-    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-loki:3100/ready"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 sh -ec 'i=1; while [ \$i -le 60 ]; do if curl -fsS http://steel-hammer-loki:3100/ready >/dev/null 2>&1; then exit 0; fi; i=\$((i+1)); sleep 2; done; exit 1'"
 
 run_test_suite "Observability_Tempo" \
-    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-tempo:3200/ready"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf http://steel-hammer-tempo:3200/ready"
 
 run_test_suite "Observability_Grafana" \
-    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-grafana:3000/api/health"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf http://steel-hammer-grafana:3000/api/health"
 
 run_test_suite "Observability_Loki_Labels" \
-    "docker exec steel-hammer-sentinel-gear curl -sf http://steel-hammer-loki:3100/loki/api/v1/labels | grep -q 'container'"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf http://steel-hammer-loki:3100/loki/api/v1/labels | grep -q 'container'"
+
+run_test_suite "Observability_Phase2_Proof" \
+    "KEEP_STACK=true $PROJECT_ROOT/scripts/e2e/prove-phase2-observability.sh"
 
 # ============================================================================
 # PHASE 5: COLLECT OBSERVABILITY ARTIFACTS
@@ -255,6 +329,10 @@ fi)
 - **Purpose:** Validate logging, tracing, metrics collection
 - **Components:** Loki, Tempo, Grafana, Promtail, OTEL Collector
 - **Framework:** Container-based health checks
+
+- **Executable Proof:**
+    - scripts/e2e/prove-phase2-observability.sh
+    - Generates evidence-backed report under test-results/phase2-observability/
 
 ### Phase 5: Artifact Collection
 - **Purpose:** Collect observability data for analysis

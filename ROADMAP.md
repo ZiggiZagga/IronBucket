@@ -6,7 +6,8 @@
 
 **Verified Test Snapshot (2026-03-12):**
 - Backend modules: 8/8 passing via `scripts/comprehensive-test-reporter.sh --all`
-- E2E smoke: passing in current environment-aware mode
+- Full orchestrator: 157/157 passing via `scripts/run-all-tests-complete.sh`
+- E2E smoke: passing in container-network mode with transient 5xx retry hardening
 - Security validation (reporter): 4/4 passing
 - Sentinel roadmap profile: 105 tests run, 0 failing (`mvn test -Proadmap` in `services/Sentinel-Gear`)
 
