@@ -8,6 +8,7 @@ Uses shared python_utils for logging, env resolution, and JSON handling.
 """
 
 import sys
+import os
 import subprocess
 from pathlib import Path
 
@@ -39,11 +40,17 @@ def main():
         logger.info(f"TEMP_DIR: {TEMP_DIR}")
         return False
     
-    logger.info(f"Executing: mvn test")
+    maven_test_filter = os.environ.get("SENTINEL_TEST_FILTER", "SentinelGear*,BuzzleVane*")
+    maven_quiet = os.environ.get("MAVEN_QUIET", "true").lower() == "true"
+    maven_command = ["mvn", "test", f"-Dtest={maven_test_filter}"]
+    if maven_quiet:
+        maven_command.append("-q")
+
+    logger.info(f"Executing: {' '.join(maven_command)}")
     logger.info(f"Location: {sentinel_gear_path}")
     
     result = subprocess.run(
-        ["mvn", "test", "-Dtest=SentinelGear*,BuzzleVane*", "-q"],
+        maven_command,
         cwd=str(sentinel_gear_path),
         capture_output=True,
         text=True
