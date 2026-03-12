@@ -1,0 +1,45 @@
+server:
+  port: 0
+  ssl:
+    enabled: ${SERVER_SSL_ENABLED:false}
+    key-store: ${SERVER_SSL_KEYSTORE:}
+    key-store-password: ${SERVER_SSL_KEYSTORE_PASSWORD:}
+    key-store-type: ${SERVER_SSL_KEYSTORE_TYPE:PKCS12}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    region: ${EUREKA_REGION:dev-region-1}
+
+spring:
+  application:
+    name: claimspindel
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: s3-dev-route
+              uri: lb://BRAZZ-NOSSEL
+              predicates:
+                - Path=/s3/**
+                - Claims=role,devrole
+            - id: s3-admin-route
+              uri: lb://BRAZZ-NOSSEL
+              predicates:
+                - Path=/s3/**
+                - Claims=role,adminrole	
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+          discovery:
+            locator:
+              lower-case-service-id: true
+              enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://steel-hammer-keycloak:7081/realms/dev}
+          jwk-set-uri: ${OAUTH2_ISSUER_URI:http://steel-hammer-keycloak:7081/realms/dev}/protocol/openid-connect/certs

@@ -1,0 +1,12 @@
+groups:
+  - name: ironbucket-core-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.05
+        for: 5m
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+      - alert: SecurityBreach
+        expr: increase(http_server_requests_seconds_count{status="403"}[5m]) > 25
+        for: 5m

@@ -1,0 +1,6 @@
+com/ironbucket/vaultsmith/adapter/S3StorageBackend.class
+com/ironbucket/vaultsmith/impl/AwsS3Backend.class
+com/ironbucket/vaultsmith/model/S3UploadResult.class
+com/ironbucket/vaultsmith/config/S3BackendConfig.class
+com/ironbucket/vaultsmith/model/S3ObjectMetadata.class
+com/ironbucket/vaultsmith/model/S3CopyResult.class

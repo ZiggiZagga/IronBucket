@@ -2,6 +2,33 @@
 
 Production-ready S3-compatible microservices platform with JWT authentication, multi-tenant support, and policy-based routing.
 
+## 🚨 Production Readiness Status
+
+**Current Status**: 🟡 **Development Ready** | 🔴 **Production Hardening Required**
+
+IronBucket has **excellent architecture and code quality** but requires **critical security hardening** before production deployment.
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Architecture | ✅ A+ | Zero-trust design, excellent |
+| Code Quality | ✅ A | Modern Java 25, Spring Boot 4 |
+| Tests | ✅ B+ | 231 tests passing |
+| CI/CD | ⚠️ B | SLSA workflow debugging |
+| Security Design | ✅ A+ | Zero-trust, multi-layer |
+| **Network Isolation** | 🔴 **C** | **NetworkPolicies required** |
+| **Credential Mgmt** | 🔴 **D** | **Vault integration needed** |
+| Observability | ⚠️ C+ | LGTM stack partial |
+
+**⚠️ CRITICAL**: Before production deployment:
+1. Deploy [Kubernetes NetworkPolicies](docs/k8s-network-policies.yaml)
+2. Implement Vault-backed secret management and rotation (see [ROADMAP.md](ROADMAP.md))
+3. Enable TLS everywhere
+4. Complete [security hardening](docs/security/MINIO-ISOLATION-AUDIT.md)
+
+**📋 See**: [Architecture Assessment](docs/ARCHITECTURE-ASSESSMENT-2026.md) | [Roadmap](ROADMAP.md)
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -52,26 +79,72 @@ PostgreSQL (Metadata)
 
 ## Documentation
 
+### 🔐 Security & Production Readiness (⚠️ START HERE)
+
+| Document | Purpose | Priority |
+|----------|---------|----------|
+| [Architecture Assessment 2026](docs/ARCHITECTURE-ASSESSMENT-2026.md) | **Complete architecture & security review** | 🔴 CRITICAL |
+| [Production Readiness Roadmap](ROADMAP.md) | **Implementation plan & timeline** | 🔴 CRITICAL |
+| [MinIO Isolation Audit](docs/security/MINIO-ISOLATION-AUDIT.md) | **Network security analysis** | 🔴 CRITICAL |
+| [K8s NetworkPolicies](docs/k8s-network-policies.yaml) | **Network isolation rules** | 🔴 DEPLOY FIRST |
+| [Sentinel-Gear Security](docs/security/SENTINEL-CLAIMSPINDEL-SECURITY-VALIDATION.md) | Zero-trust validation | High |
+
+### 📚 User Guides
+
 | Document | Purpose |
 |----------|---------|
 | [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Complete setup guide for users |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, service interaction |
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deployment guide |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & solutions |
+| [API.md](docs/API.md) | S3 API compatibility |
+
+### 🔧 Developer Guides
+
+| Document | Purpose |
+|----------|---------|
+| [TEST-REPORTING-SYSTEM.md](docs/TEST-REPORTING-SYSTEM.md) | **Comprehensive test reporting & todos** |
 | [CI-CD-PIPELINE.md](docs/CI-CD-PIPELINE.md) | CI/CD, security scanning, SLSA provenance |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Developer guidelines |
 | [TESTING.md](docs/TESTING.md) | Test execution & results |
-| [API.md](docs/API.md) | S3 API compatibility |
-| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & solutions |
 
 ## Test Results
 
-✅ **All 231 Tests Passing**
+✅ **Core module test pathways passing** (latest comprehensive run)  
+🔴 **Roadmap profile still contains failing implementation-gate tests** (see `services/Sentinel-Gear` roadmap suite)
 
-- Brazz-Nossel (S3 Proxy): 47 tests ✅
-- Sentinel-Gear (JWT Validator): 44 tests ✅
-- Claimspindel (Policy Router): 72 tests ✅
-- Buzzle-Vane (Service Discovery): 58 tests ✅
-- Storage-Conductor: 10 tests ✅
+### Run Comprehensive Tests
+
+```bash
+# Run all tests with comprehensive reporting
+bash scripts/comprehensive-test-reporter.sh --all
+
+# Run specific test types
+bash scripts/comprehensive-test-reporter.sh --backend  # Maven only
+bash scripts/comprehensive-test-reporter.sh --e2e      # E2E only
+bash scripts/comprehensive-test-reporter.sh --security # Security only
+
+# View results
+cat test-results/reports/LATEST-SUMMARY.md
+```
+
+### Test Breakdown
+
+| Module | Tests | Status |
+|--------|-------|--------|
+| Brazz-Nossel (S3 Proxy) | 47 | ✅ |
+| Sentinel-Gear (JWT Validator) | 44 | ✅ |
+| Claimspindel (Policy Router) | 72 | ✅ |
+| Buzzle-Vane (Service Discovery) | 58 | ✅ |
+| Storage-Conductor | 10 | ✅ |
+| **Security Validation** | 4 | 🔴 **3 failures** |
+
+**Security Issues Detected**:
+- 🔴 NetworkPolicies not deployed
+- 🔴 Hardcoded credentials found
+- 🟠 Tests bypass security gateway
+
+See [TEST-REPORTING-SYSTEM.md](docs/TEST-REPORTING-SYSTEM.md) for details.
 
 ## E2E Verification (Production Ready)
 

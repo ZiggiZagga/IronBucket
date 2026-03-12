@@ -22,28 +22,24 @@ jobs:
       matrix:
         service:
           - name: sentinel-gear
-            context: ./temp/Sentinel-Gear
+            context: ./services/Sentinel-Gear
           - name: claimspindel
-            context: ./temp/Claimspindel
+            context: ./services/Claimspindel
           - name: brazz-nossel
-            context: ./temp/Brazz-Nossel
+            context: ./services/Brazz-Nossel
           - name: buzzle-vane
-            context: ./temp/Buzzle-Vane
+            context: ./services/Buzzle-Vane
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
       - name: Set up Java 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
+        run: bash scripts/ci/setup-java-25.sh 25
       
       - name: Build Pactum-Scroll
         run: |
-          cd temp/Pactum-Scroll
+          cd services/Pactum-Scroll
           mvn clean install -DskipTests -B || echo "Pactum-Scroll build skipped"
       
       - name: Build application JAR
@@ -92,10 +88,20 @@ jobs:
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service.name }}.sarif'
           severity: 'CRITICAL,HIGH'
+
+      - name: Check Trivy SARIF output exists
+        id: trivy_sarif
+        if: always()
+        run: |
+          if [[ -f "trivy-results-${{ matrix.service.name }}.sarif" ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && steps.trivy_sarif.outputs.exists == 'true'
         with:
           sarif_file: 'trivy-results-${{ matrix.service.name }}.sarif'
           category: trivy-${{ matrix.service.name }}
@@ -127,11 +133,13 @@ jobs:
     steps:
       - name: Generate summary
         run: |
-          echo "## Docker Build Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| sentinel-gear | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| claimspindel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| brazz-nossel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| buzzle-vane | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Docker Build Results"
+            echo ""
+            echo "| Service | Status |"
+            echo "|---------|--------|"
+            echo "| sentinel-gear | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+            echo "| claimspindel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+            echo "| brazz-nossel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+            echo "| buzzle-vane | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

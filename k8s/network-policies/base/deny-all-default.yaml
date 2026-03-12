@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-default
+  namespace: default
+  labels:
+    tier: base
+    component: network-isolation
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  # Deny all ingress by default
+  # Deny all egress by default
+  # (empty rules list = deny all)

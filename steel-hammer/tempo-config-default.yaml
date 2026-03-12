@@ -1,0 +1,30 @@
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  max_block_duration: 5m
+
+metrics_generator:
+  registry:
+    external_labels:
+      cluster: docker
+      namespace: ironbucket
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces

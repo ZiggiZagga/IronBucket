@@ -1,0 +1,9 @@
+com/ironbucket/integration/test/IntegrationTestSpecifications$EndToEndFlowTests.class
+com/ironbucket/integration/test/IntegrationTestSpecifications$ObservabilityTests.class
+com/ironbucket/integration/test/IntegrationTestSpecifications$AuditLoggingTests.class
+com/ironbucket/integration/test/IntegrationTestSpecifications$DirectAccessPreventionTests.class
+com/ironbucket/integration/test/IntegrationTestSpecifications$ErrorHandlingTests.class
+com/ironbucket/integration/test/IntegrationTestSpecifications.class
+com/ironbucket/integration/test/IntegrationTestSpecifications$IdentityAndSecurityTests.class
+com/ironbucket/integration/test/IntegrationTestSpecifications$PolicyEvaluationTests.class
+com/ironbucket/integration/test/IntegrationTestSpecifications$S3ProxyTests.class

@@ -18,6 +18,7 @@ export interface JWTValidationConfig {
   expectedAudience?: string | string[];
   clockSkewSeconds?: number;
   requiredClaims?: string[];
+  acceptedAlgorithms?: jwt.Algorithm[];
 }
 
 /**
@@ -25,7 +26,8 @@ export interface JWTValidationConfig {
  */
 const DEFAULT_CONFIG: JWTValidationConfig = {
   clockSkewSeconds: 30,
-  requiredClaims: ['sub', 'iss', 'aud', 'iat', 'exp']
+  requiredClaims: ['sub', 'iss', 'aud', 'iat', 'exp'],
+  acceptedAlgorithms: ['HS256', 'RS256']
 };
 
 /**
@@ -62,7 +64,8 @@ export function validateJWT(
     // Verify signature and decode
     const decoded = jwt.verify(token, secret, {
       clockTimestamp: Math.floor(Date.now() / 1000),
-      clockTolerance: config.clockSkewSeconds || 30
+      clockTolerance: config.clockSkewSeconds || 30,
+      algorithms: config.acceptedAlgorithms || DEFAULT_CONFIG.acceptedAlgorithms
     }) as Record<string, any>;
 
     // Check required claims

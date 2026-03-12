@@ -17,24 +17,21 @@ jobs:
   dependency-check:
     name: Dependency Vulnerability Scan
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
       - name: Set up Java 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
+        run: bash scripts/ci/setup-java-25.sh 25
       
       - name: Run OWASP Dependency Check
         run: |
           # Install dependency-check-maven plugin and run
           for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
             echo "Scanning $module for vulnerabilities..."
-            cd temp/$module
+            cd services/$module
             mvn org.owasp:dependency-check-maven:check \
               -DfailBuildOnCVSS=7 \
               -DsuppressionFile=../../.github/dependency-check-suppressions.xml || true
@@ -59,22 +56,18 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Java 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
+        run: bash scripts/ci/setup-java-25.sh 25
       
       - name: Build Pactum-Scroll
         run: |
-          cd temp/Pactum-Scroll
+          cd services/Pactum-Scroll
           mvn clean install -DskipTests -B || echo "Pactum-Scroll build skipped"
       
       - name: Run SpotBugs
         run: |
           for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
             echo "Running SpotBugs on $module..."
-            cd temp/$module
+            cd services/$module
             # Use spotbugs:spotbugs to generate XML report, not just check
             mvn compile spotbugs:spotbugs -B || true
             cd ../..
@@ -98,17 +91,13 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Java 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
+        run: bash scripts/ci/setup-java-25.sh 25
       
       - name: Run Checkstyle
         run: |
           for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
             echo "Running Checkstyle on $module..."
-            cd temp/$module
+            cd services/$module
             mvn checkstyle:check -B || true
             cd ../..
           done
@@ -146,11 +135,13 @@ jobs:
     steps:
       - name: Generate security summary
         run: |
-          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Scan Type | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Dependency Check | ${{ needs.dependency-check.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| SpotBugs | ${{ needs.spotbugs.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Checkstyle | ${{ needs.checkstyle.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Secret Scan | ${{ needs.secret-scan.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Security Scan Results"
+            echo ""
+            echo "| Scan Type | Status |"
+            echo "|-----------|--------|"
+            echo "| Dependency Check | ${{ needs.dependency-check.result == 'success' && '✅' || '⚠️' }} |"
+            echo "| SpotBugs | ${{ needs.spotbugs.result == 'success' && '✅' || '⚠️' }} |"
+            echo "| Checkstyle | ${{ needs.checkstyle.result == 'success' && '✅' || '⚠️' }} |"
+            echo "| Secret Scan | ${{ needs.secret-scan.result == 'success' && '✅' || '⚠️' }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

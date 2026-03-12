@@ -10,6 +10,7 @@ services:
     image: grafana/loki:latest
     container_name: steel-hammer-loki
     hostname: steel-hammer-loki
+    user: "10001:10001"
     networks:
       - steel-hammer-network
     volumes:
@@ -40,6 +41,20 @@ services:
       - tempo-storage:/var/tempo
       - ./tempo-config.yaml:/etc/tempo/tempo-config.yaml
     command: -config.file=/etc/tempo/tempo-config.yaml
+    restart: always
+  promtail:
+    image: grafana/promtail:latest
+    container_name: steel-hammer-promtail
+    hostname: steel-hammer-promtail
+    networks:
+      - steel-hammer-network
+    depends_on:
+      - loki
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
     restart: always
 
   grafana:
@@ -72,10 +87,6 @@ services:
       - "4317:4317"
       - "4318:4318"
     restart: always
-    depends_on:
-      - loki
-      - mimir
-      - tempo
 
   # =============================================
   # DATA LAYER
@@ -103,9 +114,10 @@ services:
     build:
       context: .
       dockerfile: minio/DockerfileMinio
+    command: /opt/minio/minio server /opt/minio/data --console-address=":9001"
     environment:
-      - "MINIO_ROOT_USER=minioadmin"
-      - "MINIO_ROOT_PASSWORD=minioadmin"
+      - "MINIO_ROOT_USER=${MINIO_ROOT_USER:-vault-managed-root-user}"
+      - "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-vault-managed-root-password}"
     volumes:
       - minio-storage:/minio-storage
     healthcheck:
@@ -151,7 +163,7 @@ services:
     hostname: steel-hammer-buzzle-vane
     container_name: steel-hammer-buzzle-vane
     build:
-      context: ../temp/Buzzle-Vane
+      context: ../Buzzle-Vane
       dockerfile: Dockerfile
     depends_on:
       - steel-hammer-keycloak
@@ -181,7 +193,7 @@ services:
     hostname: steel-hammer-sentinel-gear
     container_name: steel-hammer-sentinel-gear
     build:
-      context: ../temp/Sentinel-Gear
+      context: ../Sentinel-Gear
       dockerfile: Dockerfile
     depends_on:
       - steel-hammer-keycloak
@@ -191,6 +203,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=sentinel-gear"
+      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
@@ -200,7 +213,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health-check"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -212,7 +225,7 @@ services:
     hostname: steel-hammer-claimspindel
     container_name: steel-hammer-claimspindel
     build:
-      context: ../temp/Claimspindel
+      context: ../Claimspindel
       dockerfile: Dockerfile
     depends_on:
       - steel-hammer-keycloak
@@ -223,6 +236,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=claimspindel"
+      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
@@ -241,7 +255,7 @@ services:
     hostname: steel-hammer-brazz-nossel
     container_name: steel-hammer-brazz-nossel
     build:
-      context: ../temp/Brazz-Nossel
+      context: ../Brazz-Nossel
       dockerfile: Dockerfile
     depends_on:
       - steel-hammer-keycloak
@@ -252,9 +266,10 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
-      - "MINIO_ACCESS_KEY=minioadmin"
-      - "MINIO_SECRET_KEY=minioadmin"
+      - "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-vault-managed-access-key}"
+      - "MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-vault-managed-secret-key}"
       - "SPRING_APPLICATION_NAME=brazz-nossel"
+      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
@@ -292,7 +307,8 @@ services:
       - BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083
     volumes:
       - ./test-scripts:/scripts:ro
-    entrypoint: ["/bin/sh", "-c", "sleep 60 && /scripts/run-e2e-tests.sh"]
+      - /tmp/ironbucket-e2e-reports:/tmp/ironbucket-e2e-reports
+    entrypoint: ["/bin/sh", "-c", "sleep 15 && sh /scripts/e2e-via-gateway.sh && sleep 3600"]
     restart: "no"
     logging:
       driver: "json-file"

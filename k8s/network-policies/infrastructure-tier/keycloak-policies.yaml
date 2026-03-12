@@ -1,0 +1,60 @@
+---
+# Ingress: Allow Keycloak from Sentinel-Gear only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keycloak-allow-ingress
+  namespace: default
+  labels:
+    app: keycloak
+    tier: infrastructure
+spec:
+  podSelector:
+    matchLabels:
+      app: keycloak
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow only from Sentinel-Gear
+  - from:
+    - podSelector:
+        matchLabels:
+          app: sentinel-gear
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+# Egress: Keycloak can reach PostgreSQL for user data
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keycloak-allow-egress
+  namespace: default
+  labels:
+    app: keycloak
+    tier: infrastructure
+spec:
+  podSelector:
+    matchLabels:
+      app: keycloak
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Allow to PostgreSQL (5432)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432

@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration for container-to-container communication
 KEYCLOAK_INTERNAL_URL="http://steel-hammer-keycloak:7081"
-MINIO_INTERNAL_URL="http://steel-hammer-minio:9000"
+MINIO_INTERNAL_URL="http://steel-hammer-brazz-nossel:8082"
 POSTGRES_HOST="steel-hammer-postgres"
 
 # Test results tracking

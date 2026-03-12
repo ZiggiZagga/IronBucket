@@ -1,0 +1,4 @@
+com/ironbucket/adminshell/shell/AdminCommandsTest.class
+com/ironbucket/adminshell/shell/AdminCommandsTracingTest.class
+com/ironbucket/adminshell/security/SecurityUtilTest.class
+com/ironbucket/adminshell/shell/provider/ValueProvidersTest.class

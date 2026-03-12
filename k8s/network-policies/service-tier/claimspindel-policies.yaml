@@ -1,0 +1,69 @@
+---
+# Ingress: Allow Claimspindel to accept only from Sentinel-Gear
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: claimspindel-allow-ingress
+  namespace: default
+  labels:
+    app: claimspindel
+    tier: service
+spec:
+  podSelector:
+    matchLabels:
+      app: claimspindel
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow only from Sentinel-Gear
+  - from:
+    - podSelector:
+        matchLabels:
+          app: sentinel-gear
+    ports:
+    - protocol: TCP
+      port: 8081
+
+---
+# Egress: Allow Claimspindel to reach PostgreSQL and Buzzle-Vane
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: claimspindel-allow-egress
+  namespace: default
+  labels:
+    app: claimspindel
+    tier: service
+spec:
+  podSelector:
+    matchLabels:
+      app: claimspindel
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Allow to PostgreSQL (5432)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  
+  # Allow to Buzzle-Vane (8083) - Service discovery
+  - to:
+    - podSelector:
+        matchLabels:
+          app: buzzle-vane
+    ports:
+    - protocol: TCP
+      port: 8083

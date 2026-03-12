@@ -4,6 +4,12 @@
 # Demonstrates Upload, Update, and Delete functionality
 # Uses S3-compatible MinIO backend accessed through docker network
 
+# Load environment
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TEMP_DIR="${TEMP_DIR:-${PROJECT_ROOT}/build/temp}"
+mkdir -p "$TEMP_DIR"
+
 echo "=========================================="
 echo "IronBucket S3 Operations Test"
 echo "Direct MinIO S3 Backend Access"
@@ -17,12 +23,13 @@ echo "TEST 1: UPLOAD TEST DOCUMENT"
 echo "------------------------------------"
 echo "Creating test file with initial content..."
 
-docker run --rm --network "$NETWORK" alpine/curl:latest sh -c '
-echo "Original S3 Document - Test File v1" > /tmp/test-doc.txt
+echo "Original S3 Document - Test File v1" > "$TEMP_DIR/test-doc.txt"
+
+docker run --rm --network "$NETWORK" -v "$TEMP_DIR:/data:ro" alpine/curl:latest sh -c '
 echo "Uploading test-document.txt to MinIO S3..."
 curl -X PUT \
   -H "Content-Type: text/plain" \
-  --data-binary @/tmp/test-doc.txt \
+  --data-binary @/data/test-doc.txt \
   http://steel-hammer-minio:9000/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n" 2>&1 | tail -5
 '
@@ -48,12 +55,13 @@ echo "TEST 3: UPDATE FILE CONTENT"
 echo "------------------------------------"
 echo "Creating updated version of file..."
 
-docker run --rm --network "$NETWORK" alpine/curl:latest sh -c '
-echo "Updated S3 Document - Test File v2 - Modified $(date)" > /tmp/test-doc-v2.txt
+echo "Updated S3 Document - Test File v2 - Modified $(date)" > "$TEMP_DIR/test-doc-v2.txt"
+
+docker run --rm --network "$NETWORK" -v "$TEMP_DIR:/data:ro" alpine/curl:latest sh -c '
 echo "Uploading updated version..."
 curl -X PUT \
   -H "Content-Type: text/plain" \
-  --data-binary @/tmp/test-doc-v2.txt \
+  --data-binary @/data/test-doc-v2.txt \
   http://steel-hammer-minio:9000/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n" 2>&1 | tail -5
 '

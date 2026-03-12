@@ -171,3 +171,10 @@ description: >
   - Security and identity improvements.
   - Test upgrades (especially fake → real tests).
   - CI/CD and SLSA Generic Generator–related changes (workflows, digests, provenance).
+
+Your Task today:
+Run the entire test suite.
+Identify all failing tests.
+Fix the codebase so that each failing test passes.
+Repeat until the entire test suite is green.
+Only modify a test if you are absolutely certain the test itself is incorrect — never out of convenience or to avoid fixing the underlying code.

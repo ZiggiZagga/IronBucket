@@ -449,9 +449,19 @@ describe('JWT Validation - Phase 2', () => {
     });
 
     test('should reject JWT with unsupported algorithm', () => {
-      // This test requires mocking or a different JWT library support
-      // Placeholder for future implementation
-      expect(true).toBe(true);
+      const payload = {
+        sub: 'alice@example.com',
+        iss: 'https://idp.example.com',
+        aud: 'sentinel-gear-app',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600
+      };
+      const tokenWithUnsupportedAlg = jwt.sign(payload, getTestSecret(), { algorithm: 'HS512' });
+
+      const validation = validateJWT(tokenWithUnsupportedAlg);
+
+      expect(validation.valid).toBe(false);
+      expect(validation.error).toContain('JWT validation error');
     });
   });
 

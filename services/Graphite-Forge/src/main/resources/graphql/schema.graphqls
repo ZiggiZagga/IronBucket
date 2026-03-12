@@ -1,0 +1,152 @@
+type Query {
+  getPolicy(id: ID!): Policy
+  getPolicyById(id: ID!): Policy
+  listPolicies: [Policy!]!
+  searchPolicies(query: String): [Policy!]!
+  evaluatePolicy(input: PolicyEvaluationInput!): PolicyEvaluationResult!
+
+  getIdentity(sub: String!): Identity
+  identity(id: ID!): Identity
+  getIdentityById(id: ID!): Identity
+  listIdentities(tenantId: String!): [Identity!]!
+  getUserPermissions(identityId: ID!): [String!]!
+
+  getTenant(id: ID!): Tenant
+  tenant(id: ID!): Tenant
+  getTenantById(id: ID!): Tenant
+  listTenants: [Tenant!]!
+
+  getAuditTrail(tenantId: String!): [AuditEvent!]!
+  getAuditLogs(tenantId: String!): [AuditEvent!]!
+  auditLogs(tenantId: String!): [AuditEvent!]!
+  filterAuditLogs(filter: AuditLogFilterInput!): [AuditEvent!]!
+  getAuditLogById(id: ID!): AuditEvent
+
+  getPolicyStatistics(tenantId: String!): PolicyStatistics!
+  policyStats(tenantId: String!): PolicyStatistics!
+  getUserActivitySummary(tenantId: String!): [UserActivitySummary!]!
+  userActivity(tenantId: String!): [UserActivitySummary!]!
+  getResourceAccessPatterns(tenantId: String!): [ResourceAccessPattern!]!
+  resourceAccess(tenantId: String!): [ResourceAccessPattern!]!
+}
+
+type Mutation {
+  createPolicy(input: PolicyInput!): Policy!
+  addPolicy(input: PolicyInput!): Policy!
+  updatePolicy(id: ID!, input: PolicyInput!): Policy!
+  deletePolicy(id: ID!): Boolean!
+  validatePolicy(input: PolicyInput!): ValidationResult!
+
+  createIdentity(input: IdentityInput!): Identity!
+  addUser(input: IdentityInput!): Identity!
+  updateIdentity(id: ID!, input: IdentityInput!): Identity!
+  updateUser(id: ID!, input: IdentityInput!): Identity!
+  deleteIdentity(id: ID!): Boolean!
+  removeUser(id: ID!): Boolean!
+
+  createTenant(input: TenantInput!): Tenant!
+  addTenant(input: TenantInput!): Tenant!
+  updateTenant(id: ID!, input: TenantInput!): Tenant!
+  deleteTenant(id: ID!): Boolean!
+}
+
+type Subscription {
+  auditLogSubscription(tenantId: String!): AuditEvent!
+  onAuditLog(tenantId: String!): AuditEvent!
+}
+
+type Policy {
+  id: ID!
+  tenantId: String!
+  principal: String!
+  resource: String!
+  action: String!
+  effect: String!
+  version: Int!
+  enabled: Boolean!
+}
+
+type Identity {
+  id: ID!
+  sub: String!
+  tenantId: String!
+  username: String!
+  email: String
+  permissions: [String!]!
+}
+
+type Tenant {
+  id: ID!
+  name: String!
+  status: String!
+}
+
+type AuditEvent {
+  id: ID!
+  tenantId: String!
+  actor: String!
+  action: String!
+  resource: String!
+  timestamp: String!
+  decision: String!
+}
+
+type PolicyEvaluationResult {
+  allow: Boolean!
+  reason: String!
+}
+
+type ValidationResult {
+  valid: Boolean!
+  errors: [String!]!
+}
+
+type PolicyStatistics {
+  tenantId: String!
+  totalPolicies: Int!
+  evaluationCount: Long!
+}
+
+type UserActivitySummary {
+  identityId: ID!
+  operations: Long!
+  lastSeen: String!
+}
+
+type ResourceAccessPattern {
+  resource: String!
+  accesses: Long!
+}
+
+input PolicyInput {
+  tenantId: String!
+  principal: String!
+  resource: String!
+  action: String!
+  effect: String!
+}
+
+input IdentityInput {
+  tenantId: String!
+  username: String!
+  email: String
+}
+
+input TenantInput {
+  name: String!
+  status: String!
+}
+
+input AuditLogFilterInput {
+  tenantId: String!
+  actor: String
+  action: String
+  resource: String
+}
+
+input PolicyEvaluationInput {
+  tenantId: String!
+  principal: String!
+  resource: String!
+  action: String!
+}

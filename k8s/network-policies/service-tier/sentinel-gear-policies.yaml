@@ -1,0 +1,93 @@
+---
+# Ingress: Allow external traffic to Sentinel-Gear (8080)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sentinel-gear-allow-ingress
+  namespace: default
+  labels:
+    app: sentinel-gear
+    tier: ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: sentinel-gear
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow from ingress controller (external traffic)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow from same namespace for internal testing
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+# Egress: Allow Sentinel-Gear to reach downstream services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sentinel-gear-allow-egress
+  namespace: default
+  labels:
+    app: sentinel-gear
+    tier: service
+spec:
+  podSelector:
+    matchLabels:
+      app: sentinel-gear
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Allow to Claimspindel (8081)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: claimspindel
+    ports:
+    - protocol: TCP
+      port: 8081
+  
+  # Allow to Brazz-Nossel (8082)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: brazz-nossel
+    ports:
+    - protocol: TCP
+      port: 8082
+  
+  # Allow to Buzzle-Vane (8083) - Eureka discovery
+  - to:
+    - podSelector:
+        matchLabels:
+          app: buzzle-vane
+    ports:
+    - protocol: TCP
+      port: 8083
+  
+  # Allow to Keycloak (8080) - OIDC
+  - to:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 8080

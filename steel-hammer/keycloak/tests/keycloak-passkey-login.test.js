@@ -1,6 +1,5 @@
 // Test: Keycloak User Login with Passkey (WebAuthn)
-// This is a placeholder for a browser-based test (e.g. Playwright or Puppeteer)
-// Here we only check if the WebAuthn login page is available
+// Lightweight endpoint-level validation: verifies the login page advertises WebAuthn/Passkey.
 
 const axios = require('axios');
 

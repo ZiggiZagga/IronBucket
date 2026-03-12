@@ -15,6 +15,9 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 **Actions:**
 - ✅ Builds all Maven modules (Pactum-Scroll, Sentinel-Gear, Claimspindel, Brazz-Nossel, Buzzle-Vane)
 - ✅ Runs full test suite (231 tests)
+- ✅ Enforces Sentinel roadmap gate via `mvn test -Proadmap` (blocking CI check)
+- ✅ Runs separate Sentinel behavioral integration gate via `mvn test -Pintegration`
+  - strict blocking mode on all configured refs
 - ✅ Caches Maven dependencies for faster builds
 - ✅ Uploads test results and build artifacts
 - ✅ Generates test summary in GitHub UI
@@ -22,6 +25,8 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 **Expected Results:**
 - All modules compile successfully
 - All 231 tests pass
+- Sentinel roadmap profile runs with minimum executed-test threshold and zero failures
+- Sentinel behavioral integration profile is reported independently from roadmap scaffold checks
 - JAR artifacts generated and uploaded
 
 ---
@@ -229,6 +234,8 @@ chmod +x slsa-verifier
 - No direct pushes to `main`
 
 **Status Checks:**
+- Sentinel Roadmap Gate ✅
+- Sentinel Behavioral Gate ✅ (strict on all configured refs)
 - Build and Test ✅
 - Security Scanning ✅
 - Docker Build ✅

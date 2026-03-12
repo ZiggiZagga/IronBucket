@@ -1,0 +1,316 @@
+# IronBucket Kubernetes NetworkPolicies
+#
+# These policies enforce that MinIO can ONLY be accessed through Brazz-Nossel,
+# ensuring all S3 operations flow through the complete security stack:
+# Client → Brazz-Nossel → Sentinel-Gear → Claimspindel → MinIO
+#
+# Deploy to production namespace before any IronBucket services
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minio-strict-isolation
+  namespace: ironbucket
+  labels:
+    app: ironbucket
+    component: storage
+    security: critical
+spec:
+  # Apply to MinIO pods only
+  podSelector:
+    matchLabels:
+      app: minio
+  
+  # Default deny all traffic
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Allow ingress ONLY from Brazz-Nossel
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: brazz-nossel
+    ports:
+    - protocol: TCP
+      port: 9000  # S3 API
+    - protocol: TCP
+      port: 9001  # MinIO Console (admin only)
+  
+  # Allow egress for MinIO operations
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53  # DNS
+    - protocol: UDP
+      port: 53  # DNS
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres  # For metadata if needed
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: brazz-nossel-s3-proxy
+  namespace: ironbucket
+  labels:
+    app: ironbucket
+    component: gateway
+spec:
+  podSelector:
+    matchLabels:
+      app: brazz-nossel
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Allow ingress from clients and internal services
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ironbucket
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system  # If using service mesh
+    - podSelector: {}  # Allow from same namespace
+    ports:
+    - protocol: TCP
+      port: 8082  # S3 Proxy port
+  
+  # Allow egress to security stack and MinIO
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: sentinel-gear
+    ports:
+    - protocol: TCP
+      port: 8080
+  - to:
+    - podSelector:
+        matchLabels:
+          app: claimspindel
+    ports:
+    - protocol: TCP
+      port: 8081
+  - to:
+    - podSelector:
+        matchLabels:
+          app: minio
+    ports:
+    - protocol: TCP
+      port: 9000  # S3 access
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432  # Audit logging
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sentinel-gear-jwt-validator
+  namespace: ironbucket
+  labels:
+    app: ironbucket
+    component: security
+spec:
+  podSelector:
+    matchLabels:
+      app: sentinel-gear
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: brazz-nossel
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system
+    ports:
+    - protocol: TCP
+      port: 8080
+  
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: keycloak
+    ports:
+    - protocol: TCP
+      port: 7081  # OIDC/JWKS
+  - to:
+    - podSelector:
+        matchLabels:
+          app: claimspindel
+    ports:
+    - protocol: TCP
+      port: 8081
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: claimspindel-policy-engine
+  namespace: ironbucket
+  labels:
+    app: ironbucket
+    component: policy
+spec:
+  podSelector:
+    matchLabels:
+      app: claimspindel
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: sentinel-gear
+    - podSelector:
+        matchLabels:
+          app: brazz-nossel
+    ports:
+    - protocol: TCP
+      port: 8081
+  
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432  # Policy metadata
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443  # Git policy repo (if external)
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: ironbucket
+  labels:
+    app: ironbucket
+    security: baseline
+spec:
+  # Apply to all pods without specific policies
+  podSelector: {}
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Deny all by default (policies above will override)
+
+---
+# Additional hardening: Deny external access to MinIO console
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minio-console-block-external
+  namespace: ironbucket
+  labels:
+    app: ironbucket
+    component: storage-admin
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  
+  policyTypes:
+  - Ingress
+  
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: admin-tools  # Only allow from admin pod
+    ports:
+    - protocol: TCP
+      port: 9001  # MinIO Console
+
+---
+# Monitoring and Alerting Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ironbucket-monitoring-access
+  namespace: ironbucket
+  labels:
+    app: ironbucket
+    component: observability
+spec:
+  podSelector:
+    matchLabels:
+      tier: monitoring
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus metrics
+  
+  egress:
+  - to:
+    - podSelector: {}  # Can scrape all pods in namespace
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8081
+    - protocol: TCP
+      port: 8082
