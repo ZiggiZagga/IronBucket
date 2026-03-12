@@ -7,6 +7,7 @@ WORKFLOW_FILE="$ROOT_DIR/.github/workflows/e2e-complete-suite.yml"
 CI_DOC_FILE="$ROOT_DIR/docs/CI-CD-PIPELINE.md"
 E2E_DOC_FILE="$ROOT_DIR/docs/E2E-QUICKSTART.md"
 PROOF_SCRIPT="scripts/e2e/prove-phase1-4-complete.sh"
+FIRST_USER_GATE_SCRIPT="scripts/ci/run-first-user-experience-gate.sh"
 PHASE14_ARTIFACT="test-results/phase1-4-proof/"
 
 assert_file_exists() {
@@ -34,7 +35,12 @@ assert_file_exists "$E2E_DOC_FILE"
 assert_file_exists "$ROOT_DIR/$PROOF_SCRIPT"
 
 # Workflow must execute the current roadmap proof gate and upload phase 1-4 artifacts.
-assert_contains "$WORKFLOW_FILE" "$PROOF_SCRIPT"
+if grep -Fq "$PROOF_SCRIPT" "$WORKFLOW_FILE" || grep -Fq "$FIRST_USER_GATE_SCRIPT" "$WORKFLOW_FILE"; then
+  :
+else
+  echo "ERROR: Expected '$PROOF_SCRIPT' or '$FIRST_USER_GATE_SCRIPT' in $WORKFLOW_FILE" >&2
+  exit 1
+fi
 assert_contains "$WORKFLOW_FILE" "$PHASE14_ARTIFACT"
 
 # CI/CD docs must mention the active E2E proof command and workflow gate.
