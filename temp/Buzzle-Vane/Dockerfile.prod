@@ -1,0 +1,35 @@
+# Multi-stage build for Buzzle-Vane with production hardening
+FROM maven:3.9-eclipse-temurin-25 AS builder
+WORKDIR /build
+COPY . .
+RUN mvn clean package -DskipTests -q
+
+FROM eclipse-temurin:25-jre-alpine
+WORKDIR /app
+
+RUN apk add --no-cache curl tzdata dumb-init
+
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+
+COPY --from=builder /build/target/*.jar app.jar
+RUN chown 1000:1000 app.jar
+
+ENV JAVA_OPTS="-XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:InitiatingHeapOccupancyPercent=35 \
+    -XX:G1ReservePercent=10 \
+    -XX:G1HeapRegionSize=16M \
+    -XX:MinMetaspaceSize=64M \
+    -XX:MaxMetaspaceSize=512M \
+    -Duser.timezone=UTC"
+
+EXPOSE 8083
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=30s \
+    CMD curl -f http://localhost:8083/actuator/health/readiness || exit 1
+
+USER appuser
+
+ENTRYPOINT ["/sbin/dumb-init", "--"]
+CMD ["java", "-jar", "-Dspring.profiles.active=production", "app.jar"]

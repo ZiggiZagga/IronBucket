@@ -1,0 +1,113 @@
+# Buzzle-Vane (Service Discovery) Production Configuration
+# Security-hardened, observable, and resilient
+
+spring:
+  application:
+    name: buzzle-vane
+  
+  profiles:
+    active: production
+  
+  # Security: JWT Resource Server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${IDP_PROVIDER_PROTOCOL:https}://${IDP_PROVIDER_HOST:required}/realms/${IDP_PROVIDER_REALM:required}/protocol/openid-connect/certs
+          issuer-uri: ${IDP_PROVIDER_PROTOCOL:https}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8083}
+  servlet:
+    context-path: /
+  shutdown: graceful
+  compression:
+    enabled: true
+    min-response-size: 1024
+  error:
+    include-message: always
+    include-binding-errors: always
+  
+  # TLS/SSL - Required for production
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE_PATH:/etc/ssl/keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:required}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS:ironbucket}
+
+# Eureka Service Discovery Server Configuration
+eureka:
+  server:
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 60000
+    expected-client-renewal-interval-seconds: 30
+    renewal-percent-threshold: 0.85
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      version: ${APP_VERSION:1.0.0}
+      environment: production
+
+# Logging Configuration
+logging:
+  level:
+    root: WARN
+    com.ironbucket: INFO
+    org.springframework: WARN
+    org.springframework.cloud: INFO
+    com.netflix.eureka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/ironbucket/buzzle-vane.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# Actuator Configuration - Security-hardened observability
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+      exclude: env,configprops,loggers
+    health:
+      show-details: when-authorized
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: buzzle-vane
+      environment: production
+      version: ${APP_VERSION:1.0.0}
+
+# Service Discovery Configuration
+ironbucket:
+  discovery:
+    mesh:
+      enabled: true
+      circuit-breaker:
+        enabled: true
+        threshold: 50
+        timeout-seconds: 30
+    health-check:
+      enabled: true
+      interval-seconds: 10
+      timeout-seconds: 5

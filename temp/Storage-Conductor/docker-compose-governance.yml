@@ -1,0 +1,225 @@
+version: '3.8'
+
+services:
+
+  # PostgreSQL: Database for Keycloak
+  storage-conductor-postgres:
+    image: postgres:15-alpine
+    hostname: postgres
+    container_name: storage-conductor-postgres
+    networks:
+      - storage-test-network
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Keycloak: Identity provider (OIDC/OAuth2)
+  storage-conductor-keycloak:
+    image: keycloak/keycloak:latest
+    hostname: keycloak
+    container_name: storage-conductor-keycloak
+    networks:
+      - storage-test-network
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+    command:
+      - "start-dev"
+      - "--import-realm"
+    volumes:
+      - ../../steel-hammer/keycloak/dev-realm.json:/opt/keycloak/data/import/dev-realm.json
+    depends_on:
+      storage-conductor-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health", "||", "exit", "1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # MinIO: S3-compatible object storage for testing
+  storage-conductor-minio:
+    image: minio/minio:latest
+    hostname: minio
+    container_name: storage-conductor-minio
+    networks:
+      - storage-test-network
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /minio-data --console-address ":9001"
+    volumes:
+      - minio-data:/minio-data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Buzzle-Vane: Eureka discovery service
+  buzzle-vane:
+    build:
+      context: ../..
+      dockerfile: temp/Buzzle-Vane/Dockerfile
+    hostname: buzzle-vane
+    container_name: buzzle-vane
+    networks:
+      - storage-test-network
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Claimspindel: Claims routing (governs access)
+  claimspindel:
+    build:
+      context: ../..
+      dockerfile: temp/Claimspindel/Dockerfile
+    hostname: claimspindel
+    container_name: claimspindel
+    networks:
+      - storage-test-network
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/dev
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://buzzle-vane:8083/eureka/
+    depends_on:
+      buzzle-vane:
+        condition: service_healthy
+      storage-conductor-keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Vault-Smith: S3 backend adapter (S3 governance)
+  vault-smith:
+    build:
+      context: ../..
+      dockerfile: temp/Vault-Smith/Dockerfile
+    hostname: vault-smith
+    container_name: vault-smith
+    networks:
+      - storage-test-network
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      VAULT_SMITH_S3_ENDPOINT: http://minio:9000
+      VAULT_SMITH_S3_ACCESS_KEY: minioadmin
+      VAULT_SMITH_S3_SECRET_KEY: minioadmin
+      VAULT_SMITH_S3_REGION: us-east-1
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/dev
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://buzzle-vane:8083/eureka/
+    depends_on:
+      storage-conductor-minio:
+        condition: service_healthy
+      buzzle-vane:
+        condition: service_healthy
+      storage-conductor-keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Sentinel-Gear: Identity gateway (governs all access)
+  sentinel-gear:
+    build:
+      context: ../..
+      dockerfile: temp/Sentinel-Gear/Dockerfile
+    hostname: sentinel-gear
+    container_name: sentinel-gear
+    networks:
+      - storage-test-network
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/dev
+      KEYCLOAK_REALM_URL: http://keycloak:8080/realms/dev
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://buzzle-vane:8083/eureka/
+    depends_on:
+      storage-conductor-keycloak:
+        condition: service_healthy
+      buzzle-vane:
+        condition: service_healthy
+      claimspindel:
+        condition: service_healthy
+      vault-smith:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Storage-Conductor Tests: Integration test suite
+  storage-conductor-tests:
+    build:
+      context: ..
+      dockerfile: Storage-Conductor/Dockerfile
+    hostname: storage-conductor-tests
+    container_name: storage-conductor-tests
+    networks:
+      - storage-test-network
+    depends_on:
+      sentinel-gear:
+        condition: service_healthy
+      vault-smith:
+        condition: service_healthy
+      storage-conductor-minio:
+        condition: service_healthy
+    environment:
+      # MinIO configuration (direct access for verification)
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_REGION: us-east-1
+      S3_ENDPOINT: http://minio:9000
+      # Governance stack URLs
+      SENTINEL_GEAR_URL: http://sentinel-gear:8080
+      VAULT_SMITH_URL: http://vault-smith:8090
+      CLAIMSPINDEL_URL: http://claimspindel:8081
+      KEYCLOAK_URL: http://keycloak:8080
+      # Test configuration
+      TEST_TENANT: test-org-001
+      PROVE_GOVERNANCE: "true"
+    restart: "no"
+
+networks:
+  storage-test-network:
+    driver: bridge
+    name: storage-test-network
+
+volumes:
+  minio-data:
+    driver: local
+  postgres-data:
+    driver: local

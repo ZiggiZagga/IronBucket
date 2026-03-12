@@ -1,0 +1,69 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: sentinel-gear
+  datasource:
+    url: jdbc:postgresql://steel-hammer-postgres:5432/ironbucket
+    username: postgres
+    password: ${POSTGRES_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://steel-hammer-keycloak:7081/realms/dev
+          jwk-set-uri: http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.ironbucket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId}] %-5level %logger{36} - %msg%n"
+
+# Service configuration
+app:
+  jwt:
+    validation:
+      clock-skew-seconds: 60
+      issuer-whitelist:
+        - http://steel-hammer-keycloak:7081/realms/dev
+        - https://keycloak:7081/realms/dev
+  tenant:
+    isolation-mode: MULTI
+    auto-assign-tenant: null
+    validate-mode: false
+  timeout:
+    connection-ms: 5000
+    read-ms: 10000
+    write-ms: 10000

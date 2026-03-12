@@ -1,0 +1,45 @@
+server:
+  port: 8083
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: buzzle-vane
+  cloud:
+    client:
+      registration:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,discovery
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.ironbucket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId}] %-5level %logger{36} - %msg%n"
+
+# Service discovery configuration
+app:
+  discovery:
+    enabled: true
+    services:
+      - name: sentinel-gear
+        url: http://sentinel-gear:8080
+        healthcheck: /actuator/health
+      - name: claimspindel
+        url: http://claimspindel:8081
+        healthcheck: /actuator/health
+      - name: brazz-nossel
+        url: http://brazz-nossel:8082
+        healthcheck: /actuator/health
+  registry:
+    location: /app/registry

@@ -1,0 +1,138 @@
+# Claimspindel (Claims Routing) Production Configuration
+# Security-hardened, observable, and resilient
+
+spring:
+  application:
+    name: claimspindel
+  
+  profiles:
+    active: production
+  
+  # Security: JWT Resource Server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${IDP_PROVIDER_PROTOCOL:https}://${IDP_PROVIDER_HOST:required}/realms/${IDP_PROVIDER_REALM:required}/protocol/openid-connect/certs
+          issuer-uri: ${IDP_PROVIDER_PROTOCOL:https}://${IDP_PROVIDER_HOST}/realms/${IDP_PROVIDER_REALM}
+  
+  # Cloud Gateway Configuration
+  cloud:
+    gateway:
+      server:
+        webflux:
+          use-blocking-handler: false
+          routes:
+            - id: route-to-brazz-nossel
+              uri: lb://brazz-nossel
+              predicates:
+                - Path=/s3/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: brazzNosselCircuitBreaker
+                    fallbackUri: forward:/fallback/brazz-nossel
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: /
+  shutdown: graceful
+  compression:
+    enabled: true
+    min-response-size: 1024
+  error:
+    include-message: always
+    include-binding-errors: always
+  
+  # TLS/SSL - Required for production
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE_PATH:/etc/ssl/keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:required}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS:ironbucket}
+
+# Eureka Service Discovery
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    region: ${EUREKA_REGION:prod-region-1}
+    initial-instance-info-replication-interval-seconds: 30
+    instance-info-replication-interval-seconds: 60
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      version: ${APP_VERSION:1.0.0}
+      environment: production
+
+# Logging Configuration
+logging:
+  level:
+    root: WARN
+    com.ironbucket: INFO
+    org.springframework: WARN
+    org.springframework.security: DEBUG
+    org.springframework.cloud: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/ironbucket/claimspindel.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# Actuator Configuration - Security-hardened observability
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreaker
+      exclude: env,configprops,loggers
+    health:
+      show-details: when-authorized
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: claimspindel
+      environment: production
+      version: ${APP_VERSION:1.0.0}
+
+# JWT/OIDC Configuration
+ironbucket:
+  security:
+    jwt:
+      issuer-whitelist: ${JWT_ISSUER_WHITELIST:}
+      audience: ${JWT_AUDIENCE:ironbucket}
+      clock-skew-seconds: 30
+    tenant:
+      mode: ${TENANT_MODE:multi}
+      default-tenant: ${DEFAULT_TENANT:default}
+    policy:
+      cache:
+        ttl-seconds: 300
+        max-size: 5000
