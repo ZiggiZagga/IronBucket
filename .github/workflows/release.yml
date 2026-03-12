@@ -84,7 +84,7 @@ jobs:
       
       - name: Build Vault-Smith
         run: |
-          cd temp/Vault-Smith
+          cd tools/Vault-Smith
           mvn clean install -DskipTests -B
       
       - name: Run all tests
@@ -93,7 +93,11 @@ jobs:
         run: |
           for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane Storage-Conductor; do
             echo "Testing $module..."
-            cd temp/$module
+            if [[ "$module" == "Storage-Conductor" ]]; then
+              cd tools/$module
+            else
+              cd services/$module
+            fi
             mvn clean test -B
             cd ../..
           done
@@ -102,7 +106,7 @@ jobs:
         run: |
           echo "✅ All 231 tests must pass for release"
           # Check for any test failures or errors (must be exactly 0)
-          if find temp -name "TEST-*.xml" -exec grep -E 'failures="[^0"]|errors="[^0"]' {} +; then
+          if find services tools -name "TEST-*.xml" -exec grep -E 'failures="[^0"]|errors="[^0"]' {} +; then
             echo "❌ Tests failed or had errors"
             exit 1
           fi
@@ -114,6 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      digests: ${{ steps.hash.outputs.digests }}
     
     steps:
       - name: Checkout code
@@ -134,41 +139,41 @@ jobs:
           else
             VERSION="${GITHUB_REF#refs/tags/}"
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Building version: $VERSION"
       
       - name: Update version in POMs
         run: |
-          VERSION=${{ steps.version.outputs.version }}
-          for module in Vault-Smith Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane Storage-Conductor; do
-            if [ -f "temp/$module/pom.xml" ]; then
-              cd temp/$module
-              mvn versions:set -DnewVersion=${VERSION#v} -DgenerateBackupPoms=false
+          VERSION="${{ steps.version.outputs.version }}"
+          for modulePath in tools/Vault-Smith services/Sentinel-Gear services/Claimspindel services/Brazz-Nossel services/Buzzle-Vane tools/Storage-Conductor services/Pactum-Scroll; do
+            if [ -f "$modulePath/pom.xml" ]; then
+              cd "$modulePath"
+              mvn versions:set "-DnewVersion=${VERSION#v}" -DgenerateBackupPoms=false
               cd ../..
             fi
           done
           
           # Update vault-smith dependency version in Storage-Conductor
           echo "Updating vault-smith dependency in Storage-Conductor to ${VERSION#v}..."
-          if [ -f "temp/Storage-Conductor/pom.xml" ]; then
+          if [ -f "tools/Storage-Conductor/pom.xml" ]; then
             # Use xmlstarlet or sed to update the vault-smith dependency version
-            sed -i "/<artifactId>vault-smith<\/artifactId>/,/<\/dependency>/ s/<version>[^<]*<\/version>/<version>${VERSION#v}<\/version>/" temp/Storage-Conductor/pom.xml
+            sed -i "/<artifactId>vault-smith<\/artifactId>/,/<\/dependency>/ s/<version>[^<]*<\/version>/<version>${VERSION#v}<\/version>/" tools/Storage-Conductor/pom.xml
             echo "Updated vault-smith dependency to ${VERSION#v}"
-            grep -A2 "vault-smith" temp/Storage-Conductor/pom.xml || echo "Warning: Could not verify update"
+            grep -A2 "vault-smith" tools/Storage-Conductor/pom.xml || echo "Warning: Could not verify update"
           fi
       
       - name: Build all modules
         run: |
           # Build Vault-Smith first with install (Storage-Conductor depends on it)
           echo "Building Vault-Smith (dependency for Storage-Conductor)..."
-          cd temp/Vault-Smith
+          cd tools/Vault-Smith
           mvn clean install -DskipTests -B
           cd ../..
           
           # Build remaining modules
-          for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane Storage-Conductor; do
-            echo "Building $module..."
-            cd temp/$module
+          for modulePath in services/Sentinel-Gear services/Claimspindel services/Brazz-Nossel services/Buzzle-Vane tools/Storage-Conductor; do
+            echo "Building $modulePath..."
+            cd "$modulePath"
             mvn clean package -DskipTests -B
             cd ../..
           done
@@ -176,16 +181,22 @@ jobs:
       - name: Collect release artifacts
         run: |
           mkdir -p release
-          find temp -name "*.jar" -not -path "*/original-*" -not -path "*/.m2/*" | while read jar; do
-            module=$(echo $jar | cut -d'/' -f3)
+          find services tools -name "*.jar" -not -path "*/original-*" -not -path "*/.m2/*" | while IFS= read -r jar; do
+            module=$(echo "$jar" | cut -d'/' -f2)
             cp "$jar" "release/${module}-${{ steps.version.outputs.version }}.jar"
           done
           
           # Generate checksums
           cd release
-          sha256sum *.jar > SHA256SUMS
-          sha512sum *.jar > SHA512SUMS
+          sha256sum -- ./*.jar > SHA256SUMS
+          sha512sum -- ./*.jar > SHA512SUMS
           ls -lah
+
+      - name: Generate provenance digests
+        id: hash
+        run: |
+          digests=$(awk '{print "sha256:" $1 " " $2}' release/SHA256SUMS | base64 -w0)
+          echo "digests=$digests" >> "$GITHUB_OUTPUT"
       
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
@@ -294,13 +305,13 @@ jobs:
       matrix:
         service:
           - name: sentinel-gear
-            context: ./temp/Sentinel-Gear
+            context: ./services/Sentinel-Gear
           - name: claimspindel
-            context: ./temp/Claimspindel
+            context: ./services/Claimspindel
           - name: brazz-nossel
-            context: ./temp/Brazz-Nossel
+            context: ./services/Brazz-Nossel
           - name: buzzle-vane
-            context: ./temp/Buzzle-Vane
+            context: ./services/Buzzle-Vane
     
     steps:
       - name: Checkout code
@@ -315,7 +326,7 @@ jobs:
       
       - name: Build Pactum-Scroll
         run: |
-          cd temp/Pactum-Scroll
+          cd services/Pactum-Scroll
           mvn clean install -DskipTests -B || echo "Pactum-Scroll build skipped"
       
       - name: Build application JAR

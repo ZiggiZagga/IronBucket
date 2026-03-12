@@ -58,61 +58,63 @@ jobs:
       
       - name: Build Pactum-Scroll (shared contracts)
         run: |
-          cd temp/Pactum-Scroll
+          cd services/Pactum-Scroll
           mvn clean install -B -V || echo "Pactum-Scroll build skipped"
       
       - name: Build Vault-Smith
         run: |
-          cd temp/Vault-Smith
+          cd tools/Vault-Smith
           mvn clean install -DskipTests -B
       
       - name: Build Sentinel-Gear (JWT Validator)
         env:
           S3_TESTS_ENABLED: true
         run: |
-          cd temp/Sentinel-Gear
+          cd services/Sentinel-Gear
           mvn clean test -B -V
       
       - name: Build Claimspindel (Policy Router)
         env:
           S3_TESTS_ENABLED: true
         run: |
-          cd temp/Claimspindel
+          cd services/Claimspindel
           mvn clean test -B -V
       
       - name: Build Brazz-Nossel (S3 Proxy)
         env:
           S3_TESTS_ENABLED: true
         run: |
-          cd temp/Brazz-Nossel
+          cd services/Brazz-Nossel
           mvn clean test -B -V
       
       - name: Build Buzzle-Vane (Service Discovery)
         env:
           S3_TESTS_ENABLED: true
         run: |
-          cd temp/Buzzle-Vane
+          cd services/Buzzle-Vane
           mvn clean test -B -V
       
       - name: Build Storage-Conductor
         env:
           S3_TESTS_ENABLED: true
         run: |
-          cd temp/Storage-Conductor
+          cd tools/Storage-Conductor
           mvn clean test -B -V
       
       - name: Generate test report summary
         if: always()
         run: |
-          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Module | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Pactum-Scroll | ✅ Built |" >> $GITHUB_STEP_SUMMARY
-          echo "| Sentinel-Gear | ✅ 44 tests |" >> $GITHUB_STEP_SUMMARY
-          echo "| Claimspindel | ✅ 72 tests |" >> $GITHUB_STEP_SUMMARY
-          echo "| Brazz-Nossel | ✅ 47 tests |" >> $GITHUB_STEP_SUMMARY
-          echo "| Buzzle-Vane | ✅ 58 tests |" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Test Results Summary"
+            echo ""
+            echo "| Module | Status |"
+            echo "|--------|--------|"
+            echo "| Pactum-Scroll | ✅ Built |"
+            echo "| Sentinel-Gear | ✅ 44 tests |"
+            echo "| Claimspindel | ✅ 72 tests |"
+            echo "| Brazz-Nossel | ✅ 47 tests |"
+            echo "| Buzzle-Vane | ✅ 58 tests |"
+          } >> "$GITHUB_STEP_SUMMARY"
       
       - name: Upload test results
         if: always()
@@ -126,20 +128,20 @@ jobs:
       
       - name: Package artifacts
         run: |
-          cd temp/Sentinel-Gear && mvn package -DskipTests -B
-          cd ../Claimspindel && mvn package -DskipTests -B
-          cd ../Brazz-Nossel && mvn package -DskipTests -B
-          cd ../Buzzle-Vane && mvn package -DskipTests -B
-          cd ../Storage-Conductor && mvn package -DskipTests -B
+          for module in services/Sentinel-Gear services/Claimspindel services/Brazz-Nossel services/Buzzle-Vane tools/Storage-Conductor; do
+            cd "$module"
+            mvn package -DskipTests -B
+            cd - >/dev/null
+          done
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
-            temp/Sentinel-Gear/target/*.jar
-            temp/Claimspindel/target/*.jar
-            temp/Brazz-Nossel/target/*.jar
-            temp/Buzzle-Vane/target/*.jar
-            temp/Storage-Conductor/target/*.jar
+            services/Sentinel-Gear/target/*.jar
+            services/Claimspindel/target/*.jar
+            services/Brazz-Nossel/target/*.jar
+            services/Buzzle-Vane/target/*.jar
+            tools/Storage-Conductor/target/*.jar
           retention-days: 90

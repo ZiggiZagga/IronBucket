@@ -34,7 +34,7 @@ jobs:
         run: |
           for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane; do
             echo "Building $module..."
-            cd temp/$module
+            cd "services/$module"
             mvn clean package -DskipTests -B
             cd ../..
           done
@@ -42,9 +42,9 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          find temp -name "*.jar" -not -path "*/target/original-*" -not -path "*/.m2/*" | while read jar; do
-            module=$(echo $jar | cut -d'/' -f3)
-            cp "$jar" "artifacts/${module}-$(basename $jar)"
+          find services tools -name "*.jar" -not -path "*/target/original-*" -not -path "*/.m2/*" | while IFS= read -r jar; do
+            module=$(echo "$jar" | cut -d'/' -f2)
+            cp "$jar" "artifacts/${module}-$(basename "$jar")"
           done
           ls -lah artifacts/
       
@@ -52,12 +52,12 @@ jobs:
         id: hash
         run: |
           cd artifacts
-          sha256sum * > checksums.txt
+          sha256sum -- * > checksums.txt
           cat checksums.txt
           # SLSA generator expects format: "sha256:HASH filename" (one per line, base64 encoded)
           # sha256sum output is "HASH filename", so we reformat
           digests=$(cat checksums.txt | awk '{print "sha256:" $1 " " $2}' | base64 -w0)
-          echo "digests=$digests" >> $GITHUB_OUTPUT
+          echo "digests=$digests" >> "$GITHUB_OUTPUT"
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -107,10 +107,10 @@ jobs:
         run: |
           echo "Verifying SLSA provenance..."
           for artifact in artifacts/*.jar; do
-            echo "Verifying $(basename $artifact)..."
+            echo "Verifying $(basename "$artifact")..."
             ./slsa-verifier verify-artifact "$artifact" \
               --provenance-path ironbucket-provenance.intoto.jsonl \
-              --source-uri github.com/${{ github.repository }} \
-              --source-tag ${{ github.ref_name }} || echo "Verification info logged"
+              --source-uri "github.com/${{ github.repository }}" \
+              --source-tag "${{ github.ref_name }}" || echo "Verification info logged"
           done
           echo "✅ Provenance verification complete"

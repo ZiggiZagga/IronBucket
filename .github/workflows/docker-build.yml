@@ -22,13 +22,13 @@ jobs:
       matrix:
         service:
           - name: sentinel-gear
-            context: ./temp/Sentinel-Gear
+            context: ./services/Sentinel-Gear
           - name: claimspindel
-            context: ./temp/Claimspindel
+            context: ./services/Claimspindel
           - name: brazz-nossel
-            context: ./temp/Brazz-Nossel
+            context: ./services/Brazz-Nossel
           - name: buzzle-vane
-            context: ./temp/Buzzle-Vane
+            context: ./services/Buzzle-Vane
     
     steps:
       - name: Checkout code
@@ -43,7 +43,7 @@ jobs:
       
       - name: Build Pactum-Scroll
         run: |
-          cd temp/Pactum-Scroll
+          cd services/Pactum-Scroll
           mvn clean install -DskipTests -B || echo "Pactum-Scroll build skipped"
       
       - name: Build application JAR
@@ -127,11 +127,13 @@ jobs:
     steps:
       - name: Generate summary
         run: |
-          echo "## Docker Build Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| sentinel-gear | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| claimspindel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| brazz-nossel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| buzzle-vane | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Docker Build Results"
+            echo ""
+            echo "| Service | Status |"
+            echo "|---------|--------|"
+            echo "| sentinel-gear | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+            echo "| claimspindel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+            echo "| brazz-nossel | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+            echo "| buzzle-vane | ${{ needs.build-images.result == 'success' && '✅' || '❌' }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
