@@ -42,4 +42,18 @@ public class IdentityService {
     public List<String> extractRoles(String token) {
         return jwtValidator.extractRoles(token);
     }
+
+    /**
+     * Extract primary organization from token
+     */
+    public String extractOrganization(String token) {
+        return jwtValidator.extractOrganization(token);
+    }
+
+    /**
+     * Extract all organizations from token
+     */
+    public List<String> extractOrganizations(String token) {
+        return jwtValidator.extractOrganizations(token);
+    }
 }

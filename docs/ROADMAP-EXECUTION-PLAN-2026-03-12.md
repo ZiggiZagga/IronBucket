@@ -51,6 +51,14 @@ The plan focuses on converting roadmap assertions into implementation increments
 - Split “scaffold existence” checks from “behavioral/e2e” checks to prevent false confidence.
 - Promote presigned security config requirements into deployment manifests and runbooks.
 
+**Progress update (2026-03-12):**
+- `build-and-test.yml` now includes a dedicated blocking job: `Sentinel Roadmap Gate`.
+- Gate runs `scripts/ci/run-sentinel-roadmap-gate.sh`, executes `mvn test -Proadmap` in Sentinel-Gear,
+  and fails if roadmap reports are missing, if failures/errors occur, or if executed roadmap tests are below threshold.
+- CI now also includes a separate `Sentinel Behavioral Gate` job using `scripts/ci/run-sentinel-behavioral-gate.sh`
+  to run `mvn test -Pintegration` and report behavioral/integration failures independently of roadmap scaffold checks.
+- Behavioral gate is now strict and blocking on all configured refs after integration baseline stabilization.
+
 ---
 
 ## Execution Sequence

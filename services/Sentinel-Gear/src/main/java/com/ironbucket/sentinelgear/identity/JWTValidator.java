@@ -6,6 +6,10 @@ import io.jsonwebtoken.security.SignatureException;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * JWTValidator - Core Identity Gateway Component
@@ -72,9 +76,38 @@ public class JWTValidator {
     public String extractTenant(String token) {
         try {
             Claims claims = parser.parseClaimsJws(token).getBody();
-            return (String) claims.get("tenant");
+            Object tenant = claims.get("tenant");
+            if (tenant instanceof String && !((String) tenant).isBlank()) {
+                return (String) tenant;
+            }
+            return extractOrganizationFromClaims(claims);
         } catch (JwtException e) {
             return null;
+        }
+    }
+
+    /**
+     * Extract primary organization identifier from JWT.
+     * Supports common Keycloak organization claim shapes.
+     */
+    public String extractOrganization(String token) {
+        try {
+            Claims claims = parser.parseClaimsJws(token).getBody();
+            return extractOrganizationFromClaims(claims);
+        } catch (JwtException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Extract all organization identifiers from JWT.
+     */
+    public List<String> extractOrganizations(String token) {
+        try {
+            Claims claims = parser.parseClaimsJws(token).getBody();
+            return extractOrganizationsFromClaims(claims);
+        } catch (JwtException e) {
+            return List.of();
         }
     }
     
@@ -116,5 +149,83 @@ public class JWTValidator {
      */
     public boolean isTenantValid(String tenant) {
         return tenant != null && !tenant.isEmpty() && tenant.matches("^[a-zA-Z0-9_-]+$");
+    }
+
+    private String extractOrganizationFromClaims(Map<String, Object> claims) {
+        String directOrg = firstNonBlankClaim(claims,
+                "organization",
+                "organization_id",
+                "org",
+                "org_id",
+                "kc_org");
+        if (directOrg != null) {
+            return directOrg;
+        }
+
+        Object organizationClaim = claims.get("organization");
+        if (organizationClaim instanceof Map<?, ?> organizationMap) {
+            Object id = organizationMap.get("id");
+            if (id instanceof String idValue && !idValue.isBlank()) {
+                return idValue;
+            }
+            Object name = organizationMap.get("name");
+            if (name instanceof String nameValue && !nameValue.isBlank()) {
+                return nameValue;
+            }
+        }
+
+        List<String> organizations = extractOrganizationsFromClaims(claims);
+        return organizations.isEmpty() ? null : organizations.get(0);
+    }
+
+    private List<String> extractOrganizationsFromClaims(Map<String, Object> claims) {
+        Set<String> organizations = new LinkedHashSet<>();
+
+        Object organizationsClaim = claims.get("organizations");
+        if (organizationsClaim instanceof List<?> orgList) {
+            for (Object orgEntry : orgList) {
+                if (orgEntry instanceof String orgId && !orgId.isBlank()) {
+                    organizations.add(orgId);
+                } else if (orgEntry instanceof Map<?, ?> orgMap) {
+                    Object id = orgMap.get("id");
+                    if (id instanceof String idValue && !idValue.isBlank()) {
+                        organizations.add(idValue);
+                        continue;
+                    }
+                    Object name = orgMap.get("name");
+                    if (name instanceof String nameValue && !nameValue.isBlank()) {
+                        organizations.add(nameValue);
+                    }
+                }
+            }
+        }
+
+        Object groupsClaim = claims.get("groups");
+        if (groupsClaim instanceof List<?> groups) {
+            for (Object groupEntry : groups) {
+                if (!(groupEntry instanceof String group) || group.isBlank()) {
+                    continue;
+                }
+                if (group.startsWith("org:")) {
+                    organizations.add(group.substring("org:".length()));
+                } else if (group.startsWith("/org/")) {
+                    organizations.add(group.substring("/org/".length()));
+                } else if (group.startsWith("/orgs/")) {
+                    organizations.add(group.substring("/orgs/".length()));
+                }
+            }
+        }
+
+        return new ArrayList<>(organizations);
+    }
+
+    private String firstNonBlankClaim(Map<String, Object> claims, String... keys) {
+        for (String key : keys) {
+            Object value = claims.get(key);
+            if (value instanceof String stringValue && !stringValue.isBlank()) {
+                return stringValue;
+            }
+        }
+        return null;
     }
 }

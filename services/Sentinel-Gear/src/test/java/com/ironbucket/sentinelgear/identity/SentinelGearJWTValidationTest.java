@@ -89,6 +89,21 @@ public class SentinelGearJWTValidationTest {
                 .signWith(WRONG_KEY, SignatureAlgorithm.HS256)
                 .compact();
     }
+
+            private String createJWTWithCustomClaims(Map<String, Object> claims) {
+            var builder = Jwts.builder()
+                .setIssuer(TEST_ISSUER)
+                .setSubject("alice@acme.com")
+                .setAudience("sentinel-gear-app")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000));
+
+            claims.forEach(builder::claim);
+
+            return builder
+                .signWith(TEST_KEY, SignatureAlgorithm.HS256)
+                .compact();
+            }
     
     @Nested
     @DisplayName("JWT Signature Validation")
@@ -276,6 +291,74 @@ public class SentinelGearJWTValidationTest {
             // Act & Assert
             assertFalse(validator.hasRole(token, "s3:write"), "Should not have s3:write role");
             assertTrue(validator.hasRole(token, "policy:read"), "Should have policy:read role");
+        }
+    }
+
+    @Nested
+    @DisplayName("Keycloak Organization Support")
+    class KeycloakOrganizationSupport {
+
+        @Test
+        @DisplayName("Organization extracted from string claim")
+        public void testOrganizationExtractedFromStringClaim() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "organization", "acme-org",
+                    "groups", List.of("org:acme-org")
+            ));
+
+            String organization = validator.extractOrganization(token);
+            assertEquals("acme-org", organization);
+        }
+
+        @Test
+        @DisplayName("Organization extracted from structured claim")
+        public void testOrganizationExtractedFromStructuredClaim() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "organization", Map.of("id", "globex-org", "name", "Globex")
+            ));
+
+            String organization = validator.extractOrganization(token);
+            assertEquals("globex-org", organization);
+        }
+
+        @Test
+        @DisplayName("Organizations list extracted from Keycloak organizations claim")
+        public void testOrganizationsExtractedFromListClaim() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "organizations", List.of(
+                            Map.of("id", "acme-org", "name", "Acme"),
+                            Map.of("id", "globex-org", "name", "Globex")
+                    )
+            ));
+
+            List<String> organizations = validator.extractOrganizations(token);
+
+            assertEquals(2, organizations.size());
+            assertEquals("acme-org", organizations.get(0));
+            assertEquals("globex-org", organizations.get(1));
+        }
+
+        @Test
+        @DisplayName("Tenant extraction falls back to organization when tenant claim missing")
+        public void testTenantFallsBackToOrganization() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "organization", "acme-org"
+            ));
+
+            String tenant = validator.extractTenant(token);
+            assertEquals("acme-org", tenant);
+        }
+
+        @Test
+        @DisplayName("Explicit tenant claim has priority over organization")
+        public void testTenantHasPriorityOverOrganization() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "tenant", "tenant-override",
+                    "organization", "acme-org"
+            ));
+
+            String tenant = validator.extractTenant(token);
+            assertEquals("tenant-override", tenant);
         }
     }
     

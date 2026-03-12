@@ -11,6 +11,85 @@ permissions:
   pull-requests: write
 
 jobs:
+  sentinel-roadmap-gate:
+    name: Sentinel Roadmap Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build Pactum-Scroll (shared contracts)
+        run: |
+          cd services/Pactum-Scroll
+          mvn clean install -B -V || echo "Pactum-Scroll build skipped"
+
+      - name: Enforce Sentinel roadmap profile gate
+        env:
+          ROADMAP_MIN_TESTS: 50
+        run: bash scripts/ci/run-sentinel-roadmap-gate.sh
+
+      - name: Upload Sentinel roadmap reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentinel-roadmap-reports
+          path: services/Sentinel-Gear/target/surefire-reports/TEST-com.ironbucket.roadmap*.xml
+          retention-days: 30
+
+  sentinel-behavioral-gate:
+    name: Sentinel Behavioral Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build Pactum-Scroll (shared contracts)
+        run: |
+          cd services/Pactum-Scroll
+          mvn clean install -B -V || echo "Pactum-Scroll build skipped"
+
+      - name: Enforce Sentinel behavioral integration gate
+        env:
+          BEHAVIORAL_MIN_TESTS: 20
+          BEHAVIORAL_GATE_STRICT: true
+        run: bash scripts/ci/run-sentinel-behavioral-gate.sh
+
+      - name: Upload Sentinel integration reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentinel-integration-reports
+          path: services/Sentinel-Gear/target/surefire-reports/TEST-com.ironbucket.sentinelgear.integration*.xml
+          retention-days: 30
+
   build:
     name: Build and Test All Modules
     runs-on: ubuntu-latest

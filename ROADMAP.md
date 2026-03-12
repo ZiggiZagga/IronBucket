@@ -185,55 +185,53 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 
 ---
 
-### 🔵 Phase 4: Multi-Backend Adapter Ecosystem (Q2 2026)
-**Goal:** Multi-backend support (GCS, Azure Blob, local FS) with unified policy enforcement
+### 🔵 Phase 4: jclouds-Based Multi-Backend Ecosystem (Q2 2026)
+**Goal:** Build the multi-backend data plane on open source Apache jclouds with unified policy enforcement and full future jclouds feature coverage in IronBucket.
 
 **Deliverables:**
 
-#### 4.1 GCS Backend Adapter
-- Google Cloud Storage request translation layer
-- Service account authentication
-- Bucket/object permissions mapping to Claimspindel policies
-- Unit tests (30+ scenarios)
-- Integration tests with public GCS
-- Documentation: GCS-to-Policy mapping table
+#### 4.1 jclouds Provider Core Integration
+- Introduce a `jclouds-adapter-core` module as the canonical backend abstraction
+- Standardize BlobStore/Context lifecycle, credential resolution, and provider capability probing
+- Add provider capability matrix surfaced to policy-engine and GraphQL admin APIs
+- Unit tests (40+ scenarios) for provider-neutral behavior
+- Documentation: jclouds capability and policy mapping matrix
 
-#### 4.2 Azure Blob Backend Adapter
-- Azure Blob Storage request translation layer
-- Managed identity / SAS token support
-- Container/blob permissions mapping
-- Unit tests (30+ scenarios)
-- Integration tests with public Azure Blob
-- Documentation: Azure-to-Policy mapping table
+#### 4.2 jclouds GCS and Azure Providers
+- Implement Google Cloud Storage and Azure Blob via jclouds providers
+- Support service account/managed identity and token-based auth flows
+- Map provider-specific semantics to IronBucket contracts without bypassing Claimspindel
+- Unit tests (30+ scenarios per provider)
+- Integration tests against public provider test environments
+- Documentation: provider-specific constraints and policy compatibility tables
 
-#### 4.3 Local Filesystem Backend Adapter
-- POSIX-compatible filesystem backend
-- File permission (umask, ACLs) mapping to policies
-- Symbolic link handling (security boundary)
-- Quota enforcement per tenant
+#### 4.3 jclouds-Compatible Local/Private Backends
+- Add local/private backend support through jclouds-compatible patterns and extension points
+- Enforce filesystem security boundaries (symlink policy, ACL mapping, quotas)
+- Ensure parity with cloud providers for audit, tagging, and metadata contracts where supported
 - Unit tests (25+ scenarios)
-- Documentation: FS-to-Policy mapping table
+- Documentation: local/private backend parity and exception matrix
 
-#### 4.4 Adapter Registry & Discovery
-- Service mesh integration (Istio/Linkerd)
-- Dynamic backend selection per bucket
-- Fallback/failover routing
+#### 4.4 jclouds Provider Registry & Discovery
+- Dynamic provider selection per bucket/tenant using jclouds provider metadata
+- Fallback/failover routing with capability-aware constraints
 - Unit tests (20+ scenarios)
-- Integration tests with multi-adapter deployment
-- Observability: adapter selection metrics
+- Integration tests with multi-provider deployment
+- Observability: provider selection, fallback, and latency metrics
 
-#### 4.5 Unified Policy Framework
-- Policy evaluation across all adapters
-- Adapter-specific capability checks (e.g., versioning not supported on local FS)
-- Deny list vs. allow list semantics per adapter
-- Audit logging for adapter-specific operations
-- Performance: policy cache invalidation strategy
+#### 4.5 Unified Policy & Capability Framework
+- Policy evaluation across all jclouds-backed providers
+- Capability checks driven by jclouds provider features (versioning, multipart, lifecycle, ACL model)
+- Deny-overrides-allow semantics preserved across providers
+- Audit logging for provider-specific operations
+- Performance: policy/cache invalidation strategy for provider metadata and auth contexts
 
 **Success Criteria:**
-- All three adapters pass integration tests
-- Single policy language covers all backends
-- Latency increase <5ms for adapter selection
-- 100% audit trail coverage across adapters
+- jclouds-backed providers pass integration and contract suites
+- Single policy language covers all supported providers
+- Latency increase <5ms for provider selection
+- 100% audit trail coverage across provider operations
+- Phase 4 establishes the path to full jclouds feature support in future IronBucket phases
 
 ### 🔵 Phase 5: Advanced Governance & Compliance (Q3 2026)
 **Goal:** Policy versioning, auditability, compliance automation

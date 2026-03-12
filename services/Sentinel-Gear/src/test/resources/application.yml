@@ -4,10 +4,15 @@ server:
 management:
   server:
     port: 0
+  health:
+    vault:
+      enabled: false
 
 spring:
   cloud:
     discovery:
+      enabled: false
+    vault:
       enabled: false
 
 eureka:
@@ -15,3 +20,10 @@ eureka:
     enabled: false
     register-with-eureka: false
     fetch-registry: false
+
+ironbucket:
+  security:
+    presigned:
+      enabled: true
+      secret: test-presigned-secret
+      nonce-ttl: PT5M

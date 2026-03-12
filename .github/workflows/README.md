@@ -12,12 +12,18 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 - Pull requests to `main` or `develop`
 
 **What it does:**
+- Runs dedicated Sentinel roadmap gate (`mvn test -Proadmap`)
+- Runs dedicated Sentinel behavioral integration gate (`mvn test -Pintegration`)
 - Builds Pactum-Scroll (shared contracts)
 - Compiles and tests all microservices
 - Runs 231 unit tests
 - Uploads test results and artifacts
 
 **Expected outcome:** All tests passing ✅
+
+**Sentinel Gate Policy:**
+- Roadmap gate: blocking on all configured refs
+- Behavioral gate: blocking on all configured refs
 
 ---
 
