@@ -1,13 +1,14 @@
 package com.ironbucket.sentinelgear.integration;
 
 import com.ironbucket.sentinelgear.fixtures.AuditFixtures;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,8 +27,6 @@ class SentinelGearAuditLoggingTest {
 
     @Autowired
     private AuditFixtures auditFixtures;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * TEST 1: Audit logs should be valid JSON
@@ -65,22 +64,25 @@ class SentinelGearAuditLoggingTest {
     @Test
     @DisplayName("✗ test_auditEvent_containsTimestamp")
     void test_auditEvent_containsTimestamp() {
-        // GIVEN: Multiple audit events
         Map<String, Object> event1 = auditFixtures.generateAuditEvent_AccessDenied();
         Map<String, Object> event2 = auditFixtures.generateAuditEvent_AccessAllowed();
         Map<String, Object> event3 = auditFixtures.generateAuditEvent_PolicyEvaluationError();
 
-        // THEN: All should have timestamp
         assertNotNull(event1.get("timestamp"));
         assertNotNull(event2.get("timestamp"));
         assertNotNull(event3.get("timestamp"));
 
-        // AND: Timestamps should be ISO-8601 format
         String timestamp1 = event1.get("timestamp").toString();
-        assertTrue(isISO8601(timestamp1), "Timestamp should be ISO-8601 format");
+        String timestamp2 = event2.get("timestamp").toString();
+        String timestamp3 = event3.get("timestamp").toString();
 
-        // AND: Timestamps should be parseable as date
+        assertTrue(isISO8601(timestamp1), "Timestamp should be ISO-8601 format");
+        assertTrue(isISO8601(timestamp2), "Timestamp should be ISO-8601 format");
+        assertTrue(isISO8601(timestamp3), "Timestamp should be ISO-8601 format");
+
         assertDoesNotThrow(() -> java.time.OffsetDateTime.parse(timestamp1));
+        assertDoesNotThrow(() -> java.time.OffsetDateTime.parse(timestamp2));
+        assertDoesNotThrow(() -> java.time.OffsetDateTime.parse(timestamp3));
     }
 
     /**
@@ -149,45 +151,50 @@ class SentinelGearAuditLoggingTest {
     @Test
     @DisplayName("✗ test_auditEvent_uploadedToPostgres")
     void test_auditEvent_uploadedToPostgres() {
-        // GIVEN: An audit event
         Map<String, Object> event = auditFixtures.generateAuditEvent_AccessDenied();
 
-        // WHEN: Event is prepared for persistence
-        // Required fields: timestamp, traceId, principal, action, resource, decision, reason
-        String persistQuery = buildInsertStatement(event);
+        Map<String, Object> persistenceRecord = buildPersistenceRecord(event);
 
-        // THEN: SQL should be valid insert statement
-        assertNotNull(persistQuery);
-        assertTrue(persistQuery.contains("INSERT INTO"), "Should be INSERT statement");
-        assertTrue(persistQuery.contains("audit_events"), "Should target audit_events table");
+        assertEquals("audit_events", persistenceRecord.get("table"));
+        assertEquals(event.get("traceId"), persistenceRecord.get("traceId"));
+        assertEquals(event.get("decision"), persistenceRecord.get("decision"));
+        assertNotNull(persistenceRecord.get("payload"));
 
-        // AND: All required fields should be included
-        assertTrue(persistQuery.contains("timestamp"));
-        assertTrue(persistQuery.contains("traceId") || persistQuery.contains("trace_id"));
-        assertTrue(persistQuery.contains("principal"));
-        assertTrue(persistQuery.contains("action"));
-        assertTrue(persistQuery.contains("resource"));
-        assertTrue(persistQuery.contains("decision"));
-
-        // AND: Event should be JSON serializable for storage
         String eventJson = auditFixtures.toJsonString(event);
         assertTrue(auditFixtures.isValidJson(eventJson), "Should be valid JSON for storage");
+
+        Map<String, Object> invalidEvent = new java.util.HashMap<>(event);
+        invalidEvent.remove("traceId");
+        assertThrows(IllegalArgumentException.class, () -> buildPersistenceRecord(invalidEvent));
     }
 
     /**
      * Helper: Check if string is ISO-8601 format
      */
     private boolean isISO8601(String timestamp) {
-        return timestamp.contains("T") && (timestamp.contains("Z") || timestamp.contains("+") || timestamp.contains("-"));
+        try {
+            OffsetDateTime.parse(timestamp);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
-    /**
-     * Helper: Build SQL insert statement from audit event
-     */
-    private String buildInsertStatement(Map<String, Object> event) {
-        return "INSERT INTO audit_events (" +
-                "timestamp, traceId, principal, action, resource, decision, reason, statusCode" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private Map<String, Object> buildPersistenceRecord(Map<String, Object> event) {
+        Set<String> requiredFields = Set.of(
+                "timestamp", "traceId", "principal", "action", "resource", "decision", "reason", "statusCode"
+        );
+        for (String field : requiredFields) {
+            if (!event.containsKey(field) || event.get(field) == null) {
+                throw new IllegalArgumentException("Missing required audit field: " + field);
+            }
+        }
+        Map<String, Object> record = new java.util.HashMap<>();
+        record.put("table", "audit_events");
+        record.put("traceId", event.get("traceId"));
+        record.put("decision", event.get("decision"));
+        record.put("payload", auditFixtures.toJsonString(event));
+        return record;
     }
 
 }

@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,24 +34,14 @@ class SentinelGearProxyDelegationTest {
     @Test
     @DisplayName("✗ test_proxyRequest_forwardsToBackend")
     void test_proxyRequest_forwardsToBackend() {
-        // GIVEN: A proxy request context
-        String originalPath = "/acme-corp-bucket/documents/file.pdf";
         String backendUrl = "http://brazz-nossel:8082";
+        String originalPath = "acme-corp-bucket/documents/file.pdf";
 
-        // Simulate request context
-        Map<String, Object> requestContext = new HashMap<>();
-        requestContext.put("path", originalPath);
-        requestContext.put("method", "GET");
-        requestContext.put("backend", backendUrl);
+        String proxyTarget = buildProxyTarget(backendUrl, originalPath);
 
-        // WHEN: Request is marked for proxying
-        boolean shouldProxy = true;
-        String proxyTarget = backendUrl + originalPath;
-
-        // THEN: Request should be forwarded
-        assertTrue(shouldProxy, "Request should be marked for proxying");
         assertEquals("http://brazz-nossel:8082/acme-corp-bucket/documents/file.pdf", proxyTarget);
         assertTrue(proxyTarget.contains("brazz-nossel"), "Should proxy to brazz-nossel");
+        assertFalse(proxyTarget.contains("//acme-corp"), "Target path should be normalized");
     }
 
     /**
@@ -63,18 +54,20 @@ class SentinelGearProxyDelegationTest {
     @Test
     @DisplayName("✗ test_proxyHeaders_preserveAuth")
     void test_proxyHeaders_preserveAuth() {
-        // GIVEN: A request with auth header
         String authToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
         Map<String, String> headers = new HashMap<>();
         headers.put(HttpHeaders.AUTHORIZATION, authToken);
+        headers.put("X-Trace-Id", "4aa83f5f-03c0-433f-9020-7d10f1e95fca");
+        headers.put("Connection", "keep-alive");
 
-        // WHEN: Headers are copied to proxy request
-        String proxyAuthHeader = headers.get(HttpHeaders.AUTHORIZATION);
+        Map<String, String> proxiedHeaders = buildProxiedHeaders(headers);
+        String proxyAuthHeader = proxiedHeaders.get(HttpHeaders.AUTHORIZATION);
 
-        // THEN: Authorization should be preserved
         assertNotNull(proxyAuthHeader, "Authorization header should be preserved");
         assertEquals(authToken, proxyAuthHeader);
         assertTrue(proxyAuthHeader.startsWith("Bearer"), "Should contain Bearer token");
+        assertTrue(proxiedHeaders.containsKey("X-Trace-Id"), "Trace header should be preserved");
+        assertFalse(proxiedHeaders.containsKey("Connection"), "Hop-by-hop headers should not be forwarded");
     }
 
     /**
@@ -87,13 +80,10 @@ class SentinelGearProxyDelegationTest {
     @Test
     @DisplayName("✗ test_proxyBody_passthrough")
     void test_proxyBody_passthrough() {
-        // GIVEN: A request body
         String originalBody = "{\"metadata\": {\"env\": \"prod\"}, \"data\": \"file content\"}";
 
-        // WHEN: Body is passed to proxy
-        String proxyBody = originalBody;
+        String proxyBody = forwardRequestBody(originalBody);
 
-        // THEN: Body should be unchanged
         assertEquals(originalBody, proxyBody, "Request body should be passed unchanged");
         assertTrue(proxyBody.contains("metadata"), "Should contain original data");
         assertTrue(proxyBody.contains("prod"), "Should preserve metadata");
@@ -109,20 +99,19 @@ class SentinelGearProxyDelegationTest {
     @Test
     @DisplayName("✗ test_proxyResponse_headersPassed")
     void test_proxyResponse_headersPassed() {
-        // GIVEN: A backend response with headers
         Map<String, String> backendHeaders = new HashMap<>();
         backendHeaders.put("ETag", "\"abc123xyz\"");
         backendHeaders.put("Content-Type", "application/json");
         backendHeaders.put("X-Amz-Version-Id", "v123");
+        backendHeaders.put("Connection", "close");
 
-        // WHEN: Response is proxied back to client
-        Map<String, String> proxiedHeaders = new HashMap<>(backendHeaders);
+        Map<String, String> proxiedHeaders = sanitizeBackendResponseHeaders(backendHeaders);
 
-        // THEN: All headers should be passed back
         assertNotNull(proxiedHeaders.get("ETag"));
         assertEquals("\"abc123xyz\"", proxiedHeaders.get("ETag"));
         assertEquals("application/json", proxiedHeaders.get("Content-Type"));
         assertTrue(proxiedHeaders.containsKey("X-Amz-Version-Id"));
+        assertFalse(proxiedHeaders.containsKey("Connection"), "Connection header should not be returned to client");
     }
 
     /**
@@ -135,19 +124,46 @@ class SentinelGearProxyDelegationTest {
     @Test
     @DisplayName("✗ test_proxyError_wrappedInS3Format")
     void test_proxyError_wrappedInS3Format() {
-        // GIVEN: A backend error response
         int backendStatus = 403;
         String backendError = "Access Denied";
 
-        // WHEN: Error is wrapped in S3 format
         String s3ErrorXML = generateS3ErrorResponse(backendStatus, backendError);
 
-        // THEN: Response should be valid S3 XML
         assertNotNull(s3ErrorXML);
         assertTrue(s3ErrorXML.contains("<?xml"), "Should be XML");
         assertTrue(s3ErrorXML.contains("<Error>"), "Should have Error element");
         assertTrue(s3ErrorXML.contains("</Error>"), "Should close Error element");
         assertTrue(s3ErrorXML.contains(backendError), "Should contain error message");
+        assertTrue(s3ErrorXML.contains("<Code>AccessDenied</Code>"), "403 must map to AccessDenied");
+
+        String unavailableXml = generateS3ErrorResponse(503, "backend down");
+        assertTrue(unavailableXml.contains("<Code>ServiceUnavailable</Code>"), "5xx must map to ServiceUnavailable");
+    }
+
+    private String buildProxyTarget(String backendUrl, String requestPath) {
+        String normalizedPath = requestPath.startsWith("/") ? requestPath : "/" + requestPath;
+        return backendUrl + normalizedPath;
+    }
+
+    private Map<String, String> buildProxiedHeaders(Map<String, String> headers) {
+        Set<String> allowed = Set.of(HttpHeaders.AUTHORIZATION, "X-Identity-Context", "X-Trace-Id", "Content-Type");
+        Map<String, String> forwarded = new HashMap<>();
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            if (allowed.contains(entry.getKey())) {
+                forwarded.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return forwarded;
+    }
+
+    private String forwardRequestBody(String body) {
+        return body;
+    }
+
+    private Map<String, String> sanitizeBackendResponseHeaders(Map<String, String> backendHeaders) {
+        Map<String, String> responseHeaders = new HashMap<>(backendHeaders);
+        responseHeaders.remove("Connection");
+        return responseHeaders;
     }
 
     /**

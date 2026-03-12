@@ -1,65 +1,53 @@
 /** @jest-environment jsdom */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { useMutation } from '@apollo/client';
 import '@testing-library/jest-dom';
 import UploadDialog from '@/components/ironbucket/UploadDialog';
-import { UPLOAD_OBJECT } from '@/graphql/ironbucket-mutations';
+
+jest.mock('@apollo/client', () => ({
+  useMutation: jest.fn(),
+  gql: (literals: TemplateStringsArray, ...placeholders: unknown[]) =>
+    literals.reduce((acc, part, index) => acc + part + (placeholders[index] ?? ''), '')
+}));
+
+const mockedUseMutation = useMutation as jest.Mock;
 
 describe('UploadDialog Component', () => {
   const mockBucket = 'test-bucket';
-  const mockOnClose = jest.fn();
-  const mockOnSuccess = jest.fn();
+  let mockOnClose: jest.Mock;
+  let mockOnSuccess: jest.Mock;
+  let uploadMutation: jest.Mock;
 
-  const uploadMocks = [
-    {
-      request: {
-        query: UPLOAD_OBJECT,
-        variables: {
-          bucket: mockBucket,
+  beforeEach(() => {
+    mockOnClose = jest.fn();
+    mockOnSuccess = jest.fn();
+    uploadMutation = jest.fn().mockResolvedValue({
+      data: {
+        uploadObject: {
           key: 'test-file.txt',
-          content: 'mock-file-content',
-          contentType: 'text/plain'
-        }
-      },
-      result: {
-        data: {
-          uploadObject: {
-            key: 'test-file.txt',
-            bucket: mockBucket,
-            size: 1024
-          }
+          bucket: mockBucket,
+          size: 1024
         }
       }
-    }
-  ];
+    });
+    mockedUseMutation.mockReturnValue([uploadMutation]);
+  });
 
   it('should render upload dialog', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     expect(screen.getByText(/upload file/i)).toBeInTheDocument();
     expect(screen.getByText(/drag.*drop/i)).toBeInTheDocument();
   });
 
   it('should show bucket name in dialog', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     expect(screen.getByText(new RegExp(mockBucket, 'i'))).toBeInTheDocument();
   });
 
   it('should allow file selection via file picker', async () => {
-    render(
-      <MockedProvider mocks={uploadMocks} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     const file = new File(['test content'], 'test-file.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/choose file/i);
@@ -72,11 +60,7 @@ describe('UploadDialog Component', () => {
   });
 
   it('should support drag and drop', async () => {
-    render(
-      <MockedProvider mocks={uploadMocks} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     const dropzone = screen.getByText(/drag.*drop/i).closest('div');
     const file = new File(['test content'], 'test-file.txt', { type: 'text/plain' });
@@ -89,11 +73,7 @@ describe('UploadDialog Component', () => {
   });
 
   it('should validate file size limit', async () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} maxFileSize={1024} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} maxFileSize={1024} />);
 
     const largeFile = new File(['x'.repeat(2000)], 'large-file.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/choose file/i);
@@ -107,14 +87,12 @@ describe('UploadDialog Component', () => {
 
   it('should validate file type restrictions', async () => {
     render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <UploadDialog
-          bucket={mockBucket}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          allowedTypes={['text/plain', 'application/pdf']}
-        />
-      </MockedProvider>
+      <UploadDialog
+        bucket={mockBucket}
+        onClose={mockOnClose}
+        onSuccess={mockOnSuccess}
+        allowedTypes={['text/plain', 'application/pdf']}
+      />
     );
 
     const invalidFile = new File(['content'], 'script.js', { type: 'application/javascript' });
@@ -128,11 +106,7 @@ describe('UploadDialog Component', () => {
   });
 
   it('should show upload progress bar', async () => {
-    render(
-      <MockedProvider mocks={uploadMocks} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     const file = new File(['test content'], 'test-file.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/choose file/i);
@@ -147,11 +121,7 @@ describe('UploadDialog Component', () => {
   });
 
   it('should allow canceling upload', async () => {
-    render(
-      <MockedProvider mocks={uploadMocks} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     const file = new File(['test content'], 'test-file.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/choose file/i);
@@ -162,29 +132,12 @@ describe('UploadDialog Component', () => {
 
     const cancelButton = await screen.findByText(/cancel/i);
     fireEvent.click(cancelButton);
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
   it('should show error message on upload failure', async () => {
-    const errorMocks = [
-      {
-        request: {
-          query: UPLOAD_OBJECT,
-          variables: {
-            bucket: mockBucket,
-            key: 'test-file.txt',
-            content: 'mock-file-content',
-            contentType: 'text/plain'
-          }
-        },
-        error: new Error('Upload failed')
-      }
-    ];
-
-    render(
-      <MockedProvider mocks={errorMocks} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    uploadMutation.mockRejectedValueOnce(new Error('Upload failed'));
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     const file = new File(['test content'], 'test-file.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/choose file/i);
@@ -199,11 +152,7 @@ describe('UploadDialog Component', () => {
   });
 
   it('should call onSuccess callback after successful upload', async () => {
-    render(
-      <MockedProvider mocks={uploadMocks} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
     const file = new File(['test content'], 'test-file.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/choose file/i);
@@ -211,6 +160,17 @@ describe('UploadDialog Component', () => {
 
     const uploadButton = screen.getByRole('button', { name: /upload/i });
     fireEvent.click(uploadButton);
+
+    await waitFor(() => {
+      expect(uploadMutation).toHaveBeenCalledWith({
+        variables: {
+          bucket: mockBucket,
+          key: 'test-file.txt',
+          content: 'mock-file-content',
+          contentType: 'text/plain'
+        }
+      });
+    });
 
     await waitFor(() => {
       expect(mockOnSuccess).toHaveBeenCalledWith({
@@ -222,11 +182,7 @@ describe('UploadDialog Component', () => {
   });
 
   it('should close dialog after successful upload', async () => {
-    render(
-      <MockedProvider mocks={uploadMocks} addTypename={false}>
-        <UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} autoClose />
-      </MockedProvider>
-    );
+    render(<UploadDialog bucket={mockBucket} onClose={mockOnClose} onSuccess={mockOnSuccess} autoClose />);
 
     const file = new File(['test content'], 'test-file.txt', { type: 'text/plain' });
     const input = screen.getByLabelText(/choose file/i);

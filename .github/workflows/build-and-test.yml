@@ -24,6 +24,9 @@ jobs:
       - name: Set up Java 25
         run: bash scripts/ci/setup-java-25.sh 25
 
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -62,6 +65,9 @@ jobs:
 
       - name: Set up Java 25
         run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
 
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -122,6 +128,9 @@ jobs:
       
       - name: Set up Java 25
         run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
       
       - name: Cache Maven dependencies
         uses: actions/cache@v4

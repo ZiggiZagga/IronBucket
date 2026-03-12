@@ -3,11 +3,13 @@ package com.ironbucket.sentinelgear.integration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,25 +37,20 @@ class SentinelGearIdentityPropagationTest {
     @Test
     @DisplayName("✗ test_identityHeader_forwardedDownstream")
     void test_identityHeader_forwardedDownstream() {
-        // GIVEN: An upstream request with identity context
         String jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZUBhY21lLWNvcnAiLCJyZWdpb24iOiJ1cy1lYXN0LTEifQ.signature";
         Map<String, String> upstreamHeaders = new HashMap<>();
         upstreamHeaders.put("Authorization", "Bearer " + jwtToken);
         upstreamHeaders.put("X-Identity-Context", encodeIdentityContext("alice@acme-corp", "us-east-1"));
+        upstreamHeaders.put("Connection", "keep-alive");
 
-        // WHEN: Request is processed and forwarded
-        String identityContextHeader = upstreamHeaders.get("X-Identity-Context");
-        Map<String, String> downstreamHeaders = new HashMap<>(upstreamHeaders);
+        Map<String, String> downstreamHeaders = forwardIdentityHeaders(upstreamHeaders);
+        Map<String, Object> decodedIdentity = decodeIdentityContext(downstreamHeaders.get("X-Identity-Context"));
 
-        // THEN: Header should be forwarded
         assertNotNull(downstreamHeaders.get("X-Identity-Context"));
-        assertEquals(identityContextHeader, downstreamHeaders.get("X-Identity-Context"));
-        
-        // Decode header to verify content
-        String decodedContext = new String(java.util.Base64.getDecoder().decode(
-            downstreamHeaders.get("X-Identity-Context")
-        ));
-        assertTrue(decodedContext.contains("alice"), "Decoded header should contain 'alice'");
+        assertEquals("alice@acme-corp", decodedIdentity.get("principal"));
+        assertEquals("us-east-1", decodedIdentity.get("region"));
+        assertEquals("Bearer " + jwtToken, downstreamHeaders.get("Authorization"));
+        assertFalse(downstreamHeaders.containsKey("Connection"), "Hop-by-hop headers must not be propagated");
     }
 
     /**
@@ -66,24 +63,21 @@ class SentinelGearIdentityPropagationTest {
     @Test
     @DisplayName("✗ test_tenantContext_propagated")
     void test_tenantContext_propagated() {
-        // GIVEN: A request from alice@acme-corp
         String originalTenant = "acme-corp";
         Map<String, Object> requestContext = new HashMap<>();
         requestContext.put("tenant", originalTenant);
         requestContext.put("principal", "alice@acme-corp");
+        requestContext.put("region", "us-east-1");
 
-        // Simulate propagation through chain
-        String tenantAt_SentinelGear = originalTenant;
-        String tenantAt_Claimspindel = originalTenant;  // Should not change
-        String tenantAt_BrazzNossel = originalTenant;   // Should not change
+        String tenantAtSentinelGear = propagatedTenant(requestContext, originalTenant);
+        String tenantAtClaimspindel = propagatedTenant(requestContext, tenantAtSentinelGear);
+        String tenantAtBrazzNossel = propagatedTenant(requestContext, tenantAtClaimspindel);
 
-        // THEN: Tenant should be consistent at each layer
-        assertEquals(originalTenant, tenantAt_SentinelGear);
-        assertEquals(originalTenant, tenantAt_Claimspindel);
-        assertEquals(originalTenant, tenantAt_BrazzNossel);
+        assertEquals(originalTenant, tenantAtSentinelGear);
+        assertEquals(originalTenant, tenantAtClaimspindel);
+        assertEquals(originalTenant, tenantAtBrazzNossel);
 
-        // AND: Tenant should not be overwritten by other users
-        assertNotEquals("evil-corp", tenantAt_Claimspindel);
+        assertThrows(IllegalStateException.class, () -> propagatedTenant(requestContext, "evil-corp"));
     }
 
     /**
@@ -96,7 +90,6 @@ class SentinelGearIdentityPropagationTest {
     @Test
     @DisplayName("✗ test_auditorContext_propagated")
     void test_auditorContext_propagated() {
-        // GIVEN: An audit context
         String auditId = UUID.randomUUID().toString();
         String traceId = UUID.randomUUID().toString();
         Map<String, String> auditContext = new HashMap<>();
@@ -104,17 +97,15 @@ class SentinelGearIdentityPropagationTest {
         auditContext.put("traceId", traceId);
         auditContext.put("timestamp", String.valueOf(System.currentTimeMillis()));
 
-        // WHEN: Context is propagated
-        Map<String, String> propagatedContext = new HashMap<>(auditContext);
+        Map<String, String> sentinelContext = propagateAuditContext(auditContext);
+        Map<String, String> claimspindelContext = propagateAuditContext(sentinelContext);
+        Map<String, String> brazzContext = propagateAuditContext(claimspindelContext);
 
-        // THEN: Context should be available at all layers
-        assertNotNull(propagatedContext.get("auditId"));
-        assertEquals(auditId, propagatedContext.get("auditId"));
-        assertEquals(traceId, propagatedContext.get("traceId"));
-        assertNotNull(propagatedContext.get("timestamp"));
-
-        // AND: Trace ID should match across logs
-        assertTrue(isValidUUID(propagatedContext.get("traceId")));
+        assertEquals(auditId, sentinelContext.get("auditId"));
+        assertEquals(auditId, claimspindelContext.get("auditId"));
+        assertEquals(traceId, brazzContext.get("traceId"));
+        assertTrue(isValidUUID(brazzContext.get("traceId")));
+        assertNotNull(brazzContext.get("timestamp"));
     }
 
     /**
@@ -127,27 +118,21 @@ class SentinelGearIdentityPropagationTest {
     @Test
     @DisplayName("✗ test_jwtClaims_availableToDownstream")
     void test_jwtClaims_availableToDownstream() {
-        // GIVEN: JWT claims
-        Map<String, Object> jwtClaims = new HashMap<>();
-        jwtClaims.put("sub", "alice@acme-corp");
-        jwtClaims.put("region", "us-east-1");
-        jwtClaims.put("groups", List.of("acme-corp:admins", "acme-corp:devs"));
-        jwtClaims.put("services", List.of("s3", "kms"));
+        String jwtToken = createUnsignedJwtPayload(Map.of(
+                "sub", "alice@acme-corp",
+                "region", "us-east-1",
+                "groups", List.of("acme-corp:admins", "acme-corp:devs"),
+                "services", List.of("s3", "kms")
+        ));
 
-        // WHEN: Claims are extracted and forwarded
-        Map<String, Object> claimsForDownstream = new HashMap<>(jwtClaims);
+        Map<String, Object> claimsForDownstream = extractJwtClaims(jwtToken);
         String claimsJson = serializeForPropagation(claimsForDownstream);
 
-        // THEN: Claims should be available
         assertNotNull(claimsForDownstream.get("sub"));
         assertEquals("alice@acme-corp", claimsForDownstream.get("sub"));
-
-        // AND: All important claims should be present
         assertNotNull(claimsForDownstream.get("region"));
         assertNotNull(claimsForDownstream.get("groups"));
         assertNotNull(claimsForDownstream.get("services"));
-
-        // AND: Downstream can parse the claims
         assertTrue(claimsJson.contains("acme-corp:admins"));
         assertTrue(claimsJson.contains("us-east-1"));
     }
@@ -162,38 +147,101 @@ class SentinelGearIdentityPropagationTest {
     @Test
     @DisplayName("✗ test_traceContext_correlatedEnd2End")
     void test_traceContext_correlatedEnd2End() {
-        // GIVEN: A trace ID generated at entry point
         String originalTraceId = UUID.randomUUID().toString();
-        Map<String, Object> requestMetadata = new HashMap<>();
-        requestMetadata.put("traceId", originalTraceId);
-        requestMetadata.put("startTime", System.currentTimeMillis());
+        Map<String, String> sentinelHeaders = Map.of("X-Trace-Id", originalTraceId);
+        Map<String, String> claimspindelHeaders = propagateTraceHeader(sentinelHeaders);
+        Map<String, String> brazzHeaders = propagateTraceHeader(claimspindelHeaders);
+        Map<String, String> minioHeaders = propagateTraceHeader(brazzHeaders);
 
-        // WHEN: Request flows through: Sentinel-Gear → Claimspindel → Brazz-Nossel → MinIO
-        String traceAtSentinelGear = originalTraceId;
-        String traceAtClaimspindel = originalTraceId;
-        String traceAtBrazzNossel = originalTraceId;
-        String traceAtMinIO = originalTraceId;
+        assertEquals(originalTraceId, claimspindelHeaders.get("X-Trace-Id"));
+        assertEquals(originalTraceId, brazzHeaders.get("X-Trace-Id"));
+        assertEquals(originalTraceId, minioHeaders.get("X-Trace-Id"));
 
-        // THEN: Trace ID should be consistent
-        assertEquals(originalTraceId, traceAtSentinelGear);
-        assertEquals(originalTraceId, traceAtClaimspindel);
-        assertEquals(originalTraceId, traceAtBrazzNossel);
-        assertEquals(originalTraceId, traceAtMinIO);
+        String log1 = "sentinel-gear: processing request " + claimspindelHeaders.get("X-Trace-Id");
+        String log2 = "claimspindel: evaluating policy " + brazzHeaders.get("X-Trace-Id");
+        String log3 = "brazz-nossel: proxying to MinIO " + minioHeaders.get("X-Trace-Id");
 
-        // AND: Should be able to correlate logs across services
-        String log1 = "sentinel-gear: processing request " + traceAtSentinelGear;
-        String log2 = "claimspindel: evaluating policy " + traceAtClaimspindel;
-        String log3 = "brazz-nossel: proxying to MinIO " + traceAtBrazzNossel;
+        assertEquals(extractTraceId(log1), extractTraceId(log2));
+        assertEquals(extractTraceId(log2), extractTraceId(log3));
+    }
 
-        assertTrue(extractTraceId(log1).equals(extractTraceId(log2)));
-        assertTrue(extractTraceId(log2).equals(extractTraceId(log3)));
+    private Map<String, String> forwardIdentityHeaders(Map<String, String> incoming) {
+        Set<String> allowed = Set.of("Authorization", "X-Identity-Context", "X-Trace-Id");
+        Map<String, String> forwarded = new HashMap<>();
+        for (Map.Entry<String, String> entry : incoming.entrySet()) {
+            if (allowed.contains(entry.getKey())) {
+                forwarded.put(entry.getKey(), entry.getValue());
+            }
+        }
+        if (forwarded.containsKey("X-Identity-Context")) {
+            decodeIdentityContext(forwarded.get("X-Identity-Context"));
+        }
+        return forwarded;
+    }
+
+    private Map<String, Object> decodeIdentityContext(String headerValue) {
+        try {
+            byte[] decoded = Base64.getDecoder().decode(headerValue);
+            return new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(decoded, Map.class);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Invalid identity context header", ex);
+        }
+    }
+
+    private String propagatedTenant(Map<String, Object> requestContext, String currentTenant) {
+        String requestTenant = String.valueOf(requestContext.get("tenant"));
+        if (!requestTenant.equals(currentTenant)) {
+            throw new IllegalStateException("Tenant mismatch during propagation");
+        }
+        return requestTenant;
+    }
+
+    private Map<String, String> propagateAuditContext(Map<String, String> incoming) {
+        if (!isValidUUID(incoming.get("traceId")) || !isValidUUID(incoming.get("auditId"))) {
+            throw new IllegalStateException("Invalid audit correlation IDs");
+        }
+        return new HashMap<>(incoming);
+    }
+
+    private String createUnsignedJwtPayload(Map<String, Object> payloadClaims) {
+        try {
+            String headerJson = "{\"alg\":\"none\",\"typ\":\"JWT\"}";
+            String payloadJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(payloadClaims);
+            String encodedHeader = Base64.getUrlEncoder().withoutPadding().encodeToString(headerJson.getBytes(StandardCharsets.UTF_8));
+            String encodedPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
+            return encodedHeader + "." + encodedPayload + ".";
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to build JWT payload", ex);
+        }
+    }
+
+    private Map<String, Object> extractJwtClaims(String jwtToken) {
+        try {
+            String[] parts = jwtToken.split("\\.");
+            if (parts.length < 2) {
+                throw new IllegalArgumentException("Invalid JWT format");
+            }
+            byte[] payload = Base64.getUrlDecoder().decode(parts[1]);
+            return new com.fasterxml.jackson.databind.ObjectMapper().readValue(payload, Map.class);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Cannot extract JWT claims", ex);
+        }
+    }
+
+    private Map<String, String> propagateTraceHeader(Map<String, String> sourceHeaders) {
+        String traceId = sourceHeaders.get("X-Trace-Id");
+        if (!isValidUUID(traceId)) {
+            throw new IllegalStateException("Missing or invalid trace ID");
+        }
+        return Map.of("X-Trace-Id", traceId);
     }
 
     /**
      * Helper: Encode identity context
      */
     private String encodeIdentityContext(String principal, String region) {
-        return java.util.Base64.getEncoder().encodeToString(
+        return Base64.getEncoder().encodeToString(
                 ("{\"principal\":\"" + principal + "\",\"region\":\"" + region + "\"}").getBytes()
         );
     }

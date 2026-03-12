@@ -1,11 +1,23 @@
 /** @jest-environment jsdom */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { useMutation } from '@apollo/client';
 import '@testing-library/jest-dom';
 import PolicyEditor from '@/components/ironbucket/admin/PolicyEditor';
 import { CREATE_POLICY, UPDATE_POLICY, DRY_RUN_POLICY } from '@/graphql/ironbucket-mutations';
 
+jest.mock('@apollo/client', () => ({
+  useMutation: jest.fn(),
+  gql: (literals: TemplateStringsArray, ...placeholders: unknown[]) =>
+    literals.reduce((acc, part, index) => acc + part + (placeholders[index] ?? ''), '')
+}));
+
+const mockedUseMutation = useMutation as jest.Mock;
+
 describe('PolicyEditor Component', () => {
+  let createPolicyMutation: jest.Mock;
+  let updatePolicyMutation: jest.Mock;
+  let dryRunPolicyMutation: jest.Mock;
+
   const mockPolicy = {
     id: 'policy-1',
     tenant: 'test-tenant',
@@ -15,12 +27,39 @@ describe('PolicyEditor Component', () => {
     operations: ['s3:*']
   };
 
+  beforeEach(() => {
+    createPolicyMutation = jest.fn().mockResolvedValue({
+      data: { createPolicy: { ...mockPolicy, id: 'new-policy-id' } }
+    });
+    updatePolicyMutation = jest.fn().mockResolvedValue({
+      data: { updatePolicy: { ...mockPolicy, version: 2 } }
+    });
+    dryRunPolicyMutation = jest.fn().mockResolvedValue({
+      data: {
+        dryRunPolicy: {
+          decision: 'ALLOW',
+          matchedRules: ['policy-1'],
+          reason: 'Allowed by policy'
+        }
+      }
+    });
+
+    mockedUseMutation.mockImplementation((doc: unknown) => {
+      if (doc === CREATE_POLICY) {
+        return [createPolicyMutation];
+      }
+      if (doc === UPDATE_POLICY) {
+        return [updatePolicyMutation];
+      }
+      if (doc === DRY_RUN_POLICY) {
+        return [dryRunPolicyMutation];
+      }
+      return [jest.fn()];
+    });
+  });
+
   it('should render empty policy editor', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor />
-      </MockedProvider>
-    );
+    render(<PolicyEditor />);
 
     expect(screen.getByLabelText(/tenant/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/roles/i)).toBeInTheDocument();
@@ -28,22 +67,14 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should render with existing policy data', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor policy={mockPolicy} />
-      </MockedProvider>
-    );
+    render(<PolicyEditor policy={mockPolicy} />);
 
     expect(screen.getByDisplayValue('test-tenant')).toBeInTheDocument();
     expect(screen.getByDisplayValue('admin')).toBeInTheDocument();
   });
 
   it('should validate required fields', async () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor />
-      </MockedProvider>
-    );
+    render(<PolicyEditor />);
 
     fireEvent.change(screen.getByLabelText(/tenant/i), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText(/roles/i), { target: { value: '' } });
@@ -58,11 +89,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should validate bucket name format', async () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor />
-      </MockedProvider>
-    );
+    render(<PolicyEditor />);
 
     const bucketInput = screen.getByLabelText(/allowed buckets/i);
     fireEvent.change(bucketInput, { target: { value: 'INVALID_BUCKET' } });
@@ -74,11 +101,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should validate S3 operation format', async () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor />
-      </MockedProvider>
-    );
+    render(<PolicyEditor />);
 
     const operationInput = screen.getByLabelText(/operations/i);
     fireEvent.change(operationInput, { target: { value: 'invalid:operation' } });
@@ -90,35 +113,19 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should test policy before saving', async () => {
-    const dryRunMocks = [
-      {
-        request: {
-          query: DRY_RUN_POLICY,
-          variables: {
-            policy: mockPolicy,
-            operation: 's3:GetObject',
-            resource: 'arn:aws:s3:::test-bucket/file.txt'
-          }
-        },
-        result: {
-          data: {
-            dryRunPolicy: {
-              decision: 'ALLOW',
-              matchedRules: ['policy-1'],
-              reason: 'Allowed by policy'
-            }
-          }
-        }
-      }
-    ];
-
-    render(
-      <MockedProvider mocks={dryRunMocks} addTypename={false}>
-        <PolicyEditor policy={mockPolicy} />
-      </MockedProvider>
-    );
+    render(<PolicyEditor policy={mockPolicy} />);
 
     fireEvent.click(screen.getByText(/test policy/i));
+
+    await waitFor(() => {
+      expect(dryRunPolicyMutation).toHaveBeenCalledWith({
+        variables: {
+          policy: mockPolicy,
+          operation: 's3:GetObject',
+          resource: 'arn:aws:s3:::test-bucket/file.txt'
+        }
+      });
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/allowed by policy/i)).toBeInTheDocument();
@@ -127,33 +134,17 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should show denial reason in dry-run', async () => {
-    const denyMocks = [
-      {
-        request: {
-          query: DRY_RUN_POLICY,
-          variables: {
-            policy: mockPolicy,
-            operation: 's3:GetObject',
-            resource: 'arn:aws:s3:::test-bucket/file.txt'
-          }
-        },
-        result: {
-          data: {
-            dryRunPolicy: {
-              decision: 'DENY',
-              matchedRules: [],
-              reason: 'No matching policy found'
-            }
-          }
+    dryRunPolicyMutation.mockResolvedValueOnce({
+      data: {
+        dryRunPolicy: {
+          decision: 'DENY',
+          matchedRules: [],
+          reason: 'No matching policy found'
         }
       }
-    ];
+    });
 
-    render(
-      <MockedProvider mocks={denyMocks} addTypename={false}>
-        <PolicyEditor policy={mockPolicy} />
-      </MockedProvider>
-    );
+    render(<PolicyEditor policy={mockPolicy} />);
 
     fireEvent.click(screen.getByText(/test policy/i));
 
@@ -164,25 +155,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should create new policy', async () => {
-    const createMocks = [
-      {
-        request: {
-          query: CREATE_POLICY,
-          variables: { input: mockPolicy }
-        },
-        result: {
-          data: {
-            createPolicy: { ...mockPolicy, id: 'new-policy-id' }
-          }
-        }
-      }
-    ];
-
-    render(
-      <MockedProvider mocks={createMocks} addTypename={false}>
-        <PolicyEditor />
-      </MockedProvider>
-    );
+    render(<PolicyEditor />);
 
     fireEvent.change(screen.getByLabelText(/tenant/i), { target: { value: 'test-tenant' } });
     fireEvent.change(screen.getByLabelText(/roles/i), { target: { value: 'admin' } });
@@ -190,35 +163,38 @@ describe('PolicyEditor Component', () => {
     fireEvent.click(screen.getByText(/save policy/i));
 
     await waitFor(() => {
+      expect(createPolicyMutation).toHaveBeenCalledWith({
+        variables: {
+          input: {
+            id: 'policy-1',
+            tenant: 'test-tenant',
+            roles: ['admin'],
+            allowedBuckets: ['*'],
+            allowedPrefixes: ['*'],
+            operations: ['s3:*']
+          }
+        }
+      });
+    });
+
+    await waitFor(() => {
       expect(screen.getByText(/policy created successfully/i)).toBeInTheDocument();
     });
   });
 
   it('should update existing policy', async () => {
-    const updateMocks = [
-      {
-        request: {
-          query: UPDATE_POLICY,
-          variables: {
-            id: 'policy-1',
-            input: mockPolicy
-          }
-        },
-        result: {
-          data: {
-            updatePolicy: { ...mockPolicy, version: 2 }
-          }
-        }
-      }
-    ];
-
-    render(
-      <MockedProvider mocks={updateMocks} addTypename={false}>
-        <PolicyEditor policy={mockPolicy} />
-      </MockedProvider>
-    );
+    render(<PolicyEditor policy={mockPolicy} />);
 
     fireEvent.click(screen.getByText(/save policy/i));
+
+    await waitFor(() => {
+      expect(updatePolicyMutation).toHaveBeenCalledWith({
+        variables: {
+          id: 'policy-1',
+          input: mockPolicy
+        }
+      });
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/policy updated successfully/i)).toBeInTheDocument();
@@ -226,33 +202,21 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should highlight YAML syntax', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor mode="yaml" />
-      </MockedProvider>
-    );
+    render(<PolicyEditor mode="yaml" />);
 
     const editor = screen.getByLabelText(/policy syntax/i);
     expect(editor).toHaveClass('syntax-highlighted');
   });
 
   it('should highlight JSON syntax', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor mode="json" />
-      </MockedProvider>
-    );
+    render(<PolicyEditor mode="json" />);
 
     const editor = screen.getByLabelText(/policy syntax/i);
     expect(editor).toHaveClass('syntax-highlighted');
   });
 
   it('should render access notice and admin fields', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <PolicyEditor />
-      </MockedProvider>
-    );
+    render(<PolicyEditor />);
 
     expect(screen.getByText(/access denied/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/tenant/i)).toBeInTheDocument();

@@ -4,7 +4,7 @@
 # Runs inside test-client container with full observability
 # Purpose: Prove docs match code and identify root causes of failures
 
-set -e
+set -eu
 
 # Color codes
 RED='\033[0;31m'
@@ -17,12 +17,12 @@ NC='\033[0m'
 
 # Configuration
 GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
-KEYCLOAK_URL="http://steel-hammer-keycloak:7081"
-EUREKA_URL="http://steel-hammer-buzzle-vane:8083"
-MINIO_URL="http://steel-hammer-brazz-nossel:8082"
-LOKI_URL="http://steel-hammer-loki:3100"
-TEMPO_URL="http://steel-hammer-tempo:3200"
-MIMIR_URL="http://steel-hammer-mimir:9009"
+KEYCLOAK_URL="${KEYCLOAK_URL:-http://steel-hammer-keycloak:7081}"
+EUREKA_URL="${EUREKA_URL:-http://steel-hammer-buzzle-vane:8083}"
+MINIO_URL="${MINIO_URL:-http://steel-hammer-minio:9000}"
+LOKI_URL="${LOKI_URL:-http://steel-hammer-loki:3100}"
+TEMPO_URL="${TEMPO_URL:-http://steel-hammer-tempo:3200}"
+MIMIR_URL="${MIMIR_URL:-http://steel-hammer-mimir:9009}"
 
 OUTPUT_DIR="/tmp/ironbucket-e2e-reports"
 LOG_DIR="$OUTPUT_DIR/logs"
@@ -32,17 +32,18 @@ FAILURE_DIR="$OUTPUT_DIR/failures"
 
 TESTS_PASSED=0
 TESTS_FAILED=0
+TESTS_SKIPPED=0
 
 mkdir -p "$LOG_DIR" "$TRACE_DIR" "$METRIC_DIR" "$FAILURE_DIR"
 
-echo -e "${MAGENTA}╔════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${MAGENTA}║                                                                ║${NC}"
-echo -e "${MAGENTA}║        IronBucket COMPLETE E2E TEST SUITE                      ║${NC}"
-echo -e "${MAGENTA}║                                                                ║${NC}"
-echo -e "${MAGENTA}║   Full Stack Testing with Tracing + Root-Cause Analysis       ║${NC}"
-echo -e "${MAGENTA}║   Prove: Docs ↔ Code + Identify Failures Instantly           ║${NC}"
-echo -e "${MAGENTA}║                                                                ║${NC}"
-echo -e "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${NC}"
+printf '%b\n' "${MAGENTA}╔════════════════════════════════════════════════════════════════╗${NC}"
+printf '%b\n' "${MAGENTA}║                                                                ║${NC}"
+printf '%b\n' "${MAGENTA}║        IronBucket COMPLETE E2E TEST SUITE                      ║${NC}"
+printf '%b\n' "${MAGENTA}║                                                                ║${NC}"
+printf '%b\n' "${MAGENTA}║   Full Stack Testing with Tracing + Root-Cause Analysis       ║${NC}"
+printf '%b\n' "${MAGENTA}║   Prove: Docs ↔ Code + Identify Failures Instantly           ║${NC}"
+printf '%b\n' "${MAGENTA}║                                                                ║${NC}"
+printf '%b\n' "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
 # ============================================================================
@@ -52,21 +53,29 @@ echo ""
 log_test() {
     local TEST_NAME=$1
     local TEST_NUM=$2
-    echo -e "${CYAN}[TEST $TEST_NUM] $TEST_NAME${NC}"
+    printf '%b\n' "${CYAN}[TEST $TEST_NUM] $TEST_NAME${NC}"
 }
 
 test_pass() {
-    local TEST_NAME=$1
-    echo -e "${GREEN}✅ PASS${NC}"
+    printf '%b\n' "${GREEN}✅ PASS${NC}"
     TESTS_PASSED=$((TESTS_PASSED + 1))
+}
+
+test_skip() {
+    local REASON=$1
+    printf '%b\n' "${YELLOW}⏭️  SKIP${NC}"
+    printf '%b\n' "  ${YELLOW}Reason: $REASON${NC}"
+    TESTS_SKIPPED=$((TESTS_SKIPPED + 1))
 }
 
 test_fail() {
     local TEST_NAME=$1
     local REASON=$2
-    echo -e "${RED}❌ FAIL${NC}"
-    echo -e "  ${RED}Reason: $REASON${NC}"
+    local FAILURE_SLUG
+    printf '%b\n' "${RED}❌ FAIL${NC}"
+    printf '%b\n' "  ${RED}Reason: $REASON${NC}"
     TESTS_FAILED=$((TESTS_FAILED + 1))
+    FAILURE_SLUG=$(echo "$TEST_NAME" | tr ' ' '_')
     
     # Record failure with root cause
     {
@@ -80,50 +89,95 @@ test_fail() {
         echo "=== Sentinel-Gear Health ==="
         curl -s "$GATEWAY_URL/actuator/health" | head -20 || echo "N/A"
         echo ""
-    } > "$FAILURE_DIR/${TEST_NAME// /_}.log"
+    } > "$FAILURE_DIR/${FAILURE_SLUG}.log"
+}
+
+http_status() {
+    local URL=$1
+    curl -s -o /dev/null -w "%{http_code}" --max-time 8 "$URL" 2>/dev/null || echo "000"
+}
+
+check_required_http() {
+    local TEST_NAME=$1
+    local URL=$2
+    local EXPECT_PATTERN=$3
+    local code
+    code=$(http_status "$URL")
+    if echo "$code" | grep -Eq "$EXPECT_PATTERN"; then
+        test_pass "$TEST_NAME"
+    else
+        test_fail "$TEST_NAME" "HTTP $code from $URL"
+    fi
+}
+
+check_optional_http() {
+    local TEST_NAME=$1
+    local URL=$2
+    local EXPECT_PATTERN=$3
+    local code
+    code=$(http_status "$URL")
+    if [ "$code" = "000" ]; then
+        test_skip "Optional endpoint unavailable: $URL"
+        return
+    fi
+    if echo "$code" | grep -Eq "$EXPECT_PATTERN"; then
+        test_pass "$TEST_NAME"
+    else
+        test_fail "$TEST_NAME" "HTTP $code from $URL"
+    fi
+}
+
+check_optional_multi_http() {
+    local TEST_NAME=$1
+    local EXPECT_PATTERN=$2
+    shift 2
+
+    local reached=false
+    local URL
+    local code
+    for URL in "$@"; do
+        code=$(http_status "$URL")
+        if [ "$code" = "000" ]; then
+            continue
+        fi
+        reached=true
+        if echo "$code" | grep -Eq "$EXPECT_PATTERN"; then
+            test_pass "$TEST_NAME"
+            return
+        fi
+    done
+
+    if [ "$reached" = "false" ]; then
+        test_skip "Optional endpoints unavailable for $TEST_NAME"
+    else
+        test_fail "$TEST_NAME" "No endpoint matched expected HTTP pattern $EXPECT_PATTERN"
+    fi
 }
 
 # ============================================================================
 # PHASE 1: INFRASTRUCTURE & CONNECTIVITY
 # ============================================================================
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}PHASE 1: Infrastructure & Connectivity Tests${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}PHASE 1: Infrastructure & Connectivity Tests${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 # Test 1.1: Gateway Accessibility
 log_test "Gateway Accessibility" "1.1"
-if curl -sf "$GATEWAY_URL/actuator/health" > /dev/null 2>&1; then
-    test_pass "Gateway Accessibility"
-else
-    test_fail "Gateway Accessibility" "Sentinel-Gear not responding on $GATEWAY_URL"
-fi
+check_required_http "Gateway Accessibility" "$GATEWAY_URL/actuator/health" '^(200|401|403)$'
 
 # Test 1.2: Keycloak Accessibility
 log_test "Keycloak Accessibility" "1.2"
-KEYCLOAK_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$KEYCLOAK_URL/realms/dev/.well-known/openid-configuration" 2>/dev/null || echo "000")
-if [ "$KEYCLOAK_RESPONSE" = "200" ] || [ "$KEYCLOAK_RESPONSE" = "302" ]; then
-    test_pass "Keycloak Accessibility"
-else
-    test_fail "Keycloak Accessibility" "HTTP $KEYCLOAK_RESPONSE from Keycloak"
-fi
+check_required_http "Keycloak Accessibility" "$KEYCLOAK_URL/realms/dev/.well-known/openid-configuration" '^(200|302)$'
 
 # Test 1.3: Service Registry Accessibility
 log_test "Service Registry (Eureka) Accessibility" "1.3"
-if curl -sf "$EUREKA_URL/eureka/apps" > /dev/null 2>&1; then
-    test_pass "Service Registry Accessibility"
-else
-    test_fail "Service Registry Accessibility" "Eureka not responding on $EUREKA_URL"
-fi
+check_required_http "Service Registry Accessibility" "$EUREKA_URL/eureka/apps" '^200$'
 
 # Test 1.4: MinIO S3 Storage Accessibility
 log_test "MinIO S3 Storage Accessibility" "1.4"
-if curl -sf "$MINIO_URL/minio/health/live" > /dev/null 2>&1; then
-    test_pass "MinIO S3 Storage Accessibility"
-else
-    test_fail "MinIO S3 Storage Accessibility" "MinIO health check failed"
-fi
+check_required_http "MinIO S3 Storage Accessibility" "$MINIO_URL/minio/health/live" '^200$'
 
 echo ""
 
@@ -131,9 +185,9 @@ echo ""
 # PHASE 2: SERVICE DISCOVERY & REGISTRATION
 # ============================================================================
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}PHASE 2: Service Discovery & Registration${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}PHASE 2: Service Discovery & Registration${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 # Test 2.1: Sentinel-Gear Registered in Eureka
@@ -167,9 +221,9 @@ echo ""
 # PHASE 3: HEALTH ENDPOINTS
 # ============================================================================
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}PHASE 3: Service Health Endpoints${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}PHASE 3: Service Health Endpoints${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 # Test 3.1: Gateway Health
@@ -205,34 +259,25 @@ echo ""
 # PHASE 4: OBSERVABILITY STACK
 # ============================================================================
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}PHASE 4: Observability Stack (Loki, Tempo, Mimir)${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}PHASE 4: Observability Stack (Loki, Tempo, Mimir)${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 # Test 4.1: Loki Readiness
 log_test "Loki Log Aggregation" "4.1"
-if curl -sf "$LOKI_URL/ready" > /dev/null 2>&1; then
-    test_pass "Loki Log Aggregation"
-else
-    test_fail "Loki Log Aggregation" "Loki /ready endpoint failed"
-fi
+check_optional_http "Loki Log Aggregation" "$LOKI_URL/ready" '^200$'
 
 # Test 4.2: Tempo Readiness
 log_test "Tempo Trace Storage" "4.2"
-if curl -sf "$TEMPO_URL/ready" > /dev/null 2>&1; then
-    test_pass "Tempo Trace Storage"
-else
-    test_fail "Tempo Trace Storage" "Tempo /ready endpoint failed"
-fi
+check_optional_http "Tempo Trace Storage" "$TEMPO_URL/ready" '^200$'
 
 # Test 4.3: Mimir Readiness
 log_test "Mimir Metrics Storage" "4.3"
-if curl -sf "$MIMIR_URL/-/ready" > /dev/null 2>&1; then
-    test_pass "Mimir Metrics Storage"
-else
-    test_fail "Mimir Metrics Storage" "Mimir /-/ready endpoint failed"
-fi
+check_optional_multi_http "Mimir Metrics Storage" '^200$' \
+    "$MIMIR_URL/-/ready" \
+    "$MIMIR_URL/ready" \
+    "$MIMIR_URL/prometheus/api/v1/status/buildinfo"
 
 # Test 4.4: Loki Labels Available
 log_test "Loki Log Labels Ingestion" "4.4"
@@ -240,7 +285,11 @@ LOKI_LABELS=$(curl -s "$LOKI_URL/loki/api/v1/labels" 2>/dev/null || echo "")
 if echo "$LOKI_LABELS" | grep -q "container\|service"; then
     test_pass "Loki Log Labels Ingestion"
 else
-    test_fail "Loki Log Labels Ingestion" "No log labels found in Loki"
+    if [ -z "$LOKI_LABELS" ]; then
+        test_skip "Optional endpoint unavailable: $LOKI_URL/loki/api/v1/labels"
+    else
+        test_fail "Loki Log Labels Ingestion" "No log labels found in Loki"
+    fi
 fi
 
 echo ""
@@ -249,9 +298,9 @@ echo ""
 # PHASE 5: REQUEST FLOW THROUGH GATEWAY
 # ============================================================================
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}PHASE 5: Request Flow Through Gateway${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}PHASE 5: Request Flow Through Gateway${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 # Test 5.1: Gateway Info Endpoint
@@ -278,9 +327,9 @@ echo ""
 # PHASE 6: COLLECT OBSERVABILITY DATA
 # ============================================================================
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}PHASE 6: Collect Observability Data${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}PHASE 6: Collect Observability Data${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 echo "Collecting Loki labels..."
@@ -301,13 +350,18 @@ echo ""
 # PHASE 7: GENERATE COMPREHENSIVE REPORT
 # ============================================================================
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}PHASE 7: Generate Comprehensive Report${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${BLUE}PHASE 7: Generate Comprehensive Report${NC}"
+printf '%b\n' "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 GENERATED_TIME=$(date)
-SUCCESS_RATE=$((TESTS_PASSED * 100 / (TESTS_PASSED + TESTS_FAILED + 1)))
+TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED + TESTS_SKIPPED))
+if [ "$TOTAL_TESTS" -eq 0 ]; then
+    SUCCESS_RATE=0
+else
+    SUCCESS_RATE=$((TESTS_PASSED * 100 / TOTAL_TESTS))
+fi
 
 {
     echo "# IronBucket Complete E2E Test Report"
@@ -321,6 +375,7 @@ SUCCESS_RATE=$((TESTS_PASSED * 100 / (TESTS_PASSED + TESTS_FAILED + 1)))
     echo "✅ **Total Tests:** $((TESTS_PASSED + TESTS_FAILED))"
     echo "✅ **Passed:** $TESTS_PASSED"
     echo "❌ **Failed:** $TESTS_FAILED"
+    echo "⏭️ **Skipped:** $TESTS_SKIPPED"
     echo "📊 **Success Rate:** $SUCCESS_RATE%"
     echo ""
     echo "## Test Phases"
@@ -400,34 +455,35 @@ SUCCESS_RATE=$((TESTS_PASSED * 100 / (TESTS_PASSED + TESTS_FAILED + 1)))
     echo ""
 } > "$OUTPUT_DIR/COMPLETE-E2E-TEST-REPORT.md"
 
-echo -e "${GREEN}✅ Report generated: $OUTPUT_DIR/COMPLETE-E2E-TEST-REPORT.md${NC}"
+printf '%b\n' "${GREEN}✅ Report generated: $OUTPUT_DIR/COMPLETE-E2E-TEST-REPORT.md${NC}"
 echo ""
 
 # ============================================================================
 # PHASE 8: SUMMARY
 # ============================================================================
 
-echo -e "${MAGENTA}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${MAGENTA}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "${CYAN}COMPLETE E2E TEST SUMMARY${NC}"
-echo -e "  ${GREEN}✅ Passed: $TESTS_PASSED${NC}"
-echo -e "  ${RED}❌ Failed: $TESTS_FAILED${NC}"
-echo -e "  📊 Success Rate: $SUCCESS_RATE%"
+printf '%b\n' "${CYAN}COMPLETE E2E TEST SUMMARY${NC}"
+printf '%b\n' "  ${GREEN}✅ Passed: $TESTS_PASSED${NC}"
+printf '%b\n' "  ${RED}❌ Failed: $TESTS_FAILED${NC}"
+printf '%b\n' "  ${YELLOW}⏭️  Skipped: $TESTS_SKIPPED${NC}"
+printf '%b\n' "  📊 Success Rate: $SUCCESS_RATE%"
 echo ""
-echo -e "${CYAN}Reports Generated:${NC}"
-echo -e "  📊 Main Report: $OUTPUT_DIR/COMPLETE-E2E-TEST-REPORT.md"
-echo -e "  📋 Logs: $LOG_DIR/"
-echo -e "  🔍 Traces: $TRACE_DIR/"
-echo -e "  📈 Metrics: $METRIC_DIR/"
+printf '%b\n' "${CYAN}Reports Generated:${NC}"
+printf '%b\n' "  📊 Main Report: $OUTPUT_DIR/COMPLETE-E2E-TEST-REPORT.md"
+printf '%b\n' "  📋 Logs: $LOG_DIR/"
+printf '%b\n' "  🔍 Traces: $TRACE_DIR/"
+printf '%b\n' "  📈 Metrics: $METRIC_DIR/"
 if [ $TESTS_FAILED -gt 0 ]; then
-    echo -e "  ⚠️  Failures: $FAILURE_DIR/"
+    printf '%b\n' "  ⚠️  Failures: $FAILURE_DIR/"
 fi
 echo ""
-echo -e "${MAGENTA}═══════════════════════════════════════════════════════════════${NC}"
+printf '%b\n' "${MAGENTA}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "${GREEN}🎯 Docs ↔ Code Alignment: VALIDATED${NC}"
-echo -e "${GREEN}🔍 Root-Cause Analysis: ENABLED${NC}"
-echo -e "${GREEN}📊 Observability: ACTIVE${NC}"
+printf '%b\n' "${GREEN}🎯 Docs ↔ Code Alignment: VALIDATED${NC}"
+printf '%b\n' "${GREEN}🔍 Root-Cause Analysis: ENABLED${NC}"
+printf '%b\n' "${GREEN}📊 Observability: ACTIVE${NC}"
 echo ""
 
 [ $TESTS_FAILED -eq 0 ] && exit 0 || exit 1

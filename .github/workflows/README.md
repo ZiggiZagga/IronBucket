@@ -27,6 +27,23 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 
 ---
 
+### 1b. `e2e-complete-suite.yml`
+**Purpose:** Blocking end-to-end proof gate for Phase 1-3 coverage
+
+**Triggers:**
+- Push to `main` or `develop`
+- Pull requests to `main` or `develop`
+
+**What it does:**
+- Starts/validates the steel-hammer stack
+- Executes real Alice/Bob E2E against Keycloak + Sentinel-Gear + MinIO
+- Enforces unauthenticated deny behavior (401/403)
+- Publishes proof report and evidence artifacts
+
+**Expected outcome:** Required check `e2e-complete-suite` passes ✅
+
+---
+
 ### 2. `security-scan.yml`
 **Purpose:** Security scanning and code quality
 

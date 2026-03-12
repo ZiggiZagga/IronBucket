@@ -345,10 +345,10 @@ docker-compose logs -f sentinel-gear
 cd /workspaces/IronBucket
 
 # Run Alice & Bob scenario
-bash e2e-alice-bob-test.sh
+bash scripts/e2e/e2e-alice-bob-test.sh
 
 # Run standalone E2E tests
-bash e2e-test-standalone.sh
+bash scripts/e2e/e2e-test-standalone.sh
 ```
 
 ---
@@ -357,10 +357,13 @@ bash e2e-test-standalone.sh
 
 ```
 IronBucket/
-├── spinup.sh                          ← Main entry point (RUN THIS FIRST)
-├── run-containerized-tests.sh         ← Docker test runner
-├── e2e-alice-bob-test.sh             ← Alice & Bob scenario test
-├── e2e-test-standalone.sh            ← Standalone E2E tests
+├── scripts/
+│   ├── spinup.sh                      ← Main entry point (RUN THIS FIRST)
+│   ├── run-all-tests-complete.sh      ← Full orchestrator
+│   └── e2e/
+│      ├── run-containerized-tests.sh  ← Docker E2E test runner
+│      ├── e2e-alice-bob-test.sh       ← Alice & Bob scenario test
+│      └── e2e-test-standalone.sh      ← Standalone E2E tests
 │
 ├── services/                          ← Core service Maven projects
 │   ├── Brazz-Nossel/                 ← S3 Proxy Gateway

@@ -3,6 +3,7 @@ package com.ironbucket.sentinelgear.integration;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -27,6 +28,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("Issue #49: Policy Engine Fallback & Retry")
 class SentinelGearPolicyFallbackTest {
+
+    private String evaluatePolicyDecision(java.util.function.Supplier<String> policyEngineCall) {
+        try {
+            return policyEngineCall.get();
+        } catch (RuntimeException ex) {
+            return "DENY";
+        }
+    }
 
     /**
      * TEST 1: Policy engine timeout should retry 3 times
@@ -72,11 +81,9 @@ class SentinelGearPolicyFallbackTest {
     @Test
     @DisplayName("✗ test_policyEngineDown_fallbackDeny")
     void test_policyEngineDown_fallbackDeny() {
-        // GIVEN: Policy engine is unavailable
-        String policyEngineStatus = "DOWN";
-
-        // WHEN: We need to make a decision
-        String decision = "DENY";  // Fail-closed default
+        String decision = evaluatePolicyDecision(() -> {
+            throw new RuntimeException("policy-engine unavailable");
+        });
 
         // THEN: Decision should be DENY
         assertEquals("DENY", decision, "Should default to DENY when policy engine is down (fail-closed)");
@@ -95,25 +102,21 @@ class SentinelGearPolicyFallbackTest {
     @Test
     @DisplayName("✗ test_retryBackoff_exponential")
     void test_retryBackoff_exponential() {
-        // GIVEN: Exponential backoff configuration
+        IntervalFunction intervalFunction = IntervalFunction.ofExponentialBackoff(100L, 2.0d);
+
         RetryConfig config = RetryConfig.custom()
                 .maxAttempts(4)
-                .waitDuration(Duration.ofMillis(100))
+            .intervalFunction(intervalFunction)
                 .build();
 
-        // Verify that the wait duration is as expected
-        assertNotNull(config);
+        long backoff1 = config.getIntervalFunction().apply(1);
+        long backoff2 = config.getIntervalFunction().apply(2);
+        long backoff3 = config.getIntervalFunction().apply(3);
 
-        // WHEN: We configure retry with exponential backoff
-        long backoff1 = 100;   // 100ms
-        long backoff2 = 200;   // 100ms * 2
-        long backoff3 = 400;   // 200ms * 2
-
-        // THEN: Backoff values should match exponential sequence
         assertEquals(100, backoff1);
         assertEquals(200, backoff2);
         assertEquals(400, backoff3);
-        assertEquals(backoff2 * 2, backoff3);  // Each is double the previous
+        assertEquals(backoff2 * 2, backoff3);
     }
 
     /**

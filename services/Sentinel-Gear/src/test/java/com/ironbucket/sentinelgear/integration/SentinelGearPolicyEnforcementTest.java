@@ -26,6 +26,15 @@ class SentinelGearPolicyEnforcementTest {
     @Autowired
     private PolicyFixtures policyFixtures;
 
+    private int mapDecisionToHttpStatus(String decision) {
+        return "ALLOW".equalsIgnoreCase(decision) ? 200 : 403;
+    }
+
+    private boolean shouldProxyRequest(Map<String, Object> policyResponse) {
+        Object decision = policyResponse.get("decision");
+        return decision instanceof String && "ALLOW".equalsIgnoreCase((String) decision);
+    }
+
     /**
      * TEST 1: Send policy request with valid claims to policy-engine
      *
@@ -36,29 +45,21 @@ class SentinelGearPolicyEnforcementTest {
     @Test
     @DisplayName("✗ test_sendPolicyRequest_withValidClaims")
     void test_sendPolicyRequest_withValidClaims() {
-        // GIVEN: A policy request with valid claims
         Map<String, Object> policyRequest = policyFixtures.generatePolicyRequest_Allow();
         String requestBody = policyFixtures.toJsonString(policyRequest);
+        Map<String, Object> parsedRequest = policyFixtures.parseResponse(requestBody);
 
-        // WHEN: Request is validated for required fields
-        // THEN: All fields should be present
-        assertNotNull(policyRequest.get("principal"));
-        assertEquals("alice@acme-corp", policyRequest.get("principal"));
+        assertNotNull(parsedRequest.get("principal"));
+        assertEquals("alice@acme-corp", parsedRequest.get("principal"));
+        assertEquals("s3:PutObject", parsedRequest.get("action"));
+        assertEquals("acme-corp:my-bucket/documents/*", parsedRequest.get("resource"));
 
-        assertNotNull(policyRequest.get("action"));
-        assertEquals("s3:PutObject", policyRequest.get("action"));
-
-        assertNotNull(policyRequest.get("resource"));
-        assertEquals("acme-corp:my-bucket/documents/*", policyRequest.get("resource"));
-
-        // AND: Context should include tenant, groups, region
-        Map<String, Object> context = (Map<String, Object>) policyRequest.get("context");
+        Map<String, Object> context = (Map<String, Object>) parsedRequest.get("context");
         assertNotNull(context);
         assertEquals("acme-corp", context.get("tenantId"));
         assertTrue(((java.util.List<?>) context.get("groups")).contains("acme-corp:admins"));
         assertEquals("us-east-1", context.get("region"));
 
-        // AND: Request should be serializable to JSON
         assertNotNull(requestBody);
         assertTrue(requestBody.contains("principal"));
         assertTrue(requestBody.contains("acme-corp:admins"));
@@ -74,19 +75,16 @@ class SentinelGearPolicyEnforcementTest {
     @Test
     @DisplayName("✗ test_policyDeny_returns403")
     void test_policyDeny_returns403() {
-        // GIVEN: A deny policy response
         Map<String, Object> denyResponse = policyFixtures.generatePolicyResponse_Deny();
+        String denyResponseJson = policyFixtures.toJsonString(denyResponse);
+        Map<String, Object> parsedDenyResponse = policyFixtures.parseResponse(denyResponseJson);
 
-        // THEN: Response should have DENY decision
-        assertEquals("DENY", denyResponse.get("decision"));
-        assertNotNull(denyResponse.get("reason"));
-        assertTrue(denyResponse.get("reason").toString().contains("restricted"));
+        assertEquals("DENY", parsedDenyResponse.get("decision"));
+        assertNotNull(parsedDenyResponse.get("reason"));
+        assertTrue(parsedDenyResponse.get("reason").toString().contains("restricted"));
 
-        // AND: When this is interpreted as HTTP response, it should be 403
-        // (This would be enforced by policy filter in real implementation)
-        String decision = (String) denyResponse.get("decision");
-        int expectedStatus = "ALLOW".equals(decision) ? 200 : 403;
-        assertEquals(403, expectedStatus, "DENY decision should map to 403 status");
+        String decision = (String) parsedDenyResponse.get("decision");
+        assertEquals(403, mapDecisionToHttpStatus(decision), "DENY decision should map to 403 status");
     }
 
     /**
@@ -99,19 +97,14 @@ class SentinelGearPolicyEnforcementTest {
     @Test
     @DisplayName("✗ test_policyAllow_proxiesRequest")
     void test_policyAllow_proxiesRequest() {
-        // GIVEN: An allow policy response
         Map<String, Object> allowResponse = policyFixtures.generatePolicyResponse_Allow();
+        Map<String, Object> denyResponse = policyFixtures.generatePolicyResponse_Deny();
 
-        // THEN: Response should have ALLOW decision
         assertEquals("ALLOW", allowResponse.get("decision"));
-
-        // AND: Reason should be provided
         assertNotNull(allowResponse.get("reason"));
         assertTrue(allowResponse.get("reason").toString().contains("admin"));
-
-        // AND: When ALLOW is received, request proceeds to proxy layer
-        String decision = (String) allowResponse.get("decision");
-        assertTrue("ALLOW".equals(decision), "Policy decision should be ALLOW");
+        assertTrue(shouldProxyRequest(allowResponse), "ALLOW decision should permit proxying");
+        assertFalse(shouldProxyRequest(denyResponse), "DENY decision should block proxying");
     }
 
     /**
@@ -124,26 +117,23 @@ class SentinelGearPolicyEnforcementTest {
     @Test
     @DisplayName("✗ test_policyEvaluation_logsDecision")
     void test_policyEvaluation_logsDecision() {
-        // GIVEN: A policy request and response
         Map<String, Object> request = policyFixtures.generatePolicyRequest_Allow();
         Map<String, Object> response = policyFixtures.generatePolicyResponse_Allow();
 
-        // WHEN: They are logged together
-        // Create a combined audit entry
         Map<String, Object> auditEntry = new java.util.HashMap<>();
         auditEntry.put("policyRequest", request);
         auditEntry.put("policyResponse", response);
         auditEntry.put("timestamp", System.currentTimeMillis());
 
-        // THEN: Audit entry should contain decision
         assertNotNull(auditEntry.get("timestamp"));
 
-        Map<String, Object> auditResponse = (Map<String, Object>) auditEntry.get("policyResponse");
-        assertEquals("ALLOW", auditResponse.get("decision"));
-
-        // AND: Audit entry should be JSON serializable
         String auditJson = policyFixtures.toJsonString(auditEntry);
-        assertNotNull(auditJson);
+        Map<String, Object> parsedAudit = policyFixtures.parseResponse(auditJson);
+
+        Map<String, Object> auditResponse = (Map<String, Object>) parsedAudit.get("policyResponse");
+        assertEquals("ALLOW", auditResponse.get("decision"));
+        assertNotNull(parsedAudit.get("timestamp"));
+
         assertTrue(auditJson.contains("ALLOW"));
         assertTrue(auditJson.contains("admin group"));
     }
@@ -158,37 +148,24 @@ class SentinelGearPolicyEnforcementTest {
     @Test
     @DisplayName("✗ test_policyRequest_includesContext")
     void test_policyRequest_includesContext() {
-        // GIVEN: A policy request
         Map<String, Object> request = policyFixtures.generatePolicyRequest_Allow();
+        String requestJson = policyFixtures.toJsonString(request);
+        Map<String, Object> parsedRequest = policyFixtures.parseResponse(requestJson);
 
-        // THEN: Principal should be present
-        assertNotNull(request.get("principal"));
-        assertEquals("alice@acme-corp", request.get("principal"));
+        assertNotNull(parsedRequest.get("principal"));
+        assertEquals("alice@acme-corp", parsedRequest.get("principal"));
+        assertNotNull(parsedRequest.get("action"));
+        assertEquals("s3:PutObject", parsedRequest.get("action"));
+        assertNotNull(parsedRequest.get("resource"));
 
-        // AND: Action should be present
-        assertNotNull(request.get("action"));
-        assertEquals("s3:PutObject", request.get("action"));
-
-        // AND: Resource should be present
-        assertNotNull(request.get("resource"));
-
-        // AND: Context should be present with all fields
-        Map<String, Object> context = (Map<String, Object>) request.get("context");
+        Map<String, Object> context = (Map<String, Object>) parsedRequest.get("context");
         assertNotNull(context);
-
-        // Context must have tenantId
         assertNotNull(context.get("tenantId"));
         assertEquals("acme-corp", context.get("tenantId"));
-
-        // Context must have groups
         assertNotNull(context.get("groups"));
         assertTrue(context.get("groups") instanceof java.util.List);
-
-        // Context must have region
         assertNotNull(context.get("region"));
         assertEquals("us-east-1", context.get("region"));
-
-        // Context should have timestamp
         assertNotNull(context.get("timestamp"));
     }
 

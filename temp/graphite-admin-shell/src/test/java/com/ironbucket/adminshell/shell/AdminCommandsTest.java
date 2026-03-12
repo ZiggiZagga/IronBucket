@@ -15,18 +15,17 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class AdminCommandsTest {
 
@@ -41,13 +40,13 @@ class AdminCommandsTest {
 
     @BeforeEach
     void setup() {
-        reconcileService = mock(ReconcileService.class);
-        backfillService = mock(BackfillService.class);
-        orphanPartService = mock(OrphanPartService.class);
-        inspectService = mock(InspectService.class);
-        auditService = mock(AuditService.class);
-        scriptRunnerService = mock(ScriptRunnerService.class);
-        catalogProvider = spy(new CatalogProvider());
+        reconcileService = new FakeReconcileService();
+        backfillService = new FakeBackfillService();
+        orphanPartService = new FakeOrphanPartService();
+        inspectService = new FakeInspectService();
+        auditService = new FakeAuditService();
+        scriptRunnerService = new FakeScriptRunnerService();
+        catalogProvider = new CatalogProvider();
         OpenTelemetry telemetry = OpenTelemetrySdk.builder().build();
         commands = new AdminCommands(reconcileService, backfillService, orphanPartService, inspectService,
             auditService, scriptRunnerService, telemetry, true, catalogProvider);
@@ -62,30 +61,36 @@ class AdminCommandsTest {
     void reconcileRequiresForce() {
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("admin", "pass", "ROLE_ADMIN"));
         assertThrows(AccessDeniedException.class, () -> commands.reconcileBucket("demo", false));
-        verifyNoInteractions(reconcileService, auditService);
+        FakeReconcileService fakeReconcile = (FakeReconcileService) reconcileService;
+        FakeAuditService fakeAudit = (FakeAuditService) auditService;
+        assertEquals(0, fakeReconcile.invocationCount);
+        assertTrue(fakeAudit.records.isEmpty());
     }
 
     @Test
     void reconcileRunsWhenForced() {
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("admin", "pass", "ROLE_ADMIN"));
-        when(reconcileService.run("demo", true)).thenReturn(new ReconcileResult("demo", true, List.of()));
-
         String result = commands.reconcileBucket("demo", true);
 
         assertTrue(result.contains("Reconcile result for bucket demo"));
-        verify(reconcileService).run("demo", true);
-        verify(auditService).record(eq("reconcile-bucket"), contains("demo"));
+        FakeReconcileService fakeReconcile = (FakeReconcileService) reconcileService;
+        FakeAuditService fakeAudit = (FakeAuditService) auditService;
+        assertEquals(1, fakeReconcile.invocationCount);
+        assertEquals("demo", fakeReconcile.lastBucket);
+        assertTrue(fakeReconcile.lastForce);
+        assertTrue(fakeAudit.contains("reconcile-bucket", "demo"));
     }
 
     @Test
     void listOrphanPartsRequiresOperatorRole() {
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("operator", "pass", "ROLE_OPERATOR"));
-        when(orphanPartService.listOrphanParts("bkt")).thenReturn(List.of("part-1", "part-2"));
-
         String response = commands.listOrphanParts("bkt");
 
         assertTrue(response.contains("part-1"));
-        verify(auditService).record(eq("list-orphan-parts"), contains("bkt"));
+        FakeOrphanPartService fakeOrphanService = (FakeOrphanPartService) orphanPartService;
+        FakeAuditService fakeAudit = (FakeAuditService) auditService;
+        assertEquals("bkt", fakeOrphanService.lastListBucket);
+        assertTrue(fakeAudit.contains("list-orphan-parts", "bkt"));
     }
 
     @Test
@@ -103,38 +108,43 @@ class AdminCommandsTest {
     @Test
     void runScriptAuditsAndReturnsSummary() {
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("admin", "pass", "ROLE_ADMIN"));
-        when(scriptRunnerService.run(Path.of("/tmp/demo.sh"), true))
-            .thenReturn(new ScriptResult("/tmp/demo.sh", true, "ok"));
-
         String response = commands.runScript(Path.of("/tmp/demo.sh"), true);
 
         assertTrue(response.contains("/tmp/demo.sh"));
-        verify(auditService).record(eq("run-script"), contains("/tmp/demo.sh"));
+        FakeScriptRunnerService fakeScriptRunner = (FakeScriptRunnerService) scriptRunnerService;
+        FakeAuditService fakeAudit = (FakeAuditService) auditService;
+        assertEquals(Path.of("/tmp/demo.sh"), fakeScriptRunner.lastPath);
+        assertTrue(fakeScriptRunner.lastForce);
+        assertTrue(fakeAudit.contains("run-script", "/tmp/demo.sh"));
     }
 
     @Test
     void startBackfillUsesThrottleAndAudit() {
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("admin", "pass", "ROLE_ADMIN"));
-        when(backfillService.startBackfill("t1", "b1", true, Duration.ZERO))
-            .thenReturn(new BackfillStatus("t1", "b1", true, "scheduled"));
-
         String response = commands.startBackfill("t1", "b1", true, Duration.ZERO, true);
 
         assertTrue(response.contains("scheduled"));
-        ArgumentCaptor<String> argsCaptor = ArgumentCaptor.forClass(String.class);
-        verify(auditService).record(eq("start-backfill"), argsCaptor.capture());
-        assertTrue(argsCaptor.getValue().contains("t1"));
+        FakeBackfillService fakeBackfill = (FakeBackfillService) backfillService;
+        FakeAuditService fakeAudit = (FakeAuditService) auditService;
+        assertEquals("t1", fakeBackfill.lastTenantId);
+        assertEquals("b1", fakeBackfill.lastBucket);
+        assertTrue(fakeBackfill.lastDryRun);
+        assertEquals(Duration.ZERO, fakeBackfill.lastThrottle);
+        assertTrue(fakeAudit.contains("start-backfill", "t1"));
     }
 
     @Test
     void inspectObjectRequiresReadOnlyRole() {
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("reader", "pass", "ROLE_READONLY"));
-        when(inspectService.inspectObject("b1", "key1", null)).thenReturn("ok");
-
         String response = commands.inspectObject("b1", "key1", null);
 
-        assertEquals("ok", response);
-        verify(auditService).record(eq("inspect-object"), contains("key1"));
+        assertTrue(response.contains("bucket=b1"));
+        assertTrue(response.contains("key=key1"));
+        FakeInspectService fakeInspect = (FakeInspectService) inspectService;
+        FakeAuditService fakeAudit = (FakeAuditService) auditService;
+        assertEquals("b1", fakeInspect.lastBucket);
+        assertEquals("key1", fakeInspect.lastKey);
+        assertTrue(fakeAudit.contains("inspect-object", "key1"));
     }
 
     @Test
@@ -143,4 +153,89 @@ class AdminCommandsTest {
             auditService, scriptRunnerService, OpenTelemetrySdk.builder().build(), false, catalogProvider);
         assertFalse(lockedCommands.destructiveCommandsAvailability().isAvailable());
     }
+
+    private static final class FakeReconcileService implements ReconcileService {
+        private String lastBucket;
+        private boolean lastForce;
+        private int invocationCount;
+
+        @Override
+        public ReconcileResult run(String bucket, boolean force) {
+            this.lastBucket = bucket;
+            this.lastForce = force;
+            this.invocationCount++;
+            return new ReconcileResult(bucket, true, List.of());
+        }
+    }
+
+    private static final class FakeBackfillService implements BackfillService {
+        private String lastTenantId;
+        private String lastBucket;
+        private boolean lastDryRun;
+        private Duration lastThrottle;
+
+        @Override
+        public BackfillStatus startBackfill(String tenantId, String bucket, boolean dryRun, Duration throttle) {
+            this.lastTenantId = tenantId;
+            this.lastBucket = bucket;
+            this.lastDryRun = dryRun;
+            this.lastThrottle = throttle;
+            return new BackfillStatus(tenantId, bucket, true, "scheduled");
+        }
+    }
+
+    private static final class FakeOrphanPartService implements OrphanPartService {
+        private String lastListBucket;
+
+        @Override
+        public List<String> listOrphanParts(String bucket) {
+            this.lastListBucket = bucket;
+            return List.of("part-1", "part-2");
+        }
+
+        @Override
+        public int cleanupOrphanParts(String bucket, boolean force) {
+            return force ? 2 : 0;
+        }
+    }
+
+    private static final class FakeInspectService implements InspectService {
+        private String lastBucket;
+        private String lastKey;
+
+        @Override
+        public String inspectObject(String bucket, String key, String versionId) {
+            this.lastBucket = bucket;
+            this.lastKey = key;
+            return "bucket=%s key=%s version=%s".formatted(bucket, key, versionId);
+        }
+    }
+
+    private static final class FakeScriptRunnerService implements ScriptRunnerService {
+        private Path lastPath;
+        private boolean lastForce;
+
+        @Override
+        public ScriptResult run(Path scriptPath, boolean force) {
+            this.lastPath = scriptPath;
+            this.lastForce = force;
+            return new ScriptResult(scriptPath.toString(), true, "ok");
+        }
+    }
+
+    private static final class FakeAuditService implements AuditService {
+        private final List<AuditRecord> records = new ArrayList<>();
+
+        @Override
+        public void record(String command, String argsSummary) {
+            records.add(new AuditRecord(command, argsSummary));
+        }
+
+        private boolean contains(String command, String argsFragment) {
+            return records.stream().anyMatch(record ->
+                    Objects.equals(record.command(), command) && record.argsSummary().contains(argsFragment));
+        }
+    }
+
+    private record AuditRecord(String command, String argsSummary) {}
 }

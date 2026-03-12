@@ -5,7 +5,7 @@
 ### Option 1: Full Containerized Test (Recommended)
 ```bash
 cd /workspaces/IronBucket
-bash run-containerized-tests.sh
+bash scripts/e2e/run-containerized-tests.sh
 ```
 
 **What it does**:
@@ -26,7 +26,7 @@ export DOCKER_FILES_HOMEDIR="."
 docker-compose -f docker-compose-steel-hammer.yml up -d
 
 # Then: Run test (10 seconds)
-bash /workspaces/IronBucket/e2e-test-standalone.sh
+bash /workspaces/IronBucket/scripts/e2e/e2e-test-standalone.sh
 ```
 
 **Time**: ~10 seconds
@@ -123,7 +123,7 @@ docker-compose -f docker-compose-steel-hammer.yml up -d
 docker-compose -f docker-compose-steel-hammer.yml down
 
 # Run standalone test instead (faster)
-bash /workspaces/IronBucket/e2e-test-standalone.sh
+bash /workspaces/IronBucket/scripts/e2e/e2e-test-standalone.sh
 ```
 
 ### Port already in use?
@@ -157,8 +157,8 @@ kill -9 <PID>
 
 | File | Purpose | Size |
 |------|---------|------|
-| [run-containerized-tests.sh](/workspaces/IronBucket/run-containerized-tests.sh) | Quick-start script | 6.7KB |
-| [e2e-test-standalone.sh](/workspaces/IronBucket/e2e-test-standalone.sh) | Direct test execution | 16KB |
+| [run-containerized-tests.sh](/workspaces/IronBucket/scripts/e2e/run-containerized-tests.sh) | Quick-start script | 6.7KB |
+| [e2e-test-standalone.sh](/workspaces/IronBucket/scripts/e2e/e2e-test-standalone.sh) | Direct test execution | 16KB |
 | [e2e-alice-bob-container.sh](/workspaces/IronBucket/steel-hammer/tests/e2e-alice-bob-container.sh) | Core test logic | 16KB |
 | [DockerfileTestRunner](/workspaces/IronBucket/steel-hammer/DockerfileTestRunner) | Test container image | 20 lines |
 | [docker-compose-steel-hammer.yml](/workspaces/IronBucket/steel-hammer/docker-compose-steel-hammer.yml) | Service orchestration | Updated |
@@ -297,4 +297,4 @@ docker rmi steel-hammer-test steel-hammer-keycloak steel-hammer-postgres
 
 ---
 
-**Ready to test?** → `bash run-containerized-tests.sh` ✅
+**Ready to test?** → `bash scripts/e2e/run-containerized-tests.sh` ✅

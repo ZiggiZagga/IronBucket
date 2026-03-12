@@ -1,7 +1,7 @@
 # IronBucket Documentation
 
-**Last Updated:** January 19, 2026  
-**Status:** Core platform 100% operational | Phase 3 (GraphQL + S3 completeness) in progress
+**Last Updated:** March 12, 2026  
+**Status:** Core platform 100% operational | Phase 3 roadmap contracts 100% complete (current Sentinel roadmap suite)
 
 ---
 
@@ -10,7 +10,7 @@
 - **New Users:** Start with [GETTING_STARTED.md](GETTING_STARTED.md)
 - **Current Status:** See [../test-results/reports/LATEST-REPORT-EXPLAINED.md](../test-results/reports/LATEST-REPORT-EXPLAINED.md)
 - **Roadmap:** See [../ROADMAP.md](../ROADMAP.md)
-- **Run Tests:** `bash run-all-tests-complete.sh` from project root
+- **Run Tests:** `bash scripts/run-all-tests-complete.sh` from project root
 
 ---
 
@@ -111,7 +111,7 @@ IronBucket follows the **Marathon Mindset**: Complete feature implementation, no
 1. Write TDD tests that define complete requirements (see `Sentinel-Gear/src/test/java/com/ironbucket/roadmap/`)
 2. Tests intentionally fail until feature is fully implemented
 3. No partial features shipped to production
-4. 28 roadmap tests currently define Phase 3 requirements
+4. Phase 3 roadmap requirements are enforced by `scripts/ci/run-sentinel-roadmap-gate.sh`
 
 **Example:** S3 API completeness test requires 80% coverage before passing - we won't ship 50% and call it done.
 
@@ -122,7 +122,7 @@ IronBucket follows the **Marathon Mindset**: Complete feature implementation, no
 1. Review [ARCHITECTURE.md](ARCHITECTURE.md)
 2. Check Phase 3 requirements: `Sentinel-Gear/src/test/java/com/ironbucket/roadmap/`
 3. Set up dev environment: `cd steel-hammer && docker-compose -f docker-compose-lgtm.yml up`
-4. Run tests: `bash run-all-tests-complete.sh`
+4. Run tests: `bash scripts/run-all-tests-complete.sh`
 5. Submit PR with tests
 
 ---

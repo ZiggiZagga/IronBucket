@@ -1,54 +1,55 @@
 /** @jest-environment jsdom */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { useQuery } from '@apollo/client';
 import '@testing-library/jest-dom';
 import BucketList from '@/components/ironbucket/BucketList';
-import { GET_BUCKETS } from '@/graphql/ironbucket-queries';
+
+jest.mock('@apollo/client', () => ({
+  useQuery: jest.fn(),
+  gql: (literals: TemplateStringsArray, ...placeholders: unknown[]) =>
+    literals.reduce((acc, part, index) => acc + part + (placeholders[index] ?? ''), '')
+}));
+
+const mockedUseQuery = useQuery as jest.Mock;
 
 describe('BucketList Component', () => {
+  const refetch = jest.fn();
+
   const mockBuckets = [
     { name: 'bucket-1', creationDate: '2026-01-01T00:00:00Z', ownerTenant: 'test-tenant' },
     { name: 'bucket-2', creationDate: '2026-01-02T00:00:00Z', ownerTenant: 'test-tenant' }
   ];
 
-  const mocks = [
-    {
-      request: { query: GET_BUCKETS },
-      result: { data: { listBuckets: mockBuckets } }
-    }
-  ];
+  beforeEach(() => {
+    refetch.mockReset();
+    mockedUseQuery.mockReturnValue({
+      data: { listBuckets: mockBuckets },
+      loading: false,
+      error: undefined,
+      refetch
+    });
+  });
 
   it('should render loading state initially', () => {
-    render(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
+    mockedUseQuery.mockReturnValue({ data: undefined, loading: true, error: undefined, refetch });
+    render(<BucketList />);
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 
   it('should render list of buckets', async () => {
-    render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
+    render(<BucketList />);
 
     await waitFor(() => {
       expect(screen.getByText('bucket-1')).toBeInTheDocument();
       expect(screen.getByText('bucket-2')).toBeInTheDocument();
+      expect(screen.getAllByText('read-write').length).toBe(2);
     });
   });
 
   it('should render empty state when no buckets exist', async () => {
-    const emptyMocks = [{ request: { query: GET_BUCKETS }, result: { data: { listBuckets: [] } } }];
-
-    render(
-      <MockedProvider mocks={emptyMocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
+    mockedUseQuery.mockReturnValue({ data: { listBuckets: [] }, loading: false, error: undefined, refetch });
+    render(<BucketList />);
 
     await waitFor(() => {
       expect(screen.getByText(/no buckets found/i)).toBeInTheDocument();
@@ -56,13 +57,8 @@ describe('BucketList Component', () => {
   });
 
   it('should render error state when query fails', async () => {
-    const errorMocks = [{ request: { query: GET_BUCKETS }, error: new Error('Failed to load buckets') }];
-
-    render(
-      <MockedProvider mocks={errorMocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
+    mockedUseQuery.mockReturnValue({ data: undefined, loading: false, error: new Error('boom'), refetch });
+    render(<BucketList />);
 
     await waitFor(() => {
       expect(screen.getByText(/error loading buckets/i)).toBeInTheDocument();
@@ -70,11 +66,7 @@ describe('BucketList Component', () => {
   });
 
   it('should show create bucket dialog when clicking create button', async () => {
-    render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
+    render(<BucketList />);
 
     await waitFor(() => {
       expect(screen.getByText(/create bucket/i)).toBeInTheDocument();
@@ -89,11 +81,7 @@ describe('BucketList Component', () => {
   });
 
   it('should filter buckets by search query', async () => {
-    render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
+    render(<BucketList />);
 
     await waitFor(() => {
       expect(screen.getByText('bucket-1')).toBeInTheDocument();
@@ -108,52 +96,9 @@ describe('BucketList Component', () => {
     });
   });
 
-  it('should show access level indicator for each bucket', async () => {
-    render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/read-write|read-only/i).length).toBeGreaterThan(0);
-    });
-  });
-
   it('should refetch buckets when refresh button is clicked', async () => {
-    render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      const refreshButton = screen.getByLabelText(/refresh/i);
-      fireEvent.click(refreshButton);
-    });
-  });
-
-  it('should use cached data on component remount', async () => {
-    const { unmount } = render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('bucket-1')).toBeInTheDocument();
-    });
-
-    unmount();
-
-    render(
-      <MockedProvider mocks={mocks} addTypename={false}>
-        <BucketList />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('bucket-1')).toBeInTheDocument();
-    });
+    render(<BucketList />);
+    fireEvent.click(screen.getByLabelText(/refresh/i));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

@@ -422,7 +422,7 @@ npm run test:coverage
 
 # E2E tests
 cd steel-hammer
-./e2e-test-standalone.sh
+bash ../scripts/e2e/e2e-test-standalone.sh
 ```
 
 ### Test File Organization
