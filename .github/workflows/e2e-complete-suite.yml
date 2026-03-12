@@ -23,6 +23,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
       - name: Verify Docker availability
         run: |
           docker --version
