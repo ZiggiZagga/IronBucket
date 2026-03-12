@@ -108,3 +108,10 @@ spring:
   docker:
     compose:
       enabled: false
+
+ironbucket:
+  security:
+    presigned:
+      enabled: ${IRONBUCKET_SECURITY_PRESIGNED_ENABLED:true}
+      secret: ${IRONBUCKET_SECURITY_PRESIGNED_SECRET:}
+      nonce-ttl: ${IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL:PT5M}

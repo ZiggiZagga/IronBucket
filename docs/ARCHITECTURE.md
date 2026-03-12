@@ -258,6 +258,16 @@ PostgreSQL (Metadata DB)
 - **Claims Used:**
   - `sub` - User identifier
   - `roles` - User's roles
+
+### Presigned Request Hardening (Sentinel-Gear)
+
+- **Runtime Enforcement Point:** Gateway `WebFilter` chain before upstream forwarding
+- **Checks:**
+  - HMAC signature integrity
+  - Nonce replay prevention
+  - Expiry/TTL validation
+  - Signed header presence validation
+- **Operational Policy:** fail-fast startup if presigned security is enabled but no shared secret is provided
   - `tenant` - Multi-tenant identifier
   - `exp` - Token expiration
   - `iat` - Token issued at
