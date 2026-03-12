@@ -1,6 +1,71 @@
 {
   "title": "IronBucket Audit",
-  "panels": [],
+  "uid": "ironbucket-audit",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Audit Event Volume (request rate)",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"steel-hammer-sentinel-gear|steel-hammer-brazz-nossel|steel-hammer-claimspindel\"}[5m]))",
+          "legendFormat": "audited requests"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Policy Denials (403/min)",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(http_server_requests_seconds_count{job=~\"steel-hammer-sentinel-gear|steel-hammer-brazz-nossel\",status=\"403\"}[1m]))",
+          "legendFormat": "403 denied"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Write Operations/sec",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"steel-hammer-brazz-nossel\",method=~\"PUT|POST|DELETE\"}[5m]))",
+          "legendFormat": "storage writes"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Top Denied Endpoints (30m)",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum by (uri) (increase(http_server_requests_seconds_count{job=~\"steel-hammer-sentinel-gear|steel-hammer-brazz-nossel\",status=\"403\"}[30m])))",
+          "format": "table",
+          "instant": true
+        }
+      ]
+    }
+  ],
   "schemaVersion": 39,
   "version": 1
 }

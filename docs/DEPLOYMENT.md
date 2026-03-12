@@ -94,6 +94,11 @@ kubectl create secret generic ironbucket-minio \
 kubectl create secret generic ironbucket-jwt \
   -n ironbucket \
   --from-literal=secret=$(openssl rand -base64 64)
+
+# Presigned request security secret (required by Sentinel-Gear)
+kubectl create secret generic ironbucket-presigned \
+  -n ironbucket \
+  --from-literal=secret=$(openssl rand -base64 64)
 ```
 
 ### 4. Deploy PostgreSQL
@@ -214,10 +219,21 @@ JWT_SECRET=<secure-jwt-secret>
 JWT_ALGORITHM=HS256
 JWT_EXPIRATION=3600
 
+# Sentinel presigned request hardening (required for production)
+IRONBUCKET_SECURITY_PRESIGNED_ENABLED=true
+IRONBUCKET_SECURITY_PRESIGNED_SECRET=<32-byte-or-longer-shared-secret>
+IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL=PT5M
+
 # Logging
 LOG_LEVEL=INFO
 LOG_FORMAT=json
 ```
+
+### Presigned Security Operational Requirements
+
+- `IRONBUCKET_SECURITY_PRESIGNED_SECRET` must be set from a Kubernetes Secret in all production deployments.
+- `IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL` should be set to `PT5M` unless a stricter value is required by policy.
+- Secret rotation and replay/tamper incident triage steps are documented in `docs/security/PRESIGNED-REPLAY-TAMPER-RUNBOOK.md`.
 
 ### TLS/HTTPS
 

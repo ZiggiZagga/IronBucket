@@ -5,8 +5,14 @@ import java.time.Instant;
 public record S3Bucket(
     String name,
     Instant creationDate,
-    String ownerTenant
+    String ownerTenant,
+    String selectedProvider,
+    String routingReason
 ) {
+    public S3Bucket(String name, Instant creationDate, String ownerTenant) {
+        this(name, creationDate, ownerTenant, null, null);
+    }
+
     public S3Bucket {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Bucket name cannot be null or blank");

@@ -28,6 +28,17 @@ type Query {
   userActivity(tenantId: String!): [UserActivitySummary!]!
   getResourceAccessPatterns(tenantId: String!): [ResourceAccessPattern!]!
   resourceAccess(tenantId: String!): [ResourceAccessPattern!]!
+
+  listBuckets(jwtToken: String!): [S3Bucket!]!
+  getBucket(jwtToken: String!, bucketName: String!): S3Bucket
+  listObjects(jwtToken: String!, bucketName: String!, prefix: String): [S3Object!]!
+  getObject(jwtToken: String!, bucketName: String!, objectKey: String!): S3Object
+  getBucketRoutingDecision(
+    jwtToken: String!
+    tenantId: String!
+    bucketName: String!
+    requiredCapability: String!
+  ): ProviderRoutingDecision!
 }
 
 type Mutation {
@@ -116,6 +127,38 @@ type UserActivitySummary {
 type ResourceAccessPattern {
   resource: String!
   accesses: Long!
+}
+
+type S3Bucket {
+  name: String!
+  creationDate: String
+  ownerTenant: String!
+  selectedProvider: String
+  routingReason: String
+}
+
+type S3Object {
+  key: String!
+  bucketName: String!
+  size: Long!
+  lastModified: String
+  contentType: String
+  metadata: [MetadataEntry!]!
+  selectedProvider: String
+  routingReason: String
+}
+
+type MetadataEntry {
+  key: String!
+  value: String!
+}
+
+type ProviderRoutingDecision {
+  tenantId: String!
+  bucketName: String!
+  requiredCapability: String!
+  selectedProvider: String!
+  reason: String!
 }
 
 input PolicyInput {

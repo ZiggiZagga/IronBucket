@@ -203,6 +203,14 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - Publish runbook for secret rotation and nonce/replay diagnostics.
 - Add explicit smoke check in release flow for presigned-request validation path.
 
+### 2b) Stabilize Observability Runtime Gates (Now)
+- Keep `e2e-complete-suite` as the first-user canonical verification workflow, with Phase 1-4 UX proof + Phase 2 observability proof.
+- Use window-based infra scrape checks (`max_over_time(up[10m])`) for Keycloak, MinIO, and Postgres exporter to avoid startup-sample false negatives.
+- Keep MinIO/Postgres exporter scrape checks as blocking; treat Keycloak scrape as tracked warning path until scrape stability reaches sustained green baseline.
+- Keep Keycloak startup readiness budgets explicit in proof scripts (cold-start can take 2-4 minutes).
+- Prefer Loki `service_name` query fallback when container-label query returns no streams during fresh startup windows.
+- Latest gate run (`20260312T231739Z`) is green with strict MinIO/Postgres scrape thresholds and Keycloak warning-path threshold.
+
 ### 3) Kick Off Phase 4 (Next Sprint)
 - ✅ Created `jclouds-adapter-core` skeleton and capability matrix baseline document.
 - ✅ Implemented provider capability probe contract tests (S3 baseline first).

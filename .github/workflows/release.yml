@@ -12,6 +12,7 @@ on:
         type: string
 
 permissions:
+  checks: read
   contents: write
   packages: write
   id-token: write
@@ -37,6 +38,26 @@ jobs:
             echo "❌ Invalid tag format. Use semantic versioning: v1.0.0"
             exit 1
           fi
+
+      - name: Verify roadmap E2E docs/workflow sync
+        run: bash scripts/ci/verify-e2e-doc-sync.sh
+
+      - name: Resolve release commit SHA
+        id: release_sha
+        run: |
+          if [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
+            SHA="$(git rev-list -n 1 "${GITHUB_REF}")"
+          else
+            SHA="$(git rev-parse HEAD)"
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Release commit SHA: $SHA"
+
+      - name: Verify required checks are green on release commit
+        env:
+          TARGET_SHA: ${{ steps.release_sha.outputs.sha }}
+          REQUIRED_CHECK_RUNS: Build and Test All Modules,Sentinel Roadmap Gate,Sentinel Behavioral Gate,jclouds MinIO CRUD Gate,e2e-complete-suite
+        run: bash scripts/ci/verify-required-check-runs.sh
       
       - name: Check for clean working tree
         run: |
@@ -77,6 +98,17 @@ jobs:
       
       - name: Set up Java 25
         run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Sentinel Roadmap Gate (release blocking)
+        run: bash scripts/ci/run-sentinel-roadmap-gate.sh
+
+      - name: Sentinel Behavioral Gate (release blocking)
+        env:
+          BEHAVIORAL_GATE_STRICT: true
+        run: bash scripts/ci/run-sentinel-behavioral-gate.sh
+
+      - name: Sentinel Presigned Security Smoke Gate (release blocking)
+        run: bash scripts/ci/run-presigned-security-smoke.sh
       
       - name: Build Vault-Smith
         run: |

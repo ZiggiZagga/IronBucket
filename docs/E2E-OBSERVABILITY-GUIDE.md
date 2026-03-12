@@ -4,6 +4,15 @@
 
 IronBucket includes a complete **LGTM observability stack** (Loki, Grafana, Tempo, Mimir) that can be integrated with E2E tests to provide comprehensive insights, traces, metrics, and logs in test reports.
 
+## Under-The-Hood Observations (2026-03-12)
+
+- Keycloak cold-start is the dominant readiness factor in proof runs (commonly 2-4 minutes before OIDC and `/metrics` are stable).
+- OTEL Collector self-metrics are most reliable via container-local `http://localhost:8888/metrics` (not always reachable over compose DNS).
+- Loki container-specific label queries can intermittently return zero streams while broader `service_name` queries still return active streams.
+- Mimir infra scrape checks are more stable with `max_over_time(up[10m])` than point-in-time `up` queries during startup churn.
+
+These findings are now reflected in proof and E2E test scripts to reduce false negatives while preserving strict gate intent.
+
 ## Architecture
 
 ```
@@ -82,10 +91,16 @@ curl http://localhost:3200/api/traces?service=brazz-nossel
 - Request throughput
 - Resource utilization (CPU, memory)
 - Custom business metrics
+- Infrastructure metrics from Keycloak, MinIO, and Postgres exporter
 
 ```bash
 # Query metrics
 curl http://localhost:9009/api/v1/query?query=http_request_duration_seconds
+
+# Verify infra metric ingestion
+curl "http://localhost:9009/prometheus/api/v1/query?query=up{job=\"steel-hammer-keycloak\"}"
+curl "http://localhost:9009/prometheus/api/v1/query?query=up{job=\"steel-hammer-minio\"}"
+curl "http://localhost:9009/prometheus/api/v1/query?query=up{job=\"steel-hammer-postgres-exporter\"}"
 ```
 
 ### 4. **Service Health**

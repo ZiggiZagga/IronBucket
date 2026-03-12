@@ -4,9 +4,69 @@ groups:
       - alert: HighErrorRate
         expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.05
         for: 5m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: High 5xx request rate detected
+          description: HTTP 5xx rate has been above 0.05 req/s for 5 minutes.
       - alert: ServiceDown
         expr: up == 0
         for: 2m
+        labels:
+          severity: critical
+          component: platform
+        annotations:
+          summary: Service scrape target down
+          description: Prometheus target has been down for at least 2 minutes.
       - alert: SecurityBreach
         expr: increase(http_server_requests_seconds_count{status="403"}[5m]) > 25
         for: 5m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: 403 denial spike detected
+          description: Denied request count exceeded threshold in the last 5 minutes.
+
+  - name: ironbucket-infra-observability-alerts
+    rules:
+      - alert: ObservabilityInfraScrapeDown
+        expr: up{job=~"steel-hammer-keycloak|steel-hammer-minio|steel-hammer-postgres-exporter"} < 1
+        for: 3m
+        labels:
+          severity: critical
+          component: observability
+        annotations:
+          summary: Infrastructure metrics scrape down
+          description: Keycloak, MinIO, or postgres-exporter metrics target is unavailable.
+
+      - alert: KeycloakAuthErrorSpike
+        expr: sum(rate(keycloak_user_events_total{event_type=~"LOGIN_ERROR|CODE_TO_TOKEN_ERROR"}[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: identity
+        annotations:
+          summary: Keycloak authentication errors increased
+          description: Login-related errors are above expected baseline.
+
+      - alert: PostgresConnectionSaturation
+        expr: sum(pg_stat_database_numbackends{job="steel-hammer-postgres-exporter",datname!~"template0|template1"}) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: storage
+        annotations:
+          summary: PostgreSQL active connections high
+          description: Active Postgres backends exceeded 80 for 10 minutes.
+
+      - alert: MinioStorageErrorRate
+        expr: sum(rate(minio_s3_requests_errors_total{job="steel-hammer-minio"}[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: storage
+        annotations:
+          summary: MinIO S3 error rate elevated
+          description: MinIO S3 errors are above threshold for 10 minutes.

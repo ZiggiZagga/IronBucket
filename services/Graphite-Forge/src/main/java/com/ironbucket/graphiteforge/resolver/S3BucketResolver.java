@@ -1,5 +1,6 @@
 package com.ironbucket.graphiteforge.resolver;
 
+import com.ironbucket.graphiteforge.model.ProviderRoutingDecision;
 import com.ironbucket.graphiteforge.model.S3Bucket;
 import com.ironbucket.graphiteforge.service.IronBucketS3Service;
 
@@ -31,5 +32,14 @@ public class S3BucketResolver {
 
     public boolean deleteBucket(String jwtToken, String bucketName) {
         return s3Service.deleteBucket(jwtToken, bucketName);
+    }
+
+    public ProviderRoutingDecision getBucketRoutingDecision(
+        String jwtToken,
+        String tenantId,
+        String bucketName,
+        String requiredCapability
+    ) {
+        return s3Service.getBucketRoutingDecision(jwtToken, tenantId, bucketName, requiredCapability);
     }
 }

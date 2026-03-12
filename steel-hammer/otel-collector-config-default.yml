@@ -5,6 +5,37 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: steel-hammer-sentinel-gear
+          metrics_path: /actuator/prometheus
+          static_configs:
+            - targets: [steel-hammer-sentinel-gear:8081]
+        - job_name: steel-hammer-claimspindel
+          metrics_path: /actuator/prometheus
+          static_configs:
+            - targets: [steel-hammer-claimspindel:8081]
+        - job_name: steel-hammer-brazz-nossel
+          metrics_path: /actuator/prometheus
+          static_configs:
+            - targets: [steel-hammer-brazz-nossel:8082]
+        - job_name: steel-hammer-buzzle-vane
+          metrics_path: /actuator/prometheus
+          static_configs:
+            - targets: [steel-hammer-buzzle-vane:8083]
+        - job_name: steel-hammer-keycloak
+          metrics_path: /metrics
+          static_configs:
+            - targets: [steel-hammer-keycloak:7081]
+        - job_name: steel-hammer-minio
+          metrics_path: /minio/v2/metrics/cluster
+          static_configs:
+            - targets: [steel-hammer-minio:9000]
+        - job_name: steel-hammer-postgres-exporter
+          metrics_path: /metrics
+          static_configs:
+            - targets: [steel-hammer-postgres-exporter:9187]
 
 processors:
   batch:
@@ -34,7 +65,7 @@ service:
       processors: [batch]
       exporters: [logging, otlp]
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, prometheus]
       processors: [batch]
       exporters: [logging, prometheusremotewrite]
     logs:

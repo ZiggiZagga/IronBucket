@@ -26,11 +26,12 @@ This matrix defines the provider-neutral baseline used by IronBucket for initial
 - Capability registry: `ProviderCapabilityRegistry`
 - Provider profile model: `ProviderCapabilityProfile`
 - Provider selector: `ProviderSelectionService`
+- Tenant/bucket runtime router: `TenantAwareObjectStorageService` + `TenantBucketProviderRegistry`
 - BlobStoreContext adapter: `BlobStoreContextProvider` + `JcloudsBlobStoreContextProvider`
 - Provider-neutral CRUD contracts: `ObjectStorageAdapter`, `ObjectKey`, `PutObjectCommand`, `StoredObject`
 - jclouds CRUD adapter: `JcloudsObjectStorageAdapter`
 - Policy/capability enforcement: `CapabilityEnforcingObjectStorageAdapter`, `PolicyEnforcer`
-- AWS baseline probe: `AwsS3CapabilityProbe`
+- Provider probes: `AwsS3CapabilityProbe`, `GcsCapabilityProbe`, `AzureBlobCapabilityProbe`
 - Contract tests: `ProviderCapabilityRegistryTest`
 
 ## AWS Baseline Probe Tests
@@ -64,6 +65,8 @@ mvn test -B -V
 - ✅ Provider capability probe contract tests (AWS baseline).
 - ✅ Provider-neutral object CRUD contract introduced.
 - ✅ Policy + capability gate decorator added for CRUD operations.
+- ✅ Tenant-aware runtime provider routing for CRUD operations.
+- ✅ GCS and Azure provider probe unit contract tests.
 - ✅ Deterministic MinIO CRUD integration gate added via Maven profile `minio-it`.
 
 ## MinIO CRUD Integration Gate
@@ -89,6 +92,6 @@ CI executes this gate in `build-and-test.yml` as job `jclouds MinIO CRUD Gate`.
 ## Next Steps (Phase 4)
 
 1. Add non-skipped integration tests for provider-neutral CRUD against controlled S3-compatible runtime.
-2. Add capability probe integration tests per provider (GCS/Azure/local targets).
-3. Surface capability matrix and capability failures via admin/management API contracts.
+2. Add gated integration probes for GCS and Azure using provider credentials in CI secrets.
+3. Surface capability matrix and routing/capability failures via admin/management API contracts.
 4. Wire `PolicyEnforcer` to Claimspindel policy decisions (deny-overrides-allow parity).

@@ -23,6 +23,9 @@ MINIO_URL="${MINIO_URL:-http://steel-hammer-minio:9000}"
 LOKI_URL="${LOKI_URL:-http://steel-hammer-loki:3100}"
 TEMPO_URL="${TEMPO_URL:-http://steel-hammer-tempo:3200}"
 MIMIR_URL="${MIMIR_URL:-http://steel-hammer-mimir:9009}"
+KEYCLOAK_METRICS_URL="${KEYCLOAK_METRICS_URL:-$KEYCLOAK_URL/metrics}"
+MINIO_METRICS_URL="${MINIO_METRICS_URL:-$MINIO_URL/minio/v2/metrics/cluster}"
+POSTGRES_EXPORTER_URL="${POSTGRES_EXPORTER_URL:-http://steel-hammer-postgres-exporter:9187/metrics}"
 
 OUTPUT_DIR="/tmp/ironbucket-e2e-reports"
 LOG_DIR="$OUTPUT_DIR/logs"
@@ -151,6 +154,29 @@ check_optional_multi_http() {
         test_skip "Optional endpoints unavailable for $TEST_NAME"
     else
         test_fail "$TEST_NAME" "No endpoint matched expected HTTP pattern $EXPECT_PATTERN"
+    fi
+}
+
+query_mimir() {
+    local query=$1
+    curl -sG "$MIMIR_URL/prometheus/api/v1/query" --data-urlencode "query=$query" 2>/dev/null || echo ""
+}
+
+assert_mimir_job_up_optional() {
+    local TEST_NAME=$1
+    local JOB=$2
+    local response
+    response=$(query_mimir "max_over_time(up{job=\"$JOB\"}[10m])")
+
+    if [ -z "$response" ]; then
+        test_skip "Optional Mimir endpoint unavailable for $JOB"
+        return
+    fi
+
+    if echo "$response" | grep -q '"status":"success"' && echo "$response" | grep -q '"value"' && echo "$response" | grep -Eq '"value":\[[^]]+,"1(\.0+)?"\]'; then
+        test_pass "$TEST_NAME"
+    else
+        test_fail "$TEST_NAME" "No stable up=1 signal in 10m window for job=$JOB"
     fi
 }
 
@@ -292,6 +318,30 @@ else
     fi
 fi
 
+# Test 4.5: Keycloak Metrics Endpoint
+log_test "Keycloak Metrics Endpoint" "4.5"
+check_optional_http "Keycloak Metrics Endpoint" "$KEYCLOAK_METRICS_URL" '^200$'
+
+# Test 4.6: MinIO Metrics Endpoint
+log_test "MinIO Storage Metrics Endpoint" "4.6"
+check_optional_http "MinIO Storage Metrics Endpoint" "$MINIO_METRICS_URL" '^200$'
+
+# Test 4.7: Postgres Exporter Metrics Endpoint
+log_test "Postgres Exporter Metrics Endpoint" "4.7"
+check_optional_http "Postgres Exporter Metrics Endpoint" "$POSTGRES_EXPORTER_URL" '^200$'
+
+# Test 4.8: Keycloak Metrics Ingested in Mimir
+log_test "Mimir Ingestion: Keycloak Metrics" "4.8"
+assert_mimir_job_up_optional "Mimir Ingestion: Keycloak Metrics" "steel-hammer-keycloak"
+
+# Test 4.9: MinIO Metrics Ingested in Mimir
+log_test "Mimir Ingestion: MinIO Metrics" "4.9"
+assert_mimir_job_up_optional "Mimir Ingestion: MinIO Metrics" "steel-hammer-minio"
+
+# Test 4.10: Postgres Exporter Metrics Ingested in Mimir
+log_test "Mimir Ingestion: Postgres Exporter Metrics" "4.10"
+assert_mimir_job_up_optional "Mimir Ingestion: Postgres Exporter Metrics" "steel-hammer-postgres-exporter"
+
 echo ""
 
 # ============================================================================
@@ -340,6 +390,16 @@ curl -s "$TEMPO_URL/api/traces" > "$TRACE_DIR/tempo-traces.json" 2>&1 || true
 
 echo "Collecting Mimir metrics..."
 curl -s "$MIMIR_URL/api/v1/query?query=up" > "$METRIC_DIR/mimir-metrics.json" 2>&1 || true
+
+echo "Collecting Mimir job metrics for infrastructure services..."
+query_mimir 'up{job="steel-hammer-keycloak"}' > "$METRIC_DIR/mimir-keycloak-up.json" 2>&1 || true
+query_mimir 'up{job="steel-hammer-minio"}' > "$METRIC_DIR/mimir-minio-up.json" 2>&1 || true
+query_mimir 'up{job="steel-hammer-postgres-exporter"}' > "$METRIC_DIR/mimir-postgres-exporter-up.json" 2>&1 || true
+
+echo "Collecting direct infrastructure metrics endpoints..."
+curl -s "$KEYCLOAK_METRICS_URL" > "$METRIC_DIR/keycloak-metrics.txt" 2>&1 || true
+curl -s "$MINIO_METRICS_URL" > "$METRIC_DIR/minio-metrics.txt" 2>&1 || true
+curl -s "$POSTGRES_EXPORTER_URL" > "$METRIC_DIR/postgres-exporter-metrics.txt" 2>&1 || true
 
 echo "Collecting gateway metrics..."
 curl -s "$GATEWAY_URL/actuator/metrics" > "$METRIC_DIR/gateway-metrics.json" 2>&1 || true
@@ -422,6 +482,12 @@ fi
     echo "- File: metrics/mimir-metrics.json"
     echo "- Status: Active collection"
     echo "- Gateway Metrics: metrics/gateway-metrics.json"
+    echo "- Keycloak up query: metrics/mimir-keycloak-up.json"
+    echo "- MinIO up query: metrics/mimir-minio-up.json"
+    echo "- Postgres exporter up query: metrics/mimir-postgres-exporter-up.json"
+    echo "- Keycloak raw metrics: metrics/keycloak-metrics.txt"
+    echo "- MinIO raw metrics: metrics/minio-metrics.txt"
+    echo "- Postgres exporter raw metrics: metrics/postgres-exporter-metrics.txt"
     echo ""
     echo "## Root-Cause Analysis"
     echo ""

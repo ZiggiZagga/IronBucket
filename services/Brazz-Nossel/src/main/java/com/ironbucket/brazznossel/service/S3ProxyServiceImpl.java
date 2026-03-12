@@ -14,7 +14,12 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -29,12 +34,16 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     private static final Logger logger = LoggerFactory.getLogger(S3ProxyServiceImpl.class);
     
     private final S3Client s3Client;
+    private final Map<String, BackendProvider> tenantDefaultProviders;
+    private final Map<String, BackendProvider> bucketOverrides;
     
     public S3ProxyServiceImpl(
             @Value("${app.s3.endpoint:http://localhost:9000}") String endpoint,
             @Value("${app.s3.access-key:minioadmin}") String accessKey,
             @Value("${app.s3.secret-key:minioadmin}") String secretKey,
-            @Value("${app.s3.region:us-east-1}") String region) {
+            @Value("${app.s3.region:us-east-1}") String region,
+            @Value("${app.s3.routing.tenant-defaults:}") String tenantDefaults,
+            @Value("${app.s3.routing.bucket-overrides:}") String bucketOverrides) {
         
         logger.info("Initializing S3 Proxy Service with endpoint: {}", endpoint);
         
@@ -45,6 +54,129 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                 .region(Region.of(region))
                 .forcePathStyle(true) // Required for MinIO
                 .build();
+
+        this.tenantDefaultProviders = parseRoutingMap(tenantDefaults, false);
+        this.bucketOverrides = parseRoutingMap(bucketOverrides, true);
+    }
+
+    enum BackendProvider {
+        AWS_S3,
+        GCS,
+        AZURE_BLOB,
+        LOCAL_FILESYSTEM
+    }
+
+    enum RequiredCapability {
+        OBJECT_READ,
+        OBJECT_WRITE,
+        OBJECT_DELETE,
+        MULTIPART_UPLOAD,
+        VERSIONING
+    }
+
+    private Map<String, BackendProvider> parseRoutingMap(String raw, boolean expectBucketKey) {
+        Map<String, BackendProvider> parsed = new HashMap<>();
+        if (raw == null || raw.isBlank()) {
+            return parsed;
+        }
+
+        for (String entry : raw.split(",")) {
+            String token = entry.trim();
+            if (token.isBlank()) {
+                continue;
+            }
+
+            String[] parts = token.split("=", 2);
+            if (parts.length != 2) {
+                logger.warn("Ignoring malformed routing token: {}", token);
+                continue;
+            }
+
+            String key = parts[0].trim();
+            String providerRaw = parts[1].trim();
+            if (key.isBlank() || providerRaw.isBlank()) {
+                logger.warn("Ignoring malformed routing token: {}", token);
+                continue;
+            }
+
+            if (expectBucketKey && !key.contains("/")) {
+                logger.warn("Bucket override must use tenant/bucket key, ignoring token: {}", token);
+                continue;
+            }
+
+            if (!expectBucketKey && key.contains("/")) {
+                logger.warn("Tenant default must use tenant key only, ignoring token: {}", token);
+                continue;
+            }
+
+            try {
+                parsed.put(key, parseProvider(providerRaw));
+            } catch (IllegalArgumentException illegalArgumentException) {
+                logger.warn("Ignoring unknown provider '{}' in routing token: {}", providerRaw, token);
+            }
+        }
+
+        return parsed;
+    }
+
+    private BackendProvider parseProvider(String rawProvider) {
+        return BackendProvider.valueOf(rawProvider.trim().toUpperCase(Locale.ROOT).replace('-', '_'));
+    }
+
+    private boolean supports(BackendProvider provider, RequiredCapability capability) {
+        return switch (provider) {
+            case AWS_S3 -> true;
+            case GCS -> true;
+            case AZURE_BLOB -> capability != RequiredCapability.VERSIONING;
+            case LOCAL_FILESYSTEM -> EnumSet.of(
+                RequiredCapability.OBJECT_READ,
+                RequiredCapability.OBJECT_WRITE,
+                RequiredCapability.OBJECT_DELETE
+            ).contains(capability);
+        };
+    }
+
+    BackendProvider resolveProviderForRequest(NormalizedIdentity identity, String bucket, RequiredCapability capability) {
+        List<BackendProvider> candidates = new ArrayList<>();
+        String tenantBucketKey = identity.getTenantId() + "/" + bucket;
+
+        BackendProvider bucketOverride = bucketOverrides.get(tenantBucketKey);
+        if (bucketOverride != null) {
+            candidates.add(bucketOverride);
+        }
+
+        BackendProvider tenantDefault = tenantDefaultProviders.get(identity.getTenantId());
+        if (tenantDefault != null) {
+            candidates.add(tenantDefault);
+        }
+
+        for (BackendProvider fallback : BackendProvider.values()) {
+            if (!candidates.contains(fallback)) {
+                candidates.add(fallback);
+            }
+        }
+
+        for (BackendProvider candidate : candidates) {
+            if (supports(candidate, capability)) {
+                logger.debug(
+                    "Resolved provider '{}' for tenant='{}', bucket='{}', capability='{}'",
+                    candidate,
+                    identity.getTenantId(),
+                    bucket,
+                    capability
+                );
+                return candidate;
+            }
+        }
+
+        throw new IllegalStateException(
+            "No provider supports capability " + capability + " for tenant " + identity.getTenantId() + " and bucket " + bucket
+        );
+    }
+
+    private S3Client routedClient(NormalizedIdentity identity, String bucket, RequiredCapability capability) {
+        resolveProviderForRequest(identity, bucket, capability);
+        return s3Client;
     }
 
     private void assertTenantBucketAccess(String bucket, NormalizedIdentity identity) {
@@ -82,7 +214,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromCallable(() -> {
             assertTenantBucketAccess(bucket, identity);
             CreateBucketRequest request = CreateBucketRequest.builder().bucket(bucket).build();
-            s3Client.createBucket(request);
+            routedClient(identity, bucket, RequiredCapability.OBJECT_WRITE).createBucket(request);
             return bucket;
         });
     }
@@ -92,7 +224,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromRunnable(() -> {
             assertTenantBucketAccess(bucket, identity);
             DeleteBucketRequest request = DeleteBucketRequest.builder().bucket(bucket).build();
-            s3Client.deleteBucket(request);
+            routedClient(identity, bucket, RequiredCapability.OBJECT_DELETE).deleteBucket(request);
         });
     }
 
@@ -101,7 +233,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromCallable(() -> {
             assertTenantBucketAccess(bucket, identity);
             ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(bucket).build();
-            ListObjectsV2Response response = s3Client.listObjectsV2(request);
+            ListObjectsV2Response response = routedClient(identity, bucket, RequiredCapability.OBJECT_READ).listObjectsV2(request);
             return response.contents().stream().map(S3Object::key).collect(Collectors.joining("\n"));
         });
     }
@@ -118,7 +250,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .key(key)
                     .build();
             
-            return s3Client.getObjectAsBytes(request).asByteArray();
+            return routedClient(identity, bucket, RequiredCapability.OBJECT_READ).getObjectAsBytes(request).asByteArray();
         });
     }
 
@@ -127,7 +259,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromCallable(() -> {
             assertTenantBucketAccess(bucket, identity);
             HeadObjectRequest request = HeadObjectRequest.builder().bucket(bucket).key(key).build();
-            HeadObjectResponse response = s3Client.headObject(request);
+            HeadObjectResponse response = routedClient(identity, bucket, RequiredCapability.OBJECT_READ).headObject(request);
             return response.eTag();
         });
     }
@@ -137,7 +269,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromCallable(() -> {
             assertTenantBucketAccess(bucket, identity);
             HeadBucketRequest request = HeadBucketRequest.builder().bucket(bucket).build();
-            s3Client.headBucket(request);
+            routedClient(identity, bucket, RequiredCapability.OBJECT_READ).headBucket(request);
             return bucket;
         });
     }
@@ -156,7 +288,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .range(String.format("bytes=%d-%d", start, end))
                     .build();
             
-            return s3Client.getObjectAsBytes(request).asByteArray();
+            return routedClient(identity, bucket, RequiredCapability.OBJECT_READ).getObjectAsBytes(request).asByteArray();
         });
     }
     
@@ -177,7 +309,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     ))
                     .build();
             
-            PutObjectResponse response = s3Client.putObject(request, RequestBody.fromBytes(content));
+                PutObjectResponse response = routedClient(identity, bucket, RequiredCapability.OBJECT_WRITE)
+                    .putObject(request, RequestBody.fromBytes(content));
             return response.eTag();
         });
     }
@@ -194,7 +327,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .key(key)
                     .build();
             
-            s3Client.deleteObject(request);
+            routedClient(identity, bucket, RequiredCapability.OBJECT_DELETE).deleteObject(request);
             logger.info("Object deleted successfully: {}/{}", bucket, key);
         });
     }
@@ -208,7 +341,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .key(key)
                     .versionId(versionId)
                     .build();
-            s3Client.deleteObject(request);
+            routedClient(identity, bucket, RequiredCapability.VERSIONING).deleteObject(request);
         });
     }
 
@@ -221,7 +354,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .key(key)
                     .versionId(versionId)
                     .build();
-            return s3Client.getObjectAsBytes(request).asByteArray();
+            return routedClient(identity, bucket, RequiredCapability.VERSIONING).getObjectAsBytes(request).asByteArray();
         });
     }
 
@@ -230,7 +363,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromCallable(() -> {
             assertTenantBucketAccess(bucket, identity);
             ListObjectVersionsRequest request = ListObjectVersionsRequest.builder().bucket(bucket).build();
-            ListObjectVersionsResponse response = s3Client.listObjectVersions(request);
+                ListObjectVersionsResponse response = routedClient(identity, bucket, RequiredCapability.VERSIONING)
+                    .listObjectVersions(request);
             return response.versions().stream()
                     .map(v -> v.key() + ":" + v.versionId())
                     .collect(Collectors.joining("\n"));
@@ -254,7 +388,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     ))
                     .build();
             
-            CreateMultipartUploadResponse response = s3Client.createMultipartUpload(request);
+                CreateMultipartUploadResponse response = routedClient(identity, bucket, RequiredCapability.MULTIPART_UPLOAD)
+                    .createMultipartUpload(request);
             logger.info("Multipart upload initiated: uploadId={}", response.uploadId());
             return response.uploadId();
         });
@@ -270,7 +405,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .uploadId(uploadId)
                     .partNumber(partNumber)
                     .build();
-            UploadPartResponse response = s3Client.uploadPart(request, RequestBody.fromBytes(content));
+                UploadPartResponse response = routedClient(identity, bucket, RequiredCapability.MULTIPART_UPLOAD)
+                    .uploadPart(request, RequestBody.fromBytes(content));
             return response.eTag();
         });
     }
@@ -286,7 +422,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .uploadId(uploadId)
                     .multipartUpload(completed)
                     .build();
-            CompleteMultipartUploadResponse response = s3Client.completeMultipartUpload(request);
+                CompleteMultipartUploadResponse response = routedClient(identity, bucket, RequiredCapability.MULTIPART_UPLOAD)
+                    .completeMultipartUpload(request);
             return response.eTag();
         });
     }
@@ -300,7 +437,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .key(key)
                     .uploadId(uploadId)
                     .build();
-            s3Client.abortMultipartUpload(request);
+            routedClient(identity, bucket, RequiredCapability.MULTIPART_UPLOAD).abortMultipartUpload(request);
         });
     }
 
@@ -309,7 +446,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromCallable(() -> {
             assertTenantBucketAccess(bucket, identity);
             ListMultipartUploadsRequest request = ListMultipartUploadsRequest.builder().bucket(bucket).build();
-            ListMultipartUploadsResponse response = s3Client.listMultipartUploads(request);
+                ListMultipartUploadsResponse response = routedClient(identity, bucket, RequiredCapability.MULTIPART_UPLOAD)
+                    .listMultipartUploads(request);
             return response.uploads().stream()
                     .map(upload -> upload.key() + ":" + upload.uploadId())
                     .collect(Collectors.joining("\n"));
@@ -325,7 +463,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .key(key)
                     .uploadId(uploadId)
                     .build();
-            ListPartsResponse response = s3Client.listParts(request);
+                ListPartsResponse response = routedClient(identity, bucket, RequiredCapability.MULTIPART_UPLOAD)
+                    .listParts(request);
             return response.parts().stream()
                     .map(part -> part.partNumber() + ":" + part.eTag())
                     .collect(Collectors.joining("\n"));
@@ -337,7 +476,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         return Mono.fromCallable(() -> {
             assertTenantBucketAccess(bucket, identity);
             GetBucketVersioningRequest request = GetBucketVersioningRequest.builder().bucket(bucket).build();
-            GetBucketVersioningResponse response = s3Client.getBucketVersioning(request);
+            GetBucketVersioningResponse response = routedClient(identity, bucket, RequiredCapability.VERSIONING)
+                    .getBucketVersioning(request);
             return response.statusAsString();
         });
     }
@@ -354,7 +494,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .bucket(bucket)
                     .versioningConfiguration(versioning)
                     .build();
-            s3Client.putBucketVersioning(request);
+            routedClient(identity, bucket, RequiredCapability.VERSIONING).putBucketVersioning(request);
             return targetStatus.toString();
         });
     }
