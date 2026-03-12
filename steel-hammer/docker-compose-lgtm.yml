@@ -118,6 +118,7 @@ services:
     environment:
       - "MINIO_ROOT_USER=${MINIO_ROOT_USER:-vault-managed-root-user}"
       - "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-vault-managed-root-password}"
+      - "MINIO_PROMETHEUS_AUTH_TYPE=public"
     volumes:
       - minio-storage:/minio-storage
     healthcheck:
@@ -146,12 +147,27 @@ services:
     environment:
       - "KC_BOOTSTRAP_ADMIN_USERNAME=admin"
       - "KC_BOOTSTRAP_ADMIN_PASSWORD=admin"
+      - "KC_METRICS_ENABLED=true"
+      - "KC_HEALTH_ENABLED=true"
+      - "KC_LEGACY_OBSERVABILITY_INTERFACE=true"
       - "KC_DB=postgres"
       - "KC_DB_USERNAME=keycloak_db_user"
       - "KC_DB_PASSWORD=keycloak_db_pass"
       - "KC_DB_URL=jdbc:postgresql://steel-hammer-postgres:5432/keycloak"
     depends_on:
       - steel-hammer-postgres
+
+  steel-hammer-postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: steel-hammer-postgres-exporter
+    hostname: steel-hammer-postgres-exporter
+    networks:
+      - steel-hammer-network
+    environment:
+      - "DATA_SOURCE_NAME=postgresql://postgres:postgres_admin_pw@steel-hammer-postgres:5432/postgres?sslmode=disable"
+    depends_on:
+      - steel-hammer-postgres
+    restart: always
 
   # =============================================
   # SERVICE MESH

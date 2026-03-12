@@ -151,6 +151,12 @@ Receives OTLP telemetry from microservices and exports to:
 - **Mimir**: Metrics (Prometheus remote write on port 9009)
 - **Loki**: Logs (HTTP on port 3100)
 
+Also scrapes Prometheus-compatible metrics for:
+- Spring services (`/actuator/prometheus`)
+- Keycloak (`/metrics`)
+- MinIO (`/minio/v2/metrics/cluster`)
+- Postgres via `postgres-exporter` (`/metrics`)
+
 ### Service Configurations
 
 Each microservice sends telemetry to the collector via environment variable:
@@ -193,6 +199,7 @@ The test client (`steel-hammer-test-client`) performs:
 ### Phase 5: Observability
 - Prometheus metrics endpoint
 - Metrics collection validation
+- Mimir ingestion checks for Keycloak, MinIO, and Postgres exporter jobs
 
 ### Phase 6-7: Backends
 - PostgreSQL connectivity

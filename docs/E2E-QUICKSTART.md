@@ -8,6 +8,20 @@ Run the entire IronBucket stack with E2E tests in one command:
 ./spinup.sh
 ```
 
+## Roadmap Proof Gate (Phase 1-4)
+
+Run the same deterministic roadmap E2E gate that CI enforces:
+
+```bash
+bash scripts/e2e/prove-phase1-4-complete.sh
+```
+
+Artifacts are written to:
+
+```bash
+test-results/phase1-4-proof/
+```
+
 ## What It Does
 
 1. **Prerequisites Check** (5s)

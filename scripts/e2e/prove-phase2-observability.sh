@@ -9,6 +9,9 @@ OUT_DIR="$ROOT_DIR/test-results/phase2-observability/$TIMESTAMP"
 EVIDENCE_DIR="$OUT_DIR/evidence"
 REPORT_FILE="$OUT_DIR/PHASE2_OBSERVABILITY_PROOF_REPORT.md"
 KEEP_STACK="${KEEP_STACK:-false}"
+INFRA_KEYCLOAK_UP_SUM_THRESHOLD="${INFRA_KEYCLOAK_UP_SUM_THRESHOLD:-1.0}"
+INFRA_MINIO_UP_SUM_THRESHOLD="${INFRA_MINIO_UP_SUM_THRESHOLD:-1.0}"
+INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD="${INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD:-1.0}"
 
 mkdir -p "$EVIDENCE_DIR"
 
@@ -103,7 +106,11 @@ STACK_OK=true
 wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
 wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
 wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
-wait_internal_http "Keycloak" "http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" || STACK_OK=false
+wait_internal_http "Keycloak" "http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" 90 3 || STACK_OK=false
+INFRA_ENDPOINTS_READY=true
+wait_internal_http "Keycloak metrics" "http://steel-hammer-keycloak:7081/metrics" 90 3 || INFRA_ENDPOINTS_READY=false
+wait_internal_http "MinIO metrics" "http://steel-hammer-minio:9000/minio/v2/metrics/cluster" || INFRA_ENDPOINTS_READY=false
+wait_internal_http "Postgres exporter metrics" "http://steel-hammer-postgres-exporter:9187/metrics" || INFRA_ENDPOINTS_READY=false
 wait_internal_http "Buzzle-Vane" "http://steel-hammer-buzzle-vane:8083/actuator/health" || STACK_OK=false
 wait_internal_http "Claimspindel" "http://steel-hammer-claimspindel:8081/actuator/health" || STACK_OK=false
 wait_internal_http "Brazz-Nossel" "http://steel-hammer-brazz-nossel:8082/actuator/health" || STACK_OK=false
@@ -114,6 +121,9 @@ run_internal_curl "http://steel-hammer-buzzle-vane:8083/actuator/prometheus" "$E
 run_internal_curl "http://steel-hammer-claimspindel:8081/actuator/prometheus" "$EVIDENCE_DIR/claimspindel-prometheus.txt" || true
 run_internal_curl "http://steel-hammer-brazz-nossel:8082/actuator/prometheus" "$EVIDENCE_DIR/brazz-prometheus.txt" || true
 run_container_local_curl "steel-hammer-sentinel-gear" "http://localhost:8081/actuator/prometheus" "$EVIDENCE_DIR/sentinel-prometheus.txt" || true
+run_internal_curl "http://steel-hammer-keycloak:7081/metrics" "$EVIDENCE_DIR/keycloak-metrics.txt" || true
+run_internal_curl "http://steel-hammer-minio:9000/minio/v2/metrics/cluster" "$EVIDENCE_DIR/minio-metrics.txt" || true
+run_internal_curl "http://steel-hammer-postgres-exporter:9187/metrics" "$EVIDENCE_DIR/postgres-exporter-metrics.txt" || true
 
 log "Generating synthetic OTLP trace"
 OTLP_TRACE_JSON="$EVIDENCE_DIR/synthetic-trace.json"
@@ -176,12 +186,28 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
 
 run_internal_curl "http://steel-hammer-loki:3100/loki/api/v1/labels" "$EVIDENCE_DIR/loki-labels.json" || true
 run_internal_curl "http://steel-hammer-tempo:3200/metrics" "$EVIDENCE_DIR/tempo-metrics.txt" || true
-run_internal_curl "http://steel-hammer-otel-collector:8888/metrics" "$EVIDENCE_DIR/otel-collector-metrics.txt" || true
+# Collector telemetry endpoint is frequently bound to localhost inside container.
+run_container_local_curl "steel-hammer-otel-collector" "http://localhost:8888/metrics" "$EVIDENCE_DIR/otel-collector-metrics.txt" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
   "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=up' \
   > "$EVIDENCE_DIR/mimir-query-up.json" || true
+
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
+  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  --data-urlencode 'query=max_over_time(up{job="steel-hammer-keycloak"}[10m])' \
+  > "$EVIDENCE_DIR/mimir-query-keycloak-up.json" || true
+
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
+  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  --data-urlencode 'query=max_over_time(up{job="steel-hammer-minio"}[10m])' \
+  > "$EVIDENCE_DIR/mimir-query-minio-up.json" || true
+
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
+  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  --data-urlencode 'query=max_over_time(up{job="steel-hammer-postgres-exporter"}[10m])' \
+  > "$EVIDENCE_DIR/mimir-query-postgres-exporter-up.json" || true
 
 (
   cd "$STACK_DIR"
@@ -196,6 +222,16 @@ for file in \
   "$EVIDENCE_DIR/sentinel-prometheus.txt"; do
   if [[ ! -s "$file" ]] || ! grep -q "# HELP\|# TYPE" "$file"; then
     PROM_ENDPOINTS_OK=false
+  fi
+done
+
+INFRA_ENDPOINTS_CONTENT_OK=true
+for file in \
+  "$EVIDENCE_DIR/keycloak-metrics.txt" \
+  "$EVIDENCE_DIR/minio-metrics.txt" \
+  "$EVIDENCE_DIR/postgres-exporter-metrics.txt"; do
+  if [[ ! -s "$file" ]] || ! grep -q "# HELP\|# TYPE" "$file"; then
+    INFRA_ENDPOINTS_CONTENT_OK=false
   fi
 done
 
@@ -218,6 +254,64 @@ except Exception:
     print('unknown')
 PY
 )"
+
+mimir_query_results_len() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json,sys
+try:
+    with open(sys.argv[1], 'r', encoding='utf-8') as f:
+        payload=json.load(f)
+    results=payload.get('data',{}).get('result',[])
+    print(len(results) if isinstance(results,list) else 0)
+except Exception:
+    print(0)
+PY
+}
+
+MIMIR_KEYCLOAK_RESULTS="$(mimir_query_results_len "$EVIDENCE_DIR/mimir-query-keycloak-up.json")"
+MIMIR_MINIO_RESULTS="$(mimir_query_results_len "$EVIDENCE_DIR/mimir-query-minio-up.json")"
+MIMIR_POSTGRES_EXPORTER_RESULTS="$(mimir_query_results_len "$EVIDENCE_DIR/mimir-query-postgres-exporter-up.json")"
+
+mimir_query_up_sum() {
+  local file="$1"
+  python3 - "$file" <<'PY'
+import json,sys
+total=0.0
+try:
+  with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    payload=json.load(f)
+  for item in payload.get('data',{}).get('result',[]):
+    value=item.get('value',[])
+    if isinstance(value,list) and len(value) > 1:
+      try:
+        total += float(value[1])
+      except Exception:
+        pass
+except Exception:
+  pass
+print(total)
+PY
+}
+
+MIMIR_KEYCLOAK_UP_SUM="$(mimir_query_up_sum "$EVIDENCE_DIR/mimir-query-keycloak-up.json")"
+MIMIR_MINIO_UP_SUM="$(mimir_query_up_sum "$EVIDENCE_DIR/mimir-query-minio-up.json")"
+MIMIR_POSTGRES_EXPORTER_UP_SUM="$(mimir_query_up_sum "$EVIDENCE_DIR/mimir-query-postgres-exporter-up.json")"
+
+INFRA_METRICS_IN_MIMIR_OK=false
+if [[ "$MIMIR_KEYCLOAK_RESULTS" =~ ^[0-9]+$ ]] && [[ "$MIMIR_MINIO_RESULTS" =~ ^[0-9]+$ ]] && [[ "$MIMIR_POSTGRES_EXPORTER_RESULTS" =~ ^[0-9]+$ ]] && \
+  (( MIMIR_KEYCLOAK_RESULTS > 0 )) && (( MIMIR_MINIO_RESULTS > 0 )) && (( MIMIR_POSTGRES_EXPORTER_RESULTS > 0 )) && \
+   python3 - <<PY
+import sys
+sys.exit(0 if (
+   float("${MIMIR_KEYCLOAK_UP_SUM:-0}") >= float("${INFRA_KEYCLOAK_UP_SUM_THRESHOLD}") and
+   float("${MIMIR_MINIO_UP_SUM:-0}") >= float("${INFRA_MINIO_UP_SUM_THRESHOLD}") and
+   float("${MIMIR_POSTGRES_EXPORTER_UP_SUM:-0}") >= float("${INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD}")
+) else 1)
+PY
+then
+  INFRA_METRICS_IN_MIMIR_OK=true
+fi
 
 TRACES_OK=false
 if python3 - <<PY
@@ -257,9 +351,12 @@ cat > "$REPORT_FILE" <<EOF
 | Prometheus endpoints (services) | $PROM_ENDPOINTS_OK | buzzle/claimspindel/brazz/sentinel prometheus dumps |
 | Synthetic OTLP trace accepted | $OTLP_POST_OK (HTTP $OTLP_POST_STATUS) | otlp-trace-post-status.txt |
 | Trace ingestion (Tempo or OTEL metrics) | $TRACES_OK | tempo-metrics.txt + otel-collector-metrics.txt |
-| Loki log query returns service streams | $LOGS_OK (results=$LOKI_RESULTS_COUNT) | loki-query-brazz.json |
+| Loki log query returns service streams | $LOGS_OK (container_results=$LOKI_RESULTS_COUNT, service_results=$LOKI_SERVICE_RESULTS_COUNT) | loki-query-brazz.json + loki-query-services.json |
 | Mimir query status | $MIMIR_STATUS | mimir-query-up.json |
 | Metrics pipeline overall | $METRICS_PIPELINE_OK | service prometheus + Mimir query |
+| Infra metrics endpoints reachable | $INFRA_ENDPOINTS_READY | keycloak/minio/postgres exporter endpoint probes |
+| Infra metrics endpoint content | $INFRA_ENDPOINTS_CONTENT_OK | keycloak/minio/postgres exporter metric dumps |
+| Infra metrics in Mimir (Keycloak/MinIO/Postgres exporter) | $INFRA_METRICS_IN_MIMIR_OK | mimir-query-*-up.json |
 
 ## Key Counters
 
@@ -267,12 +364,24 @@ cat > "$REPORT_FILE" <<EOF
 - otelcol_receiver_accepted_spans (sum): $OTEL_ACCEPTED_SPANS
 - loki query result streams: $LOKI_RESULTS_COUNT
 - loki query service streams: $LOKI_SERVICE_RESULTS_COUNT
+- mimir keycloak up results: $MIMIR_KEYCLOAK_RESULTS
+- mimir minio up results: $MIMIR_MINIO_RESULTS
+- mimir postgres exporter up results: $MIMIR_POSTGRES_EXPORTER_RESULTS
+- mimir keycloak up sum: $MIMIR_KEYCLOAK_UP_SUM
+- mimir minio up sum: $MIMIR_MINIO_UP_SUM
+- mimir postgres exporter up sum: $MIMIR_POSTGRES_EXPORTER_UP_SUM
+
+## Thresholds
+
+- keycloak up sum threshold: $INFRA_KEYCLOAK_UP_SUM_THRESHOLD
+- minio up sum threshold: $INFRA_MINIO_UP_SUM_THRESHOLD
+- postgres exporter up sum threshold: $INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD
 
 ## Conclusion
 
 EOF
 
-if [[ "$STACK_OK" == "true" && "$PROM_ENDPOINTS_OK" == "true" && "$OTLP_POST_OK" == "true" && "$TRACES_OK" == "true" && "$LOGS_OK" == "true" ]]; then
+if [[ "$STACK_OK" == "true" && "$PROM_ENDPOINTS_OK" == "true" && "$OTLP_POST_OK" == "true" && "$TRACES_OK" == "true" && "$LOGS_OK" == "true" && "$INFRA_METRICS_IN_MIMIR_OK" == "true" ]]; then
   echo "✅ Phase 2 observability is operational and proven with executable evidence." >> "$REPORT_FILE"
   OVERALL_OK=true
 else

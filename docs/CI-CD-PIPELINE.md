@@ -15,6 +15,8 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 **Actions:**
 - ✅ Builds all Maven modules (Pactum-Scroll, Sentinel-Gear, Claimspindel, Brazz-Nossel, Buzzle-Vane)
 - ✅ Runs full test suite (231 tests)
+- ✅ Verifies roadmap E2E docs/workflow sync via `scripts/ci/verify-e2e-doc-sync.sh`
+- ✅ Uses deterministic roadmap E2E proof command: `scripts/e2e/prove-phase1-4-complete.sh`
 - ✅ Enforces Sentinel roadmap gate via `mvn test -Proadmap` (blocking CI check)
 - ✅ Runs separate Sentinel behavioral integration gate via `mvn test -Pintegration`
   - strict blocking mode on all configured refs
@@ -25,9 +27,41 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 **Expected Results:**
 - All modules compile successfully
 - All 231 tests pass
+- E2E workflow (`e2e-complete-suite`) and docs reference the same active proof gate command
 - Sentinel roadmap profile runs with minimum executed-test threshold and zero failures
 - Sentinel behavioral integration profile is reported independently from roadmap scaffold checks
 - JAR artifacts generated and uploaded
+
+---
+
+### 1b. E2E Complete Suite (`e2e-complete-suite.yml`)
+
+This is the canonical first-user experience verification workflow and now triggers all required E2E-adjacent checks:
+
+- First-user experience gate via `scripts/ci/run-first-user-experience-gate.sh` (Phase 1-4 proof)
+- Observability infrastructure gate via `scripts/ci/run-observability-infra-gate.sh`
+- Observability asset validation via `scripts/ci/validate-observability-assets.sh` (dashboards + alert rules)
+
+Use this workflow as the primary end-to-end release confidence gate.
+
+---
+
+### 1b. End-to-End Complete Suite (`e2e-complete-suite.yml`)
+
+**Triggers:**
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop`
+
+**Actions:**
+- ✅ Runs Phase 1-4 roadmap E2E proof gate
+- ✅ Runs Phase 2 observability infrastructure gate (`scripts/ci/run-observability-infra-gate.sh`)
+- ✅ Enforces Mimir ingestion thresholds for `steel-hammer-keycloak`, `steel-hammer-minio`, and `steel-hammer-postgres-exporter`
+- ✅ Uploads phase proof artifacts for debugging and trend analysis
+
+**Expected Results:**
+- First-user E2E flow remains green
+- Infrastructure metrics targets are scrapeable and queryable
+- Infra `up` sums in Mimir remain above configured thresholds
 
 ---
 
@@ -137,6 +171,8 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 - ✅ Validates semantic version format
 - ✅ Checks for clean working tree
 - ✅ Verifies repository state
+- ✅ Verifies roadmap E2E docs/workflow sync (`scripts/ci/verify-e2e-doc-sync.sh`)
+- ✅ Blocks release if required checks are not green on the release commit (`scripts/ci/verify-required-check-runs.sh`)
 
 #### Phase 2: Testing
 - ✅ Runs complete test suite (231 tests)
@@ -238,6 +274,7 @@ chmod +x slsa-verifier
 - Sentinel Roadmap Gate ✅
 - Sentinel Behavioral Gate ✅ (strict on all configured refs)
 - e2e-complete-suite ✅ (strict on all configured refs)
+- Phase 2 observability infra gate ✅ (within e2e-complete-suite)
 - Build and Test ✅
 - Security Scanning ✅
 - Docker Build ✅
@@ -251,6 +288,7 @@ The following checks are required for merge into `main`:
 - `Sentinel Roadmap Gate`
 - `Sentinel Behavioral Gate`
 - `e2e-complete-suite`
+- `Build and Test All Modules`
 
 No policy exceptions are allowed for release-tag eligible changes.
 
@@ -363,9 +401,11 @@ Workflows use **least-privilege permissions**:
 ```yaml
 main:
   required_status_checks:
-    - Build and Test
+    - Build and Test All Modules
+    - jclouds MinIO CRUD Gate
     - Sentinel Roadmap Gate
     - Sentinel Behavioral Gate
+    - e2e-complete-suite
     - Security Scanning
     - Docker Build
   require_pull_request: true

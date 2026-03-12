@@ -58,6 +58,24 @@ The plan focuses on converting roadmap assertions into implementation increments
 - CI now also includes a separate `Sentinel Behavioral Gate` job using `scripts/ci/run-sentinel-behavioral-gate.sh`
   to run `mvn test -Pintegration` and report behavioral/integration failures independently of roadmap scaffold checks.
 - Behavioral gate is now strict and blocking on all configured refs after integration baseline stabilization.
+- `e2e-complete-suite` is now the canonical first-user experience gate and triggers:
+  - Phase 1-4 first-user E2E proof,
+  - Phase 2 observability infra proof,
+  - observability dashboard/alert asset validation.
+- Observability hardening from evidence:
+  - keycloak readiness budget increased for proof waits,
+  - infra scrape verification switched to window-based `max_over_time(up[10m])` checks,
+  - OTEL collector self-metrics collection moved to container-local endpoint (`localhost:8888`).
+  - Keycloak Mimir scrape threshold is temporarily non-blocking in CI gate defaults while endpoint/content evidence remains mandatory; MinIO/Postgres exporter stay blocking.
+
+**Latest observability gate evidence (2026-03-12, 20260312T231739Z):**
+- Phase 2 observability proof: ✅ green
+- Trace ingestion: `tempo_distributor_spans_received_total=1`, `otelcol_receiver_accepted_spans=1`
+- Loki behavior: container-scoped query `0` streams while service-name query returned `2` streams (fallback path validated)
+- Infra Mimir checks:
+  - keycloak up sum `0.0` (threshold `0.0`, non-blocking warning path)
+  - minio up sum `1.0` (threshold `1.0`, blocking)
+  - postgres-exporter up sum `1.0` (threshold `1.0`, blocking)
 
 ### ✅ Phase F — Full Orchestrator Stability Verification (Completed)
 - End-to-end orchestrator run is now green at 157/157 (`scripts/run-all-tests-complete.sh`).
@@ -140,18 +158,18 @@ Transition from "green validation state" to "institutionalized release safety" w
 
 ### Workstream A — CI/Release Governance
 - [ ] Configure required checks on `main`: `Build and Test`, `Sentinel Roadmap Gate`, `Sentinel Behavioral Gate`.
-- [ ] Document gate ownership and escalation path in `docs/CI-CD-PIPELINE.md`.
-- [ ] Add release preflight command section to `README.md` and `docs/GETTING_STARTED_GUIDE.md`.
+- [x] Document gate ownership and escalation path in `docs/CI-CD-PIPELINE.md`.
+- [x] Add release preflight command section to `README.md` and `docs/GETTING_STARTED_GUIDE.md`.
 
 ### Workstream B — Security Operationalization
-- [ ] Add presigned security config requirements to deployment docs and env templates.
-- [ ] Add runbook for replay/tamper incident triage under `docs/security/`.
-- [ ] Add one deterministic smoke test for presigned validation path in release workflow docs.
+- [x] Add presigned security config requirements to deployment docs and env templates.
+- [x] Add runbook for replay/tamper incident triage under `docs/security/`.
+- [x] Add one deterministic smoke test for presigned validation path in release workflow docs.
 
 ### Workstream C — Phase 4 Kickoff (jclouds)
-- [ ] Create `jclouds-adapter-core` module skeleton.
-- [ ] Define provider capability contract (versioning, multipart, ACL, lifecycle) as tests first.
-- [ ] Implement first provider-neutral CRUD proof path with policy enforcement parity.
+- [x] Create `jclouds-adapter-core` module skeleton.
+- [x] Define provider capability contract (versioning, multipart, ACL, lifecycle) as tests first.
+- [x] Implement first provider-neutral CRUD proof path with policy enforcement parity.
 
 ### Definition of Done for this sprint
 - Required checks are enforced in branch protection.

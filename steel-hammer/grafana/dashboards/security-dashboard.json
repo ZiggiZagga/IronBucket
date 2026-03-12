@@ -1,6 +1,89 @@
 {
   "title": "IronBucket Security",
-  "panels": [],
+  "uid": "ironbucket-security",
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Forbidden Requests (403/sec)",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"steel-hammer-sentinel-gear|steel-hammer-brazz-nossel\",status=\"403\"}[5m]))",
+          "legendFormat": "403 rate"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Unauthorized Requests (401/sec)",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"steel-hammer-sentinel-gear|steel-hammer-brazz-nossel\",status=\"401\"}[5m]))",
+          "legendFormat": "401 rate"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Keycloak Login Errors/sec",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(keycloak_user_events_total{job=\"steel-hammer-keycloak\",event_type=~\"LOGIN_ERROR|CODE_TO_TOKEN_ERROR\"}[5m]))",
+          "legendFormat": "keycloak login error"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Keycloak Server Errors/sec",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"steel-hammer-keycloak\",status=~\"5..\"}[5m]))",
+          "legendFormat": "keycloak 5xx"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Infra Metrics Scrape Status",
+      "datasource": { "type": "prometheus", "uid": "mimir" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(up{job=~\"steel-hammer-keycloak|steel-hammer-minio|steel-hammer-postgres-exporter\"})",
+          "legendFormat": "up targets"
+        }
+      ]
+    }
+  ],
   "schemaVersion": 39,
   "version": 1
 }

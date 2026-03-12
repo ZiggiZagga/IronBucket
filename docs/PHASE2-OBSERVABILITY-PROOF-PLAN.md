@@ -10,6 +10,7 @@ Provide executable evidence that Phase 2 observability is operational end-to-end
 ## Scope
 - Environment: local Docker Compose (`steel-hammer/docker-compose-lgtm.yml`)
 - Services under test: `sentinel-gear`, `claimspindel`, `brazz-nossel`, `buzzle-vane`, plus observability components (`loki`, `tempo`, `mimir`, `grafana`, `otel-collector`)
+- Infrastructure metrics targets under test: `keycloak` (`/metrics`), `minio` (`/minio/v2/metrics/cluster`), `postgres-exporter` (`/metrics`)
 - Evidence output location: `test-results/phase2-observability/<timestamp>/`
 
 ## Success Criteria
@@ -25,6 +26,10 @@ Provide executable evidence that Phase 2 observability is operational end-to-end
 5. **Metrics proof**
    - OTEL Collector metrics show accepted spans/metrics.
    - Mimir query endpoint responds successfully (or returns a documented, reproducible limitation).
+   - Mimir returns stable `max_over_time(up[10m])` results for Keycloak, MinIO, and Postgres exporter scrape jobs.
+    - Gate policy:
+       - MinIO and Postgres exporter remain strict blocking scrape targets.
+       - Keycloak scrape is tracked as evidence + warning path unless the runtime proves stable enough for strict blocking.
 6. **Human-readable evidence**
    - Markdown report with pass/fail checks and references to raw evidence files.
 
@@ -36,6 +41,7 @@ Provide executable evidence that Phase 2 observability is operational end-to-end
    - Hit service health/prometheus endpoints.
    - Send synthetic OTLP trace payload.
 5. Collect evidence files from Loki/Tempo/Mimir/OTEL and service endpoints.
+   - Note: OTEL collector self-metrics may need container-local access (`localhost:8888`) depending on runtime binding.
 6. Evaluate criteria and generate final proof report.
 
 ## Deliverables

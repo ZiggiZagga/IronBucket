@@ -32,6 +32,8 @@ data:
   TRACING_SAMPLE_RATE: "0.1"
   APP_VERSION: "1.0.0"
   SERVER_SSL_ENABLED: "true"
+  IRONBUCKET_SECURITY_PRESIGNED_ENABLED: "true"
+  IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL: "PT5M"
 
 ---
 # Secret: Sensitive Configuration
@@ -50,6 +52,7 @@ stringData:
   s3-secret-key: "change-me-in-production"
   s3-endpoint: "https://s3.amazonaws.com"
   ssl-keystore-password: "change-me-in-production"
+  ironbucket-security-presigned-secret: "change-me-in-production"
 
 ---
 # PersistentVolumeClaim for Logs
@@ -220,6 +223,21 @@ spec:
           env:
             - name: EUREKA_URI
               value: "http://eureka-service.identity.svc.cluster.local:8761/eureka"
+            - name: IRONBUCKET_SECURITY_PRESIGNED_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: ironbucket-config
+                  key: IRONBUCKET_SECURITY_PRESIGNED_ENABLED
+            - name: IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL
+              valueFrom:
+                configMapKeyRef:
+                  name: ironbucket-config
+                  key: IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL
+            - name: IRONBUCKET_SECURITY_PRESIGNED_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ironbucket-secrets
+                  key: ironbucket-security-presigned-secret
             - name: OAUTH2_CLIENT_ID
               valueFrom:
                 secretKeyRef:
