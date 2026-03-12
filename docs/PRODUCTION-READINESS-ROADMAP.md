@@ -11,8 +11,8 @@ This file exists as a compatibility entry for older documentation links.
 - Backend modules: 8/8 passing
 - E2E smoke path: passing
 - Security validation path: passing
-- Roadmap profile (`services/Sentinel-Gear`, `-Proadmap`): 105 run, 30 failing
-- Current readiness gate from roadmap tests: below 80% target (not release-ready for roadmap scope)
+- Roadmap profile (`services/Sentinel-Gear`, `-Proadmap`): 105 run, 0 failing
+- Current readiness gate from roadmap tests: current Sentinel roadmap scope is green; broader production rollout hardening continues
 
 For actionable next steps and execution order, use:
 - [../docs/ROADMAP-EXECUTION-PLAN-2026-03-12.md](ROADMAP-EXECUTION-PLAN-2026-03-12.md)

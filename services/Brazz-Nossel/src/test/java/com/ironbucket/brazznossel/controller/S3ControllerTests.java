@@ -7,6 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+
 class S3ControllerTests {
 
     private WebTestClient client;
@@ -20,8 +24,33 @@ class S3ControllerTests {
             }
 
             @Override
+            public Mono<String> createBucket(String bucket, NormalizedIdentity identity) {
+                return Mono.just("ok");
+            }
+
+            @Override
+            public Mono<Void> deleteBucket(String bucket, NormalizedIdentity identity) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<String> listObjects(String bucket, NormalizedIdentity identity) {
+                return Mono.just("[]");
+            }
+
+            @Override
             public Mono<byte[]> getObject(String bucket, String key, NormalizedIdentity identity) {
                 return Mono.just(new byte[0]);
+            }
+
+            @Override
+            public Mono<String> headObject(String bucket, String key, NormalizedIdentity identity) {
+                return Mono.just("{}");
+            }
+
+            @Override
+            public Mono<String> headBucket(String bucket, NormalizedIdentity identity) {
+                return Mono.just("{}");
             }
 
             @Override
@@ -40,8 +69,58 @@ class S3ControllerTests {
             }
 
             @Override
+            public Mono<Void> deleteObjectVersion(String bucket, String key, String versionId, NormalizedIdentity identity) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<byte[]> getObjectVersion(String bucket, String key, String versionId, NormalizedIdentity identity) {
+                return Mono.just(new byte[0]);
+            }
+
+            @Override
+            public Mono<String> listObjectVersions(String bucket, NormalizedIdentity identity) {
+                return Mono.just("[]");
+            }
+
+            @Override
             public Mono<String> initiateMultipartUpload(String bucket, String key, NormalizedIdentity identity) {
                 return Mono.just("upload-id");
+            }
+
+            @Override
+            public Mono<String> uploadPart(String bucket, String key, String uploadId, int partNumber, byte[] content, NormalizedIdentity identity) {
+                return Mono.just("etag");
+            }
+
+            @Override
+            public Mono<String> completeMultipartUpload(String bucket, String key, String uploadId, List<CompletedPart> parts, NormalizedIdentity identity) {
+                return Mono.just("etag");
+            }
+
+            @Override
+            public Mono<Void> abortMultipartUpload(String bucket, String key, String uploadId, NormalizedIdentity identity) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<String> listMultipartUploads(String bucket, NormalizedIdentity identity) {
+                return Mono.just("[]");
+            }
+
+            @Override
+            public Mono<String> listParts(String bucket, String key, String uploadId, NormalizedIdentity identity) {
+                return Mono.just("[]");
+            }
+
+            @Override
+            public Mono<String> getBucketVersioning(String bucket, NormalizedIdentity identity) {
+                return Mono.just("Enabled");
+            }
+
+            @Override
+            public Mono<String> putBucketVersioning(String bucket, String status, NormalizedIdentity identity) {
+                return Mono.just("ok");
             }
         };
 
