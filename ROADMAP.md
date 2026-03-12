@@ -1,7 +1,7 @@
 # IronBucket Roadmap: Journey to Graphite Forge
 
 **Last Updated:** March 12, 2026  
-**Current Phase:** Phase 3 - GraphQL Management API, S3 Completeness & Governance Hardening  
+**Current Phase:** Phase E - Gate Hardening, Release Policy & Phase 4 Kickoff  
 **Overall Status:** 🟢 **Roadmap Gates Met for Current Sentinel Profile** | 🟡 **Production Hardening In Progress**
 
 **Verified Test Snapshot (2026-03-12):**
@@ -161,7 +161,7 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 **Why:** Enterprise security requires defense-in-depth beyond policy enforcement
 
 #### 3.4 Multi-Tenant E2E Testing
-**Status:** Infrastructure ready, realm configuration needed
+**Status:** ✅ Passing in orchestrator path (container-network mode)
 
 **Requirements:**
 - Keycloak `dev` realm with Alice/Bob users
@@ -170,7 +170,7 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - File upload with policy enforcement
 - Integration with test orchestrator
 
-**Current Blocker:** Keycloak realm `dev` not pre-configured (test uses `master`)
+**Current State:** Keycloak `dev` realm defaults are aligned with Alice/Bob E2E scenario and validated in the full orchestrator.
 
 **Success Criteria:**
 - GraphQL API 75% coverage
@@ -183,6 +183,30 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - GraphQL API completeness: 100%
 - S3 API completeness: 90%
 - Governance/security roadmap suite: passing
+
+---
+
+## Next Logical Steps (March 2026)
+
+### 1) Finalize Phase E Gate Hardening (Now)
+- Make `Build and Test`, `Sentinel Roadmap Gate`, and `Sentinel Behavioral Gate` the required branch protection checks for `main`.
+- Define and document gate failure ownership and response SLA (triage in same working day).
+- Add release checklist validation that blocks tag publication if required gates are red.
+
+### 2) Operationalize Presigned Security Controls (Now)
+- Promote presigned secret and TTL requirements into deployment manifests and environment templates.
+- Publish runbook for secret rotation and nonce/replay diagnostics.
+- Add explicit smoke check in release flow for presigned-request validation path.
+
+### 3) Kick Off Phase 4 (Next Sprint)
+- Create `jclouds-adapter-core` skeleton and capability matrix document.
+- Implement provider capability probe contract tests (S3 baseline first).
+- Define first integration milestone: provider-neutral object CRUD + policy enforcement parity.
+
+### 4) Exit Criteria to Move Phase to “Active Phase 4”
+- Required CI gates enforced on `main` with no policy exceptions.
+- Presigned security runbook adopted in deployment docs.
+- Phase 4 adapter core module and tests merged on default branch.
 
 ---
 

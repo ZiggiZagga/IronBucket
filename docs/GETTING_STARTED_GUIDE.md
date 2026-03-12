@@ -87,7 +87,7 @@ choco install docker-desktop docker-compose openjdk maven
 ```bash
 git clone https://github.com/ZiggiZagga/IronBucket.git
 cd IronBucket
-git checkout s3-ops  # Switch to the main development branch
+git checkout main  # Default branch
 ```
 
 ### Step 2: Run the Unified Spin-Up Script
@@ -146,6 +146,15 @@ docker ps
 - **Admin Username**: `admin`
 - **Admin Password**: `admin`
 - **Default Realm**: `dev`
+
+### Step 5: Run Production Preflight (Recommended Before Release)
+
+```bash
+bash scripts/ci/release-preflight.sh
+
+# Optional: include full orchestrator pathway
+RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
+```
 
 #### MinIO (S3 Storage)
 - **URL**: http://localhost:9000

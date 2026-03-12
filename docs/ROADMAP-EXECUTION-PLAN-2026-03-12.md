@@ -130,3 +130,30 @@ The plan focuses on converting roadmap assertions into implementation increments
 For each phase, open one epic plus 3-6 narrowly scoped tasks with explicit failing-test references, then close tasks only when both:
 1. relevant roadmap tests pass, and
 2. docs reflect the new state in `ROADMAP.md`.
+
+---
+
+## Next Sprint Checklist (Logical Continuation)
+
+### Sprint Goal
+Transition from "green validation state" to "institutionalized release safety" while starting Phase 4 adapter architecture.
+
+### Workstream A — CI/Release Governance
+- [ ] Configure required checks on `main`: `Build and Test`, `Sentinel Roadmap Gate`, `Sentinel Behavioral Gate`.
+- [ ] Document gate ownership and escalation path in `docs/CI-CD-PIPELINE.md`.
+- [ ] Add release preflight command section to `README.md` and `docs/GETTING_STARTED_GUIDE.md`.
+
+### Workstream B — Security Operationalization
+- [ ] Add presigned security config requirements to deployment docs and env templates.
+- [ ] Add runbook for replay/tamper incident triage under `docs/security/`.
+- [ ] Add one deterministic smoke test for presigned validation path in release workflow docs.
+
+### Workstream C — Phase 4 Kickoff (jclouds)
+- [ ] Create `jclouds-adapter-core` module skeleton.
+- [ ] Define provider capability contract (versioning, multipart, ACL, lifecycle) as tests first.
+- [ ] Implement first provider-neutral CRUD proof path with policy enforcement parity.
+
+### Definition of Done for this sprint
+- Required checks are enforced in branch protection.
+- Presigned controls are documented and operationally testable.
+- Phase 4 adapter core exists with initial contract tests merged.

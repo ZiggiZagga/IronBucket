@@ -53,7 +53,7 @@ public class GovernanceIntegrityResilienceTest {
     static void setup() {
         System.out.println("===========================================================");
         System.out.println(" IronBucket Governance/Integrity/Resilience Test Suite");
-        System.out.println(" Status: RED (acts as specification until features land)");
+        System.out.println(" Status: ACTIVE (specification and release gate)");
         System.out.println("===========================================================");
     }
 

@@ -17,3 +17,9 @@ This file exists as a compatibility entry for older documentation links.
 
 For actionable next steps and execution order, use:
 - [../docs/ROADMAP-EXECUTION-PLAN-2026-03-12.md](ROADMAP-EXECUTION-PLAN-2026-03-12.md)
+
+## Immediate next focus (post-green baseline)
+
+1. Enforce branch protection checks for roadmap and behavioral gates.
+2. Operationalize presigned security rollout (manifest + runbook + smoke checks).
+3. Start Phase 4 with `jclouds-adapter-core` and provider capability contract tests.

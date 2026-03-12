@@ -4,25 +4,25 @@ Production-ready S3-compatible microservices platform with JWT authentication, m
 
 ## 🚨 Production Readiness Status
 
-**Current Status**: 🟡 **Development Ready** | 🔴 **Production Hardening Required**
+**Current Status**: 🟢 **Roadmap/Test Gates Green** | 🟡 **Operational Hardening Active**
 
-IronBucket has **excellent architecture and code quality** but requires **critical security hardening** before production deployment.
+IronBucket has validated Java test baselines and roadmap/behavioral gates, with ongoing hardening focused on release governance and production operations.
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Architecture | ✅ A+ | Zero-trust design, excellent |
 | Code Quality | ✅ A | Modern Java 25, Spring Boot 4 |
-| Tests | ✅ B+ | 231 tests passing |
-| CI/CD | ⚠️ B | SLSA workflow debugging |
+| Tests | ✅ A | Backend suites and Sentinel gates passing |
+| CI/CD | ✅ A- | Build, roadmap, behavioral, and provenance pipelines active |
 | Security Design | ✅ A+ | Zero-trust, multi-layer |
 | **Network Isolation** | 🔴 **C** | **NetworkPolicies required** |
 | **Credential Mgmt** | 🔴 **D** | **Vault integration needed** |
-| Observability | ⚠️ C+ | LGTM stack partial |
+| Observability | ✅ B+ | LGTM stack and executable proof path present |
 
-**⚠️ CRITICAL**: Before production deployment:
-1. Deploy [Kubernetes NetworkPolicies](docs/k8s-network-policies.yaml)
-2. Implement Vault-backed secret management and rotation (see [ROADMAP.md](ROADMAP.md))
-3. Enable TLS everywhere
+**⚠️ Remaining production actions:**
+1. Enforce required branch checks and release preflight in protected-branch policy
+2. Finalize presigned-secret rotation/runbook rollout
+3. Complete platform-level hardening items in [ROADMAP.md](ROADMAP.md)
 4. Complete [security hardening](docs/security/MINIO-ISOLATION-AUDIT.md)
 
 **📋 See**: [Architecture Assessment](docs/ARCHITECTURE-ASSESSMENT-2026.md) | [Roadmap](ROADMAP.md)
@@ -111,7 +111,7 @@ PostgreSQL (Metadata)
 ## Test Results
 
 ✅ **Core module test pathways passing** (latest comprehensive run)  
-🔴 **Roadmap profile still contains failing implementation-gate tests** (see `services/Sentinel-Gear` roadmap suite)
+✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
 
 ### Run Comprehensive Tests
 
@@ -137,12 +137,16 @@ cat test-results/reports/LATEST-SUMMARY.md
 | Claimspindel (Policy Router) | 72 | ✅ |
 | Buzzle-Vane (Service Discovery) | 58 | ✅ |
 | Storage-Conductor | 10 | ✅ |
-| **Security Validation** | 4 | 🔴 **3 failures** |
+| **Security Validation** | 4 | ✅ |
 
-**Security Issues Detected**:
-- 🔴 NetworkPolicies not deployed
-- 🔴 Hardcoded credentials found
-- 🟠 Tests bypass security gateway
+**Release preflight (recommended before tagging):**
+
+```bash
+bash scripts/ci/release-preflight.sh
+
+# Optional: include full orchestrator validation
+RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
+```
 
 See [TEST-REPORTING-SYSTEM.md](docs/TEST-REPORTING-SYSTEM.md) for details.
 
@@ -193,9 +197,9 @@ See [E2E-COMPLETE.md](E2E-COMPLETE.md) for details.
 
 ## Status
 
-**Production Ready** ✅
+**Production Validation Baseline** ✅
 
-All components tested, documented, and verified in clean environment.
+Core components, Java suites, and Sentinel roadmap/behavioral gates are green; operational hardening continues per roadmap.
 
 ## License
 

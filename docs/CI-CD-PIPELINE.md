@@ -273,6 +273,9 @@ done
 ### Creating a Release
 
 ```bash
+# Run production preflight before tagging
+bash scripts/ci/release-preflight.sh
+
 # Tag the release
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
@@ -284,6 +287,22 @@ git push origin v1.0.0
 # 4. Creates GitHub Release
 # 5. Publishes Docker images
 ```
+
+### Release Preflight (Local Gate)
+
+```bash
+# Java baseline + Sentinel roadmap + Sentinel integration
+bash scripts/ci/release-preflight.sh
+
+# Include full orchestrator if required by release policy
+RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
+```
+
+Expected result:
+- Backend modules green
+- Sentinel roadmap profile green
+- Sentinel behavioral integration profile green
+- Optional full orchestrator green when enabled
 
 ### Manual Workflow Dispatch
 
@@ -318,6 +337,8 @@ Workflows use **least-privilege permissions**:
 main:
   required_status_checks:
     - Build and Test
+    - Sentinel Roadmap Gate
+    - Sentinel Behavioral Gate
     - Security Scanning
     - Docker Build
   require_pull_request: true

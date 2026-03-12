@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * This is the management/admin plane complementing IronBucket's data plane.
  * 
- * Status: RED - Graphite-Forge doesn't exist yet, these tests define requirements
+ * Status: ACTIVE - GraphQL management API completeness contract
  * Priority: Varies by phase (P0 MVP, P1 Phase 2, P2 Phase 3)
  * 
  * Marathon Mindset: Complete policy management API, not partial implementation
@@ -54,7 +54,7 @@ public class GraphQLFeaturesTest {
         System.out.println("═══════════════════════════════════════════════════════════");
         System.out.println(" Graphite-Forge GraphQL Feature Completeness Test Suite");
         System.out.println(" Testing: Complete GraphQL management API");
-        System.out.println(" Status: RED (Service expected to be missing initially)");
+        System.out.println(" Status: ACTIVE (completeness gate)");
         System.out.println("═══════════════════════════════════════════════════════════");
     }
 
