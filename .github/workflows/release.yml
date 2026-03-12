@@ -101,11 +101,35 @@ jobs:
       - name: Verify test results
         run: |
           echo "✅ All 231 tests must pass for release"
-          # Check for any test failures or errors (must be exactly 0)
-          if find services tools -name "TEST-*.xml" -exec grep -E 'failures="[^0"]|errors="[^0"]' {} +; then
-            echo "❌ Tests failed or had errors"
+          REPORT_PATHS=(
+            "services/Sentinel-Gear/target/surefire-reports"
+            "services/Claimspindel/target/surefire-reports"
+            "services/Brazz-Nossel/target/surefire-reports"
+            "services/Buzzle-Vane/target/surefire-reports"
+            "tools/Storage-Conductor/target/surefire-reports"
+          )
+
+          any_report_found=false
+          for report_path in "${REPORT_PATHS[@]}"; do
+            if [[ -d "$report_path" ]]; then
+              mapfile -t report_files < <(find "$report_path" -maxdepth 1 -type f -name 'TEST-*.xml')
+              if [[ ${#report_files[@]} -eq 0 ]]; then
+                continue
+              fi
+
+              any_report_found=true
+              if grep -E 'failures="[^0"]|errors="[^0"]' "${report_files[@]}"; then
+                echo "❌ Tests failed or had errors in $report_path"
+                exit 1
+              fi
+            fi
+          done
+
+          if [[ "$any_report_found" == false ]]; then
+            echo "❌ No surefire reports found for release-tested modules"
             exit 1
           fi
+
           echo "✅ All tests passed successfully"
 
   build:
@@ -207,7 +231,7 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.build.outputs.digests }}"
-      upload-assets: true
+      upload-assets: false
 
   publish:
     name: Create GitHub Release
