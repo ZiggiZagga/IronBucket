@@ -76,11 +76,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Java 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
+        run: bash scripts/ci/setup-java-25.sh 25
       
       - name: Build Vault-Smith
         run: |
@@ -125,11 +121,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Java 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
+        run: bash scripts/ci/setup-java-25.sh 25
       
       - name: Extract version
         id: version
@@ -318,11 +310,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Java 25
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '25'
-          cache: 'maven'
+        run: bash scripts/ci/setup-java-25.sh 25
       
       - name: Build Pactum-Scroll
         run: |
