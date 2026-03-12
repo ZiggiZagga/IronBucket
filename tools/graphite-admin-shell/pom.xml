@@ -10,7 +10,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <spring-boot.version>4.0.1</spring-boot.version>
+        <spring-boot.version>4.0.3</spring-boot.version>
         <spring-shell.version>3.2.4</spring-shell.version>
     </properties>
 

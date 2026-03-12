@@ -9,9 +9,9 @@
 set -euo pipefail
 
 # Load environment and common functions
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../.env.defaults"
-source "$SCRIPT_DIR/../lib/common.sh"
+E2E_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$E2E_SCRIPT_DIR/../.env.defaults"
+source "$E2E_SCRIPT_DIR/../lib/common.sh"
 
 # Register error trap
 register_error_trap
@@ -22,6 +22,73 @@ register_error_trap
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
 PROOF_DIR="${TEMP_DIR}/ironbucket-proof/jwt-gateway-${RUN_ID}"
 mkdir -p "$PROOF_DIR"
+
+OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-dev-client}"
+OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-dev-secret}"
+ALICE_USERNAME="${ALICE_USERNAME:-alice}"
+ALICE_PASSWORD="${ALICE_PASSWORD:-aliceP@ss}"
+BOB_USERNAME="${BOB_USERNAME:-bob}"
+BOB_PASSWORD="${BOB_PASSWORD:-bobP@ss}"
+
+decode_jwt_claims() {
+    local token="$1"
+    local payload
+    local padding
+
+    payload=$(printf '%s' "$token" | cut -d'.' -f2 | tr '_-' '/+')
+    padding=$(( ${#payload} % 4 ))
+
+    if [ "$padding" -eq 2 ]; then
+        payload="${payload}=="
+    elif [ "$padding" -eq 3 ]; then
+        payload="${payload}="
+    elif [ "$padding" -eq 1 ]; then
+        payload="${payload}==="
+    fi
+
+    printf '%s' "$payload" | base64 -d 2>/dev/null || echo "{}"
+}
+
+http_request_with_retry() {
+    local method="$1"
+    local url="$2"
+    local token="$3"
+    local output_file="$4"
+    local data_file="${5:-}"
+    local content_type="${6:-}"
+    local attempts="${7:-12}"
+    local delay="${8:-2}"
+    local http_code=""
+
+    for ((i=1; i<=attempts; i++)); do
+        if [ -n "$data_file" ]; then
+            if [ -n "$content_type" ]; then
+                http_code=$(curl -s -o "$output_file" -w "%{http_code}" \
+                    -X "$method" "$url" \
+                    -H "Authorization: Bearer ${token}" \
+                    -H "Content-Type: ${content_type}" \
+                    --data-binary @"$data_file")
+            else
+                http_code=$(curl -s -o "$output_file" -w "%{http_code}" \
+                    -X "$method" "$url" \
+                    -H "Authorization: Bearer ${token}" \
+                    --data-binary @"$data_file")
+            fi
+        else
+            http_code=$(curl -s -o "$output_file" -w "%{http_code}" \
+                -X "$method" "$url" \
+                -H "Authorization: Bearer ${token}")
+        fi
+
+        if [[ "$http_code" != "502" && "$http_code" != "503" && "$http_code" != "504" ]]; then
+            break
+        fi
+
+        sleep "$delay"
+    done
+
+    echo "$http_code"
+}
 
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║                                                                  ║${NC}"
@@ -85,10 +152,10 @@ echo "Step 2.1: Alice authenticates with Keycloak (OIDC)..."
 ALICE_RESPONSE=$(curl -s -X POST \
   "$KEYCLOAK_URL/realms/dev/protocol/openid-connect/token" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'client_id=dev-client' \
-  -d 'client_secret=dev-secret' \
-  -d 'username=alice' \
-  -d 'password=aliceP@ss' \
+    -d "client_id=${OIDC_CLIENT_ID}" \
+    -d "client_secret=${OIDC_CLIENT_SECRET}" \
+    -d "username=${ALICE_USERNAME}" \
+    -d "password=${ALICE_PASSWORD}" \
   -d 'grant_type=password' \
   -d 'scope=openid profile email roles')
 
@@ -104,7 +171,11 @@ fi
 echo -e "${GREEN}✅ Alice received JWT token${NC}"
 
 # Decode Alice's JWT claims
-ALICE_CLAIMS=$(echo "$ALICE_TOKEN" | cut -d'.' -f2 | base64 -d 2>/dev/null || echo "{}")
+ALICE_CLAIMS="$(decode_jwt_claims "$ALICE_TOKEN")"
+
+if ! echo "$ALICE_CLAIMS" | jq -e . >/dev/null 2>&1; then
+    ALICE_CLAIMS="{}"
+fi
 
 echo ""
 echo "Alice's JWT Claims:"
@@ -112,7 +183,7 @@ echo "$ALICE_CLAIMS" | jq '.' 2>/dev/null || echo "$ALICE_CLAIMS"
 echo ""
 echo "Key claims extracted:"
 ALICE_USERNAME=$(echo "$ALICE_CLAIMS" | jq -r '.preferred_username // "unknown"')
-ALICE_ROLES=$(echo "$ALICE_CLAIMS" | jq -r '.realm_access.roles[]' 2>/dev/null | tr '\n' ', ' | sed 's/,$//')
+ALICE_ROLES=$(echo "$ALICE_CLAIMS" | jq -r '.realm_access.roles[]? // empty' 2>/dev/null | tr '\n' ', ' | sed 's/,$//')
 echo "  - username: $ALICE_USERNAME"
 echo "  - roles: $ALICE_ROLES"
 
@@ -125,16 +196,36 @@ fi
 echo ""
 echo "Step 2.2: Alice creates test bucket and uploads file..."
 
+ALICE_BUCKET_CREATE_HTTP=$(http_request_with_retry \
+    "POST" \
+    "${SENTINEL_GEAR_URL}/s3/bucket/default-alice-files" \
+    "${ALICE_TOKEN}" \
+    "$PROOF_DIR/alice-bucket-create.out")
+
+if [ "$ALICE_BUCKET_CREATE_HTTP" = "200" ] || [ "$ALICE_BUCKET_CREATE_HTTP" = "201" ]; then
+    echo -e "${GREEN}✅ Alice bucket ready${NC}"
+elif grep -Eq 'BucketAlreadyOwnedByYou|BucketAlreadyExists' "$PROOF_DIR/alice-bucket-create.out"; then
+    echo -e "${YELLOW}⚠️  Alice bucket already exists, continuing${NC}"
+else
+    echo -e "${YELLOW}⚠️  Alice bucket create returned ${ALICE_BUCKET_CREATE_HTTP}, continuing to upload check${NC}"
+    echo "   response=$(cat "$PROOF_DIR/alice-bucket-create.out")"
+fi
+
 ALICE_OBJECT="jwt-alice-${RUN_ID}.txt"
 echo "alice jwt gateway upload ${RUN_ID}" > "$PROOF_DIR/alice-body.txt"
-ALICE_UPLOAD_HTTP=$(curl -s -o "$PROOF_DIR/alice-upload.out" -w "%{http_code}" \
-    -X PUT "${SENTINEL_GEAR_URL}/s3/default-alice-files/${ALICE_OBJECT}" \
-    -H "Authorization: Bearer ${ALICE_TOKEN}" \
-    --data-binary @"$PROOF_DIR/alice-body.txt")
+ALICE_UPLOAD_HTTP=$(http_request_with_retry \
+    "POST" \
+    "${SENTINEL_GEAR_URL}/s3/object/default-alice-files/${ALICE_OBJECT}" \
+    "${ALICE_TOKEN}" \
+    "$PROOF_DIR/alice-upload.out" \
+    "$PROOF_DIR/alice-body.txt" \
+    "application/octet-stream")
 
-ALICE_GET_HTTP=$(curl -s -o "$PROOF_DIR/alice-get.out" -w "%{http_code}" \
-    -X GET "${SENTINEL_GEAR_URL}/s3/default-alice-files/${ALICE_OBJECT}" \
-    -H "Authorization: Bearer ${ALICE_TOKEN}")
+ALICE_GET_HTTP=$(http_request_with_retry \
+    "GET" \
+    "${SENTINEL_GEAR_URL}/s3/object/default-alice-files/${ALICE_OBJECT}" \
+    "${ALICE_TOKEN}" \
+    "$PROOF_DIR/alice-get.out")
 
 if [ "$ALICE_UPLOAD_HTTP" != "200" ] || [ "$ALICE_GET_HTTP" != "200" ]; then
         echo -e "${RED}❌ Alice gateway upload/get failed${NC}"
@@ -161,10 +252,10 @@ echo "Step 3.1: Bob authenticates with Keycloak (OIDC)..."
 BOB_RESPONSE=$(curl -s -X POST \
   "$KEYCLOAK_URL/realms/dev/protocol/openid-connect/token" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'client_id=dev-client' \
-  -d 'client_secret=dev-secret' \
-  -d 'username=bob' \
-  -d 'password=bobP@ss' \
+    -d "client_id=${OIDC_CLIENT_ID}" \
+    -d "client_secret=${OIDC_CLIENT_SECRET}" \
+    -d "username=${BOB_USERNAME}" \
+    -d "password=${BOB_PASSWORD}" \
   -d 'grant_type=password' \
   -d 'scope=openid profile email roles')
 
@@ -179,7 +270,11 @@ fi
 echo -e "${GREEN}✅ Bob received JWT token${NC}"
 
 # Decode Bob's JWT claims
-BOB_CLAIMS=$(echo "$BOB_TOKEN" | cut -d'.' -f2 | base64 -d 2>/dev/null || echo "{}")
+BOB_CLAIMS="$(decode_jwt_claims "$BOB_TOKEN")"
+
+if ! echo "$BOB_CLAIMS" | jq -e . >/dev/null 2>&1; then
+    BOB_CLAIMS="{}"
+fi
 
 echo ""
 echo "Bob's JWT Claims:"
@@ -187,7 +282,7 @@ echo "$BOB_CLAIMS" | jq '.' 2>/dev/null || echo "$BOB_CLAIMS"
 echo ""
 echo "Key claims extracted:"
 BOB_USERNAME=$(echo "$BOB_CLAIMS" | jq -r '.preferred_username // "unknown"')
-BOB_ROLES=$(echo "$BOB_CLAIMS" | jq -r '.realm_access.roles[]' 2>/dev/null | tr '\n' ', ' | sed 's/,$//')
+BOB_ROLES=$(echo "$BOB_CLAIMS" | jq -r '.realm_access.roles[]? // empty' 2>/dev/null | tr '\n' ', ' | sed 's/,$//')
 echo "  - username: $BOB_USERNAME"
 echo "  - roles: $BOB_ROLES"
 
@@ -200,16 +295,36 @@ fi
 echo ""
 echo "Step 3.2: Bob uploads and reads his own object via Sentinel-Gear..."
 
+BOB_BUCKET_CREATE_HTTP=$(http_request_with_retry \
+    "POST" \
+    "${SENTINEL_GEAR_URL}/s3/bucket/default-bob-files" \
+    "${BOB_TOKEN}" \
+    "$PROOF_DIR/bob-bucket-create.out")
+
+if [ "$BOB_BUCKET_CREATE_HTTP" = "200" ] || [ "$BOB_BUCKET_CREATE_HTTP" = "201" ]; then
+    echo -e "${GREEN}✅ Bob bucket ready${NC}"
+elif grep -Eq 'BucketAlreadyOwnedByYou|BucketAlreadyExists' "$PROOF_DIR/bob-bucket-create.out"; then
+    echo -e "${YELLOW}⚠️  Bob bucket already exists, continuing${NC}"
+else
+    echo -e "${YELLOW}⚠️  Bob bucket create returned ${BOB_BUCKET_CREATE_HTTP}, continuing to upload check${NC}"
+    echo "   response=$(cat "$PROOF_DIR/bob-bucket-create.out")"
+fi
+
 BOB_OBJECT="jwt-bob-${RUN_ID}.txt"
 echo "bob jwt gateway upload ${RUN_ID}" > "$PROOF_DIR/bob-body.txt"
-BOB_UPLOAD_HTTP=$(curl -s -o "$PROOF_DIR/bob-upload.out" -w "%{http_code}" \
-    -X PUT "${SENTINEL_GEAR_URL}/s3/default-bob-files/${BOB_OBJECT}" \
-    -H "Authorization: Bearer ${BOB_TOKEN}" \
-    --data-binary @"$PROOF_DIR/bob-body.txt")
+BOB_UPLOAD_HTTP=$(http_request_with_retry \
+    "POST" \
+    "${SENTINEL_GEAR_URL}/s3/object/default-bob-files/${BOB_OBJECT}" \
+    "${BOB_TOKEN}" \
+    "$PROOF_DIR/bob-upload.out" \
+    "$PROOF_DIR/bob-body.txt" \
+    "application/octet-stream")
 
-BOB_GET_HTTP=$(curl -s -o "$PROOF_DIR/bob-get.out" -w "%{http_code}" \
-    -X GET "${SENTINEL_GEAR_URL}/s3/default-bob-files/${BOB_OBJECT}" \
-    -H "Authorization: Bearer ${BOB_TOKEN}")
+BOB_GET_HTTP=$(http_request_with_retry \
+    "GET" \
+    "${SENTINEL_GEAR_URL}/s3/object/default-bob-files/${BOB_OBJECT}" \
+    "${BOB_TOKEN}" \
+    "$PROOF_DIR/bob-get.out")
 
 if [ "$BOB_UPLOAD_HTTP" != "200" ] || [ "$BOB_GET_HTTP" != "200" ]; then
         echo -e "${RED}❌ Bob gateway upload/get failed${NC}"

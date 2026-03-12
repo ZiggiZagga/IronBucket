@@ -9,6 +9,7 @@ This file exists as a compatibility entry for older documentation links.
 ## Verified status snapshot (2026-03-12)
 
 - Backend modules: 8/8 passing
+- Full orchestrator: 157/157 passing (`scripts/run-all-tests-complete.sh`)
 - E2E smoke path: passing
 - Security validation path: passing
 - Roadmap profile (`services/Sentinel-Gear`, `-Proadmap`): 105 run, 0 failing
