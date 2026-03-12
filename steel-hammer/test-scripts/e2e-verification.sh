@@ -90,11 +90,27 @@ TEMP_DIR="/workspaces/IronBucket/temp"
 TOTAL_TESTS=0
 TOTAL_FAILURES=0
 PROJECTS_PASSED=0
+PROJECTS_TOTAL=0
+S3_PROXY_ENDPOINT="http://steel-hammer-brazz-nossel:8082"
+
+if nc -z steel-hammer-brazz-nossel 8082 2>/dev/null; then
+    S3_PROXY_ENDPOINT="http://steel-hammer-brazz-nossel:8082"
+elif nc -z localhost 8082 2>/dev/null; then
+    S3_PROXY_ENDPOINT="http://localhost:8082"
+fi
 
 for project in Brazz-Nossel Claimspindel Buzzle-Vane Sentinel-Gear Storage-Conductor Vault-Smith; do
-    PROJECT_DIR="$TEMP_DIR/$project"
+    PROJECTS_TOTAL=$((PROJECTS_TOTAL + 1))
+    PROJECT_DIR=""
 
-    if [ ! -d "$PROJECT_DIR" ]; then
+    for base in "/workspaces/IronBucket/services" "/workspaces/IronBucket/tools" "$TEMP_DIR"; do
+        if [ -d "$base/$project" ]; then
+            PROJECT_DIR="$base/$project"
+            break
+        fi
+    done
+
+    if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR" ]; then
         echo -e "${YELLOW}⏭️  $project: Directory not found${NC}"
         continue
     fi
@@ -112,7 +128,7 @@ for project in Brazz-Nossel Claimspindel Buzzle-Vane Sentinel-Gear Storage-Condu
             TEST_COUNT=$(tail -100 /tmp/maven-${project}-full.log | grep -o "Tests run: [0-9]*" | sed 's/Tests run: //' | tail -1 || echo "0")
         fi
         
-        if [ "$TEST_COUNT" -gt 0 ]; then
+        if [[ "$TEST_COUNT" =~ ^[0-9]+$ ]] && [ "$TEST_COUNT" -gt 0 ]; then
             echo -e "${GREEN}✅ $TEST_COUNT tests passed${NC}"
             TOTAL_TESTS=$((TOTAL_TESTS + TEST_COUNT))
             PROJECTS_PASSED=$((PROJECTS_PASSED + 1))
@@ -133,7 +149,7 @@ done
 
 echo ""
 echo -e "${GREEN}Maven Tests Summary:${NC}"
-echo "  Projects Passed: $PROJECTS_PASSED/6"
+echo "  Projects Passed: $PROJECTS_PASSED/$PROJECTS_TOTAL"
 echo "  Total Tests: $TOTAL_TESTS"
 echo ""
 
@@ -148,7 +164,7 @@ echo -e "${BLUE}  Phase 4: E2E HTTP Flow - Upload Through Brazz-Nossel Proxy${NC
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-if ! python3 - <<'PY' >/dev/null 2>&1; then
+if ! python3 - <<'PY' >/dev/null 2>&1
 import importlib.util, sys
 sys.exit(0 if importlib.util.find_spec("boto3") else 1)
 PY
@@ -171,15 +187,24 @@ echo "Step 2: Send PUT request through Brazz-Nossel S3 proxy"
 BUCKET="ironbucket-e2e-test"
 KEY="http-flow-test-$(date +%s).txt"
 
-python3 << 'EOFPYTHON'
+if ! nc -z "$(echo "$S3_PROXY_ENDPOINT" | sed 's#http://##; s#:.*##')" 8082 2>/dev/null; then
+    echo -e "  ${YELLOW}⏭️  Skipping HTTP flow: Brazz-Nossel endpoint not reachable (${S3_PROXY_ENDPOINT})${NC}"
+    echo ""
+    exit 0
+fi
+
+E2E_S3_ENDPOINT="$S3_PROXY_ENDPOINT" python3 << 'EOFPYTHON'
 import boto3
 from botocore.config import Config
 import sys
+import os
+
+endpoint = os.environ.get('E2E_S3_ENDPOINT', 'http://steel-hammer-brazz-nossel:8082')
 
 # Upload through Brazz-Nossel proxy (port 8082)
 s3_proxy = boto3.client(
     's3',
-    endpoint_url='http://steel-hammer-brazz-nossel:8082',
+    endpoint_url=endpoint,
     aws_access_key_id='test-key',
     aws_secret_access_key='test-secret',
     region_name='us-east-1',
@@ -189,7 +214,7 @@ s3_proxy = boto3.client(
 # Direct MinIO access for verification
 s3_direct = boto3.client(
     's3',
-    endpoint_url='http://steel-hammer-brazz-nossel:8082',
+    endpoint_url=endpoint,
     aws_access_key_id='test-key',
     aws_secret_access_key='test-secret',
     region_name='us-east-1',
@@ -212,7 +237,7 @@ try:
             raise
 
     print(f"\n  Uploading file through Brazz-Nossel proxy...")
-    print(f"    Endpoint: http://steel-hammer-brazz-nossel:8082")
+    print(f"    Endpoint: {endpoint}")
     print(f"    Bucket: {bucket}")
     print(f"    Key: {key}")
     
@@ -256,14 +281,17 @@ echo -e "${BLUE}  Phase 5: MinIO Storage Verification${NC}"
 echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-python3 << 'EOFPYTHON'
+E2E_S3_ENDPOINT="$S3_PROXY_ENDPOINT" python3 << 'EOFPYTHON'
 import boto3
 from botocore.config import Config
 import sys
+import os
+
+endpoint = os.environ.get('E2E_S3_ENDPOINT', 'http://steel-hammer-brazz-nossel:8082')
 
 s3 = boto3.client(
     's3',
-    endpoint_url='http://steel-hammer-brazz-nossel:8082',
+    endpoint_url=endpoint,
     aws_access_key_id='test-key',
     aws_secret_access_key='test-secret',
     region_name='us-east-1',

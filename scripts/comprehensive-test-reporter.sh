@@ -126,7 +126,10 @@ log_section() {
 }
 
 log_verbose() {
-  [[ "$VERBOSE" == "true" ]] && echo -e "${GRAY}[VERBOSE]${NC} $*"
+  if [[ "$VERBOSE" == "true" ]]; then
+    echo -e "${GRAY}[VERBOSE]${NC} $*"
+  fi
+  return 0
 }
 
 # ============================================================================
