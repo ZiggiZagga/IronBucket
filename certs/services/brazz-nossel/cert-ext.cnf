@@ -1,2 +1,0 @@
-subjectAltName = DNS:brazz-nossel,DNS:localhost,DNS:brazz-nossel.ironbucket.local,IP:127.0.0.1
-extendedKeyUsage = serverAuth,clientAuth

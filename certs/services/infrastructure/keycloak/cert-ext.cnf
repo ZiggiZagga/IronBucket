@@ -1,2 +1,0 @@
-subjectAltName = DNS:infrastructure/keycloak,DNS:localhost,DNS:keycloak.ironbucket.local,IP:127.0.0.1
-extendedKeyUsage = serverAuth,clientAuth

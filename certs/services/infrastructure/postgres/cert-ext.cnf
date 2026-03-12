@@ -1,2 +1,0 @@
-subjectAltName = DNS:infrastructure/postgres,DNS:localhost,DNS:postgres.ironbucket.local,IP:127.0.0.1
-extendedKeyUsage = serverAuth,clientAuth
