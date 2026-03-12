@@ -144,19 +144,37 @@ main() {
     print_step "Running Maven unit tests for all 6 projects..."
     echo ""
 
-    cd "$TEMP_DIR"
+    cd "$PROJECT_ROOT"
 
     local total_tests=0
     local failed_projects=0
+    local projects=()
 
-    for project in services/Brazz-Nossel services/Claimspindel services/Buzzle-Vane services/Sentinel-Gear tools/Storage-Conductor tools/Vault-Smith; do
+    if declare -F get_default_maven_modules >/dev/null; then
+        mapfile -t projects < <(get_default_maven_modules)
+    else
+        projects=(
+            services/Brazz-Nossel
+            services/Claimspindel
+            services/Buzzle-Vane
+            services/Sentinel-Gear
+            tools/Storage-Conductor
+            tools/Vault-Smith
+        )
+    fi
+
+    if [ ${#projects[@]} -eq 0 ]; then
+        print_warning "No Maven projects discovered. Skipping Maven test phase."
+    fi
+
+    for project in "${projects[@]}"; do
         if [ ! -d "$project" ]; then
             print_warning "Project not found: $project"
             continue
         fi
 
         echo -n "  Testing $project... "
-        cd "$project"
+        cd "$PROJECT_ROOT/$project"
 
         local maven_log="$LOG_DIR/maven-${project//\//-}.log"
         if mvn clean test -q 2>&1 | tee -a "$LOG_FILE" > "$maven_log"; then
@@ -173,7 +191,7 @@ main() {
             fi
         fi
 
-        cd ..
+        cd "$PROJECT_ROOT"
     done
 
     cd "$PROJECT_ROOT"

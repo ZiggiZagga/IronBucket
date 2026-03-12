@@ -455,6 +455,80 @@ run_maven_modules() {
     return 0
 }
 
+# Resolve a module path by searching one or more base directories in priority order.
+# Usage: resolve_module_path "Sentinel-Gear" "services" "temp" "tools"
+# Returns relative path (e.g., services/Sentinel-Gear) on success.
+resolve_module_path() {
+    local module_name="$1"
+    shift
+
+    local base_dir
+    for base_dir in "$@"; do
+        local candidate="$base_dir/$module_name"
+        if [[ -f "$PROJECT_ROOT/$candidate/pom.xml" ]]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+# Build the canonical Maven module list using stable priority rules.
+# Service modules prefer: services/ -> temp/ -> tools/
+# Tool modules prefer: tools/ -> temp/ -> services/
+# Returns one module path per line.
+get_default_maven_modules() {
+    local -a modules=()
+    local -a missing_modules=()
+    local -a service_modules=(
+        "Sentinel-Gear"
+        "Brazz-Nossel"
+        "Claimspindel"
+        "Buzzle-Vane"
+        "Pactum-Scroll"
+    )
+    local -a tool_modules=(
+        "Storage-Conductor"
+        "Vault-Smith"
+        "graphite-admin-shell"
+    )
+
+    local module_name
+    for module_name in "${service_modules[@]}"; do
+        local resolved_path
+        resolved_path="$(resolve_module_path "$module_name" "services" "temp" "tools" || true)"
+        if [[ -n "$resolved_path" ]]; then
+            modules+=("$resolved_path")
+        else
+            missing_modules+=("Service module not found: $module_name (searched: services/, temp/, tools/)")
+        fi
+    done
+
+    for module_name in "${tool_modules[@]}"; do
+        local resolved_path
+        resolved_path="$(resolve_module_path "$module_name" "tools" "temp" "services" || true)"
+        if [[ -n "$resolved_path" ]]; then
+            modules+=("$resolved_path")
+        else
+            missing_modules+=("Tool module not found: $module_name (searched: tools/, temp/, services/)")
+        fi
+    done
+
+    if [[ ${#missing_modules[@]} -gt 0 ]]; then
+        local missing_message
+        for missing_message in "${missing_modules[@]}"; do
+            log_warn "$missing_message" >&2
+        done
+    fi
+
+    if [[ ${#modules[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    printf '%s\n' "${modules[@]}"
+}
+
 # ============================================================================
 # TIMING UTILITIES
 # ============================================================================
@@ -518,5 +592,6 @@ export -f check_service_health wait_for_service require_docker
 export -f create_temp_file create_temp_dir
 export -f is_container get_service_url
 export -f validate_prerequisites run_maven_modules
+export -f resolve_module_path get_default_maven_modules
 export -f timer_start timer_elapsed timer_elapsed_formatted
 export -f print_summary_table

@@ -22,6 +22,7 @@ TOTAL_SKIPPED=0
 # Test tracking arrays
 declare -a TEST_RESULTS
 declare -a FAILED_TESTS
+START_TIME=$(date +%s)
 
 # ============================================================================
 # HEADER
@@ -80,13 +81,13 @@ run_test_suite() {
 log_section "PHASE 1: Maven Backend Tests"
 
 echo "Discovering Maven modules..."
-MAVEN_MODULES=(
-    services/Sentinel-Gear
-    services/Brazz-Nossel
-    services/Claimspindel
-    services/Buzzle-Vane
-    services/Pactum-Scroll
-)
+mapfile -t MAVEN_MODULES < <(get_default_maven_modules)
+
+if [[ ${#MAVEN_MODULES[@]} -gt 0 ]]; then
+    printf '  - %s\n' "${MAVEN_MODULES[@]}"
+else
+    echo "  - none discovered"
+fi
 
 run_maven_modules "${MAVEN_MODULES[@]}"
 
@@ -94,7 +95,7 @@ MAVEN_BACKEND_SUMMARY="$LOG_DIR/maven-backend-summary-${TIMESTAMP}.log"
 printf "%s\n" "${MAVEN_SUMMARY[@]}" > "$MAVEN_BACKEND_SUMMARY"
 
 if [[ ${MAVEN_FOUND_COUNT:-0} -eq 0 ]]; then
-    echo -e "${YELLOW}⚠️  No Maven modules found under services/${NC}"
+    echo -e "${YELLOW}⚠️  No Maven modules found under services/, temp/, or tools/${NC}"
     TOTAL_SKIPPED=$((TOTAL_SKIPPED + 1))
 else
     TOTAL_TESTS=$((TOTAL_TESTS + MAVEN_TOTAL_TESTS))
@@ -184,7 +185,7 @@ if [ $TOTAL_TESTS -gt 0 ]; then
 fi
 
 # Generate Markdown Report
-REPORT_FILE="$REPORT_DIR/COMPLETE-TEST-REPORT-${TIMESTAMP}.md"
+REPORT_FILE="$REPORTS_DIR/COMPLETE-TEST-REPORT-${TIMESTAMP}.md"
 
 cat > "$REPORT_FILE" << EOFMD
 # IronBucket Complete Test Report
@@ -343,8 +344,8 @@ echo -e "${GREEN}✅ Comprehensive report generated: $REPORT_FILE${NC}"
 echo ""
 
 # Generate summary symlink
-ln -sf "$(basename $REPORT_FILE)" "$REPORT_DIR/LATEST-REPORT.md"
-echo -e "${GREEN}✅ Latest report symlink: $REPORT_DIR/LATEST-REPORT.md${NC}"
+ln -sf "$(basename "$REPORT_FILE")" "$REPORTS_DIR/LATEST-REPORT.md"
+echo -e "${GREEN}✅ Latest report symlink: $REPORTS_DIR/LATEST-REPORT.md${NC}"
 echo ""
 
 # ============================================================================
@@ -363,7 +364,7 @@ echo -e "  📊 Success Rate: ${SUCCESS_RATE}%"
 echo ""
 echo -e "${CYAN}Reports:${NC}"
 echo "  📊 Main Report: $REPORT_FILE"
-echo "  📝 Latest Link: $REPORT_DIR/LATEST-REPORT.md"
+echo "  📝 Latest Link: $REPORTS_DIR/LATEST-REPORT.md"
 echo ""
 echo -e "${CYAN}Artifacts:${NC}"
 echo "  📁 Logs: $LOG_DIR/"

@@ -8,11 +8,9 @@ describe('Authentication Endpoint', () => {
     expect(res.body).toHaveProperty('message', 'Auth endpoint reachable');
   });
 
-  it('should authenticate with Keycloak and return a valid token (placeholder)', async () => {
-    // Placeholder for Keycloak integration
-    // const res = await request(app).post('/auth/keycloak').send({ username: 'bob', password: 'bobP@ss' });
-    // expect(res.statusCode).toBe(200);
-    // expect(res.body).toHaveProperty('token');
-    expect(true).toBe(false); // Fails until implemented
+  it.skip('should authenticate with Keycloak and return a valid token', async () => {
+    const res = await request(app).post('/auth/keycloak').send({ username: 'bob', password: 'bobP@ss' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('token');
   });
 });

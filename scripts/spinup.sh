@@ -141,21 +141,19 @@ main() {
 }
 
 run_maven_tests() {
-    local projects=(services/Brazz-Nossel services/Claimspindel services/Buzzle-Vane services/Sentinel-Gear tools/Storage-Conductor tools/Vault-Smith tools/graphite-admin-shell)
+    mapfile -t projects < <(get_default_maven_modules)
+
+    if [ ${#projects[@]} -eq 0 ]; then
+        print_warning "No Maven modules discovered in services/, temp/, or tools/"
+        return 0
+    fi
 
     echo "Scanning for Maven projects (expected ${#projects[@]})..."
-    echo "DEBUG: About to call run_maven_modules with these projects:"
+    echo "Discovered Maven modules:"
     for p in "${projects[@]}"; do echo "  - $p"; done
     echo ""
 
     run_maven_modules "${projects[@]}"
-    
-    echo ""
-    echo "=========================================="
-    echo "DEBUG: run_maven_modules COMPLETED"
-    echo "DEBUG: Returned from Maven testing"
-    echo "=========================================="
-    echo ""
 
     echo ""
     echo "Detected Maven projects: ${MAVEN_FOUND_COUNT:-0}/${MAVEN_EXPECTED_COUNT:-${#projects[@]}}"

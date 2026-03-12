@@ -146,7 +146,7 @@ ${BOLD}IronBucket Comprehensive Test Reporting System${NC}
 ${BOLD}Usage:${NC} bash scripts/comprehensive-test-reporter.sh [options]
 
 ${BOLD}Options:${NC}
-  --backend      Run backend Maven tests only (all modules in temp/)
+  --backend      Run backend Maven tests only (auto-discovered modules)
   --e2e          Run E2E tests only
   --roadmap      Run production readiness roadmap tests
   --all          Run all tests (default including roadmap) tests
@@ -224,8 +224,7 @@ parse_arguments() {
     RUN_BACKEND=true
     RUN_E2E=true
     RUN_SECURITY=true
-    RUN_ROADMAP
-    RUN_SECURITY=true
+    RUN_ROADMAP=true
   fi
 }
 
@@ -238,13 +237,21 @@ run_backend_tests() {
 
   local backend_log="${LOGS_DIR}/backend-${TIMESTAMP}.log"
   local modules=()
-  
-  # Find all Maven modules in temp/
-  while IFS= read -r pom; do
-    local module_dir=$(dirname "$pom")
-    local module_name=$(basename "$module_dir")
-    modules+=("$module_dir:$module_name")
-  done < <(find "$PROJECT_ROOT/temp" -name "pom.xml" -type f 2>/dev/null)
+
+  if declare -F get_default_maven_modules >/dev/null; then
+    while IFS= read -r module_rel; do
+      [[ -z "$module_rel" ]] && continue
+      modules+=("${PROJECT_ROOT}/${module_rel}:$(basename "$module_rel")")
+    done < <(get_default_maven_modules)
+  else
+    while IFS= read -r pom; do
+      local module_dir
+      module_dir=$(dirname "$pom")
+      local module_name
+      module_name=$(basename "$module_dir")
+      modules+=("$module_dir:$module_name")
+    done < <(find "$PROJECT_ROOT/services" "$PROJECT_ROOT/tools" -name "pom.xml" -type f 2>/dev/null)
+  fi
 
   local module_count=0
   local module_passed=0
@@ -345,7 +352,17 @@ run_roadmap_tests() {
   # Run the Java-based roadmap test from Sentinel-Gear
   log_info "Running Production Readiness Tests..."
   
-  local sentinel_dir="${PROJECT_ROOT}/temp/Sentinel-Gear"
+  local sentinel_dir=""
+  if declare -F resolve_module_path >/dev/null; then
+    local sentinel_rel
+    sentinel_rel="$(resolve_module_path "Sentinel-Gear" "services" "temp" "tools" || true)"
+    if [[ -n "$sentinel_rel" ]]; then
+      sentinel_dir="${PROJECT_ROOT}/${sentinel_rel}"
+    fi
+  fi
+  if [[ -z "$sentinel_dir" ]]; then
+    sentinel_dir="${PROJECT_ROOT}/services/Sentinel-Gear"
+  fi
   
   if [[ ! -f "${sentinel_dir}/pom.xml" ]]; then
     log_error "Sentinel-Gear module not found at ${sentinel_dir}"
