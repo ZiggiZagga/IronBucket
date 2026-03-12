@@ -29,6 +29,7 @@
 ### Development
 - [API.md](API.md) - REST API endpoints
 - [s3-proxy-contract.md](s3-proxy-contract.md) - S3 API compatibility layer
+- [PHASE4-JCLOUDS-CAPABILITY-MATRIX.md](PHASE4-JCLOUDS-CAPABILITY-MATRIX.md) - Initial provider capability baseline for Phase 4
 - [testing/TESTING-QUICK-START.md](testing/TESTING-QUICK-START.md) - Running tests
 
 ### Security

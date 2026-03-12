@@ -204,9 +204,9 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - Add explicit smoke check in release flow for presigned-request validation path.
 
 ### 3) Kick Off Phase 4 (Next Sprint)
-- Create `jclouds-adapter-core` skeleton and capability matrix document.
-- Implement provider capability probe contract tests (S3 baseline first).
-- Define first integration milestone: provider-neutral object CRUD + policy enforcement parity.
+- ✅ Created `jclouds-adapter-core` skeleton and capability matrix baseline document.
+- ✅ Implemented provider capability probe contract tests (S3 baseline first).
+- ✅ Implemented first integration milestone: provider-neutral object CRUD + policy enforcement parity.
 
 ### 4) Exit Criteria to Move Phase to “Active Phase 4”
 - Required CI gates enforced on `main` with no policy exceptions.

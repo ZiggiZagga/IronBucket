@@ -487,6 +487,7 @@ get_default_maven_modules() {
         "Claimspindel"
         "Buzzle-Vane"
         "Pactum-Scroll"
+        "jclouds-adapter-core"
     )
     local -a tool_modules=(
         "Storage-Conductor"

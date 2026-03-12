@@ -234,12 +234,39 @@ chmod +x slsa-verifier
 - No direct pushes to `main`
 
 **Status Checks:**
+- jclouds MinIO CRUD Gate ✅ (strict on all configured refs)
 - Sentinel Roadmap Gate ✅
 - Sentinel Behavioral Gate ✅ (strict on all configured refs)
+- e2e-complete-suite ✅ (strict on all configured refs)
 - Build and Test ✅
 - Security Scanning ✅
 - Docker Build ✅
 - SLSA Provenance ✅
+
+### Branch Protection Required Checks (main)
+
+The following checks are required for merge into `main`:
+
+- `jclouds MinIO CRUD Gate`
+- `Sentinel Roadmap Gate`
+- `Sentinel Behavioral Gate`
+- `e2e-complete-suite`
+
+No policy exceptions are allowed for release-tag eligible changes.
+
+### Gate Failure Ownership and Response SLA
+
+- **Owner (code gate):** PR author + owning service maintainer
+- **Owner (platform gate):** CI/platform maintainer on duty
+- **Triage SLA:** same working day
+- **Mitigation SLA:** restore green required checks before merge/tag
+
+Minimal runbook sequence:
+
+1. Open failed job logs and identify failing stage.
+2. Reproduce locally using the same script/profile used by CI.
+3. Apply minimal fix and re-run targeted gate locally.
+4. Push fix and confirm required checks are green.
 
 ### Artifact Retention
 

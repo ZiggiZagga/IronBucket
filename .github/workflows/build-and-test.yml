@@ -11,6 +11,77 @@ permissions:
   pull-requests: write
 
 jobs:
+  jclouds-minio-crud-gate:
+    name: jclouds MinIO CRUD Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Start MinIO for jclouds integration gate
+        run: |
+          docker run -d \
+            --name jclouds-minio-it \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data
+
+          echo "Waiting for MinIO readiness..."
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null; then
+              echo "MinIO is ready"
+              break
+            fi
+            if [[ "$i" -eq 30 ]]; then
+              echo "MinIO did not become ready in time"
+              docker logs jclouds-minio-it || true
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Run jclouds MinIO CRUD integration gate
+        env:
+          IRONBUCKET_MINIO_ENDPOINT: http://127.0.0.1:9000
+          IRONBUCKET_MINIO_ACCESS_KEY: minioadmin
+          IRONBUCKET_MINIO_SECRET_KEY: minioadmin
+          IRONBUCKET_MINIO_REGION: us-east-1
+        run: |
+          cd services/jclouds-adapter-core
+          mvn -B -V verify -Pminio-it
+
+      - name: Upload jclouds MinIO integration reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jclouds-minio-it-reports
+          path: services/jclouds-adapter-core/target/failsafe-reports/
+          retention-days: 30
+
+      - name: Print MinIO logs on failure
+        if: failure()
+        run: docker logs jclouds-minio-it || true
+
+      - name: Stop MinIO
+        if: always()
+        run: docker rm -f jclouds-minio-it || true
+
   sentinel-roadmap-gate:
     name: Sentinel Roadmap Gate
     runs-on: ubuntu-latest

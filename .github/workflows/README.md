@@ -12,6 +12,7 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 - Pull requests to `main` or `develop`
 
 **What it does:**
+- Runs dedicated jclouds MinIO CRUD integration gate (`mvn verify -Pminio-it` in `jclouds-adapter-core`)
 - Runs dedicated Sentinel roadmap gate (`mvn test -Proadmap`)
 - Runs dedicated Sentinel behavioral integration gate (`mvn test -Pintegration`)
 - Builds Pactum-Scroll (shared contracts)
@@ -22,13 +23,26 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 **Expected outcome:** All tests passing ✅
 
 **Sentinel Gate Policy:**
+- jclouds MinIO CRUD gate: blocking on all configured refs
 - Roadmap gate: blocking on all configured refs
 - Behavioral gate: blocking on all configured refs
+
+**Required checks for main branch protection:**
+- `jclouds MinIO CRUD Gate`
+- `Sentinel Roadmap Gate`
+- `Sentinel Behavioral Gate`
+- `e2e-complete-suite`
+
+**Operator runbook (gate failure):**
+1. Inspect failing job logs and identify the first deterministic failure.
+2. Reproduce locally with the same command/profile used in workflow.
+3. Apply minimal fix, rerun targeted gate, then push.
+4. Merge only when all required checks are green.
 
 ---
 
 ### 1b. `e2e-complete-suite.yml`
-**Purpose:** Blocking end-to-end proof gate for Phase 1-3 coverage
+**Purpose:** Blocking end-to-end proof gate for Phase 1-4 coverage
 
 **Triggers:**
 - Push to `main` or `develop`
@@ -37,6 +51,7 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 **What it does:**
 - Starts/validates the steel-hammer stack
 - Executes real Alice/Bob E2E against Keycloak + Sentinel-Gear + MinIO
+- Executes deterministic Phase 4 jclouds MinIO CRUD integration gate
 - Enforces unauthenticated deny behavior (401/403)
 - Publishes proof report and evidence artifacts
 
