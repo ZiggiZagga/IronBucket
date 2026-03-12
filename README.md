@@ -38,13 +38,15 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 
 ### Run Locally
 ```bash
+# First-time full validation (cold-start friendly)
+bash scripts/run-all-tests-complete.sh
+
+# Optional: infrastructure-only startup
 cd steel-hammer
 docker-compose -f docker-compose-steel-hammer.yml up -d --build
-sleep 180
-docker logs steel-hammer-test
 ```
 
-**Result:** All services running ✅ + E2E test showing file upload successful ✅
+**Result:** End-to-end orchestrator runs Maven suites + infrastructure checks + full E2E + observability proof and writes reports to `test-results/`.
 
 ## Features
 

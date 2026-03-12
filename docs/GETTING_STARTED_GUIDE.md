@@ -90,34 +90,39 @@ cd IronBucket
 git checkout main  # Default branch
 ```
 
-### Step 2: Run the Unified Spin-Up Script
+### Step 2: Run the Full First-Time Validation Script
 
-We provide a single script that handles everything:
+Use the canonical one-command orchestrator from project root:
 
 ```bash
-# Run with Docker E2E tests (recommended)
-./spinup.sh
+# Full validation: backend Maven + infrastructure + E2E + observability
+bash scripts/run-all-tests-complete.sh
 
-# Or run local Maven tests only (faster)
-./spinup.sh --local-only
+# Optional: spin up core environment only
+bash scripts/spinup.sh
+
+# Optional: local Maven tests only
+bash scripts/spinup.sh --local-only
 ```
 
-**What this script does:**
+**What the full orchestrator does:**
 1. ✅ Verifies all prerequisites
 2. ✅ Runs Maven unit tests on all 6 projects (47+72+58+44 = 221 tests)
 3. ✅ Spins up Docker containers (Keycloak, PostgreSQL, MinIO, services)
 4. ✅ Waits for all services to initialize
 5. ✅ Runs end-to-end Docker-based tests
-6. ✅ Displays comprehensive test summary
+6. ✅ Runs observability proof checks
+7. ✅ Displays comprehensive test summary + artifacts/report paths
 
 **Expected Output:**
 ```
-✅ IRONBUCKET TEST SUITE COMPLETE
+✅ COMPLETE TEST RUN FINISHED
 
 Summary:
-  ✅ Maven Unit Tests: ALL PASSED
-  ✅ Docker Services: RUNNING
-  ✅ Docker E2E Tests: COMPLETED
+   ✅ Maven backend suites: PASSED
+   ✅ Infrastructure checks: PASSED
+   ✅ E2E Alice/Bob scenario: PASSED
+   ✅ Observability validation: PASSED
 
 Ready for production release! 🚀
 ```
@@ -128,7 +133,7 @@ Ready for production release! 🚀
 # Check all containers
 docker ps
 
-# Expected output: 8 containers running
+# Expected output: steel-hammer service containers running
 # - steel-hammer-postgres
 # - steel-hammer-keycloak  
 # - steel-hammer-minio
@@ -136,7 +141,7 @@ docker ps
 # - steel-hammer-claimspindel
 # - steel-hammer-brazz-nossel
 # - steel-hammer-buzzle-vane
-# - steel-hammer-test
+# - plus observability/test containers as needed by orchestrator
 ```
 
 ### Step 4: Access Admin Consoles
@@ -277,7 +282,7 @@ docker-compose -f steel-hammer/docker-compose-steel-hammer.yml down
 **Solution:**
 ```bash
 export MAVEN_OPTS="-Xmx2048m -Xms1024m"
-./spinup.sh --local-only
+bash scripts/spinup.sh --local-only
 ```
 
 ### Issue: Services fail to start
@@ -398,7 +403,7 @@ IronBucket/
 
 1. **✅ Run the test suite** - Verify everything works:
    ```bash
-   ./spinup.sh
+   bash scripts/run-all-tests-complete.sh
    ```
 
 2. **📚 Read the documentation**:
