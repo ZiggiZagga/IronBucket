@@ -1,41 +1,57 @@
-# Archived documentation
+# Archived/reference content
 .archive/
-
-# Reference repositories for learning
 .reference-repos/
 
-# Build artifacts
-target/
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE (keep shared workspace settings if needed)
+.idea/
+*.iml
+
+# Environment/secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node.js / frontend artifacts
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/coverage/
+**/.nyc_output/
+**/playwright-report/
+**/.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Java / Maven artifacts
+**/target/
+**/.mvn/timing.properties
 *.class
 *.jar
 *.war
 
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
-.next/
-dist/
-build/
-
-# Test results and logs
+# Test outputs and logs
 test-results/
 test-output/
-*.log
-*.log.*
+**/test-results/
+**/surefire-reports/
+**/failsafe-reports/
+**/*.log
+**/*.log.*
 
-# IDE
-.vscode/
-.idea/
-*.iml
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Temporary files
+# Temporary/local working files
 *.tmp
 *.bak
-*~
+tmp/
+temp/*.log

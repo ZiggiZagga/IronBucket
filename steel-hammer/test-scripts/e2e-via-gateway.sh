@@ -20,7 +20,7 @@ NC='\033[0m'
 
 GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
 KEYCLOAK_INTERNAL="http://steel-hammer-keycloak:7081"
-MINIO_INTERNAL="http://steel-hammer-minio:9000"
+MINIO_INTERNAL="http://steel-hammer-brazz-nossel:8082"
 LOKI_INTERNAL="http://steel-hammer-loki:3100"
 TEMPO_INTERNAL="http://steel-hammer-tempo:3200"
 MIMIR_INTERNAL="http://steel-hammer-mimir:9009"

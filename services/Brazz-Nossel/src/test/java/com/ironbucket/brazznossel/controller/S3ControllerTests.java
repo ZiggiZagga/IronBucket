@@ -1,8 +1,11 @@
 package com.ironbucket.brazznossel.controller;
 
+import com.ironbucket.brazznossel.model.NormalizedIdentity;
+import com.ironbucket.brazznossel.service.S3ProxyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 class S3ControllerTests {
 
@@ -10,9 +13,39 @@ class S3ControllerTests {
 
     @BeforeEach
     void setUp() {
-        // Use no-arg constructor which doesn't require S3ProxyService
-        // These tests only test /dev and /admin endpoints which don't use S3ProxyService
-        client = WebTestClient.bindToController(new S3Controller()).build();
+        S3ProxyService stubProxyService = new S3ProxyService() {
+            @Override
+            public Mono<String> listBuckets(NormalizedIdentity identity) {
+                return Mono.just("[]");
+            }
+
+            @Override
+            public Mono<byte[]> getObject(String bucket, String key, NormalizedIdentity identity) {
+                return Mono.just(new byte[0]);
+            }
+
+            @Override
+            public Mono<byte[]> getObjectRange(String bucket, String key, long start, long end, NormalizedIdentity identity) {
+                return Mono.just(new byte[0]);
+            }
+
+            @Override
+            public Mono<String> putObject(String bucket, String key, byte[] content, NormalizedIdentity identity) {
+                return Mono.just("ok");
+            }
+
+            @Override
+            public Mono<Void> deleteObject(String bucket, String key, NormalizedIdentity identity) {
+                return Mono.empty();
+            }
+
+            @Override
+            public Mono<String> initiateMultipartUpload(String bucket, String key, NormalizedIdentity identity) {
+                return Mono.just("upload-id");
+            }
+        };
+
+        client = WebTestClient.bindToController(new S3Controller(stubProxyService)).build();
     }
 
     @Test

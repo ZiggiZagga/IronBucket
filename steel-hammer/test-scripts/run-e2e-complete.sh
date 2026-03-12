@@ -91,17 +91,17 @@ import sys
 import time
 import json
 
-print("Step 1: Direct MinIO Connection (Production: goes through Brazz-Nossel with JWT)")
-print("  Endpoint: http://steel-hammer-minio:9000")
+print("Step 1: Gateway-mediated S3 Connection")
+print("  Endpoint: http://steel-hammer-brazz-nossel:8082")
 print("  Credentials: minioadmin/minioadmin (dev only; production uses JWT)")
 print("")
 
 try:
     s3 = boto3.client(
         's3',
-        endpoint_url='http://steel-hammer-minio:9000',
-        aws_access_key_id='minioadmin',
-        aws_secret_access_key='minioadmin',
+        endpoint_url='http://steel-hammer-brazz-nossel:8082',
+        aws_access_key_id='test-key',
+        aws_secret_access_key='test-secret',
         region_name='us-east-1',
         config=Config(signature_version='s3v4')
     )

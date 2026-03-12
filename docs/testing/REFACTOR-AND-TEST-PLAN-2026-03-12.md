@@ -49,8 +49,8 @@ Create a safe first refactor wave that improves repository cohesion without movi
 - Result: PASS for orchestration flow
 - Observed module detection: `7/7`
 - Backend outcomes:
-  - Passed modules: `temp/Brazz-Nossel`, `temp/Claimspindel`, `temp/Buzzle-Vane`, `tools/Vault-Smith`, `tools/graphite-admin-shell`
-  - Failed modules: `temp/Sentinel-Gear`, `tools/Storage-Conductor`
+  - Passed modules: `services/Brazz-Nossel`, `services/Claimspindel`, `services/Buzzle-Vane`, `tools/Vault-Smith`, `tools/graphite-admin-shell`
+  - Failed modules: `services/Sentinel-Gear`, `tools/Storage-Conductor`
   - Missing module warning: `Pactum-Scroll`
 
 ### 3) Full orchestrator pathway

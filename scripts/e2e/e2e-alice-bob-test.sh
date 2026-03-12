@@ -19,6 +19,10 @@ register_error_trap
 # Override service URLs if needed for this script
 # (They are already set from .env.defaults based on IS_CONTAINER)
 
+RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
+PROOF_DIR="${TEMP_DIR}/ironbucket-proof/jwt-gateway-${RUN_ID}"
+mkdir -p "$PROOF_DIR"
+
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║                                                                  ║${NC}"
 echo -e "${BLUE}║           E2E TEST: Alice & Bob Multi-Tenant Scenario            ║${NC}"
@@ -121,17 +125,25 @@ fi
 echo ""
 echo "Step 2.2: Alice creates test bucket and uploads file..."
 
-# Create test directory in project temp (not /tmp)
-mkdir -p "$TEMP_DIR/ironbucket-test"
+ALICE_OBJECT="jwt-alice-${RUN_ID}.txt"
+echo "alice jwt gateway upload ${RUN_ID}" > "$PROOF_DIR/alice-body.txt"
+ALICE_UPLOAD_HTTP=$(curl -s -o "$PROOF_DIR/alice-upload.out" -w "%{http_code}" \
+    -X PUT "${SENTINEL_GEAR_URL}/s3/default-alice-files/${ALICE_OBJECT}" \
+    -H "Authorization: Bearer ${ALICE_TOKEN}" \
+    --data-binary @"$PROOF_DIR/alice-body.txt")
 
-# Create Alice's secret file
-echo "THIS IS ALICE'S CONFIDENTIAL DOCUMENT - DO NOT SHARE WITH BOB!" > "$TEMP_DIR/ironbucket-test/alice-secret.txt"
+ALICE_GET_HTTP=$(curl -s -o "$PROOF_DIR/alice-get.out" -w "%{http_code}" \
+    -X GET "${SENTINEL_GEAR_URL}/s3/default-alice-files/${ALICE_OBJECT}" \
+    -H "Authorization: Bearer ${ALICE_TOKEN}")
 
-echo -e "${GREEN}✅ Alice's file created: 'alice-secret.txt'${NC}"
-echo "   Content: 'THIS IS ALICE'S CONFIDENTIAL DOCUMENT - DO NOT SHARE WITH BOB!'"
-echo "   Location: s3://acme-corp-data/alice-secret.txt"
-echo "   Owner: alice"
-echo "   Tenant: acme-corp"
+if [ "$ALICE_UPLOAD_HTTP" != "200" ] || [ "$ALICE_GET_HTTP" != "200" ]; then
+        echo -e "${RED}❌ Alice gateway upload/get failed${NC}"
+        echo "   upload_http=$ALICE_UPLOAD_HTTP get_http=$ALICE_GET_HTTP"
+        exit 1
+fi
+
+echo -e "${GREEN}✅ Alice upload/get via Sentinel-Gear successful${NC}"
+echo "   Object: default-alice-files/${ALICE_OBJECT}"
 
 echo ""
 echo -e "${GREEN}✅ Phase 2 Complete: Alice's file is ready in the system${NC}"
@@ -186,35 +198,38 @@ else
 fi
 
 echo ""
-echo "Step 3.2: Bob attempts to access Alice's 'acme-corp-data' bucket..."
-echo ""
+echo "Step 3.2: Bob uploads and reads his own object via Sentinel-Gear..."
 
-echo "What SHOULD happen (in production with IronBucket proxy):"
-echo ""
-echo "  Request Flow:"
-echo "  1. Bob: GET /acme-corp-data/?list-type=2"
-echo "     Headers: Authorization: Bearer <BOB_JWT_TOKEN>"
-echo ""
-echo "  2. Sentinel-Gear (OIDC Gateway):"
-echo "     ✅ Validates Bob's JWT signature using Keycloak's public key"
-echo "     ✅ Validates token expiration: NOT EXPIRED"
-echo "     ✅ Validates issuer: trusts keycloak"
-echo "     ✅ Extracts tenant from claims: 'widgets-inc'"
-echo "     ✅ Creates NormalizedIdentity for Bob"
-echo ""
-echo "  3. Claimspindel (Policy Engine):"
-echo "     📋 Policy Rule: 'Only acme-corp tenant can access acme-corp-data'"
-echo "     ❌ Bob's tenant: 'widgets-inc'"
-echo "     ❌ Required tenant: 'acme-corp'"
-echo "     ❌ Decision: DENY"
-echo ""
-echo "  4. Brazz-Nossel (S3 Proxy):"
-echo "     ❌ Returns 403 Forbidden to Bob"
-echo "     📝 Audit log: 'Unauthorized access attempt by bob to acme-corp-data'"
-echo ""
+BOB_OBJECT="jwt-bob-${RUN_ID}.txt"
+echo "bob jwt gateway upload ${RUN_ID}" > "$PROOF_DIR/bob-body.txt"
+BOB_UPLOAD_HTTP=$(curl -s -o "$PROOF_DIR/bob-upload.out" -w "%{http_code}" \
+    -X PUT "${SENTINEL_GEAR_URL}/s3/default-bob-files/${BOB_OBJECT}" \
+    -H "Authorization: Bearer ${BOB_TOKEN}" \
+    --data-binary @"$PROOF_DIR/bob-body.txt")
 
-echo -e "${GREEN}✅ Multi-tenant isolation VERIFIED!${NC}"
-echo -e "${GREEN}   Bob CANNOT access Alice's files (different tenant)${NC}"
+BOB_GET_HTTP=$(curl -s -o "$PROOF_DIR/bob-get.out" -w "%{http_code}" \
+    -X GET "${SENTINEL_GEAR_URL}/s3/default-bob-files/${BOB_OBJECT}" \
+    -H "Authorization: Bearer ${BOB_TOKEN}")
+
+if [ "$BOB_UPLOAD_HTTP" != "200" ] || [ "$BOB_GET_HTTP" != "200" ]; then
+        echo -e "${RED}❌ Bob gateway upload/get failed${NC}"
+        echo "   upload_http=$BOB_UPLOAD_HTTP get_http=$BOB_GET_HTTP"
+        exit 1
+fi
+
+echo -e "${GREEN}✅ Bob upload/get via Sentinel-Gear successful${NC}"
+echo "   Object: default-bob-files/${BOB_OBJECT}"
+
+cat > "$PROOF_DIR/jwt-gateway-summary.txt" <<EOF
+run_id=${RUN_ID}
+alice_upload_http=${ALICE_UPLOAD_HTTP}
+bob_upload_http=${BOB_UPLOAD_HTTP}
+alice_get_http=${ALICE_GET_HTTP}
+bob_get_http=${BOB_GET_HTTP}
+EOF
+
+echo ""
+echo -e "${GREEN}✅ Gateway proof summary written:${NC} $PROOF_DIR/jwt-gateway-summary.txt"
 
 # ============================================================================
 # PHASE 4: Test Results Summary

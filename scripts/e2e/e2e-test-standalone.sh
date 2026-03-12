@@ -47,6 +47,9 @@ KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:7081}"
 MINIO_URL="${MINIO_URL:-http://localhost:9000}"
 SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-http://localhost:8080}"
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
+RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
+PROOF_DIR="${TEMP_DIR:-/tmp}/ironbucket-proof/jwt-gateway-${RUN_ID}"
+mkdir -p "$PROOF_DIR"
 
 # ============================================================================
 # PHASE 1: Infrastructure Verification
@@ -221,41 +224,49 @@ echo ""
 echo -e "${BLUE}=== PHASE 4: Multi-Tenant Isolation ===${NC}"
 echo ""
 
-echo "Tenant Context Analysis:"
-echo ""
+echo "Executing real JWT gateway flow (upload + get)"
 
-if [ -n "$ALICE_CLAIMS" ] && [ "$ALICE_CLAIMS" != "{}" ]; then
-    ALICE_EMAIL=$(echo "$ALICE_CLAIMS" | jq -r '.email // "unknown"')
-    if [[ "$ALICE_EMAIL" == *"acme-corp"* ]]; then
-        echo -e "${GREEN}✅ Alice is in acme-corp tenant${NC}"
-        echo "   Email: $ALICE_EMAIL"
+ALICE_OBJECT="jwt-alice-${RUN_ID}.txt"
+BOB_OBJECT="jwt-bob-${RUN_ID}.txt"
+
+echo "alice jwt gateway upload ${RUN_ID}" > "$PROOF_DIR/alice-body.txt"
+ALICE_UPLOAD_HTTP=$(curl -s -o "$PROOF_DIR/alice-upload.out" -w "%{http_code}" \
+  -X PUT "${SENTINEL_GEAR_URL}/s3/default-alice-files/${ALICE_OBJECT}" \
+  -H "Authorization: Bearer ${ALICE_TOKEN}" \
+  --data-binary @"$PROOF_DIR/alice-body.txt")
+ALICE_GET_HTTP=$(curl -s -o "$PROOF_DIR/alice-get.out" -w "%{http_code}" \
+  -X GET "${SENTINEL_GEAR_URL}/s3/default-alice-files/${ALICE_OBJECT}" \
+  -H "Authorization: Bearer ${ALICE_TOKEN}")
+
+echo "bob jwt gateway upload ${RUN_ID}" > "$PROOF_DIR/bob-body.txt"
+BOB_UPLOAD_HTTP=$(curl -s -o "$PROOF_DIR/bob-upload.out" -w "%{http_code}" \
+  -X PUT "${SENTINEL_GEAR_URL}/s3/default-bob-files/${BOB_OBJECT}" \
+  -H "Authorization: Bearer ${BOB_TOKEN}" \
+  --data-binary @"$PROOF_DIR/bob-body.txt")
+BOB_GET_HTTP=$(curl -s -o "$PROOF_DIR/bob-get.out" -w "%{http_code}" \
+  -X GET "${SENTINEL_GEAR_URL}/s3/default-bob-files/${BOB_OBJECT}" \
+  -H "Authorization: Bearer ${BOB_TOKEN}")
+
+for metric in ALICE_UPLOAD_HTTP ALICE_GET_HTTP BOB_UPLOAD_HTTP BOB_GET_HTTP; do
+    value="${!metric}"
+    if [ "$value" = "200" ]; then
+        echo -e "${GREEN}✅ ${metric}=${value}${NC}"
         TESTS_PASSED=$((TESTS_PASSED + 1))
     else
-        echo -e "${YELLOW}⚠️  Alice's tenant: $ALICE_EMAIL${NC}"
+        echo -e "${RED}❌ ${metric}=${value}${NC}"
+        TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
-fi
+done
 
-echo ""
+cat > "$PROOF_DIR/jwt-gateway-summary.txt" <<EOF
+run_id=${RUN_ID}
+alice_upload_http=${ALICE_UPLOAD_HTTP}
+bob_upload_http=${BOB_UPLOAD_HTTP}
+alice_get_http=${ALICE_GET_HTTP}
+bob_get_http=${BOB_GET_HTTP}
+EOF
 
-if [ -n "$BOB_CLAIMS" ] && [ "$BOB_CLAIMS" != "{}" ]; then
-    BOB_EMAIL=$(echo "$BOB_CLAIMS" | jq -r '.email // "unknown"')
-    if [[ "$BOB_EMAIL" == *"widgets-inc"* ]]; then
-        echo -e "${GREEN}✅ Bob is in widgets-inc tenant${NC}"
-        echo "   Email: $BOB_EMAIL"
-        TESTS_PASSED=$((TESTS_PASSED + 1))
-    else
-        echo -e "${YELLOW}⚠️  Bob's tenant: $BOB_EMAIL${NC}"
-    fi
-fi
-
-echo ""
-
-echo "Multi-Tenant Isolation Policy:"
-echo -e "  ${GREEN}✅ Alice (acme-corp) can access acme-corp-data${NC}"
-echo -e "  ${GREEN}✅ Bob (widgets-inc) can access widgets-inc-data${NC}"
-echo -e "  ${RED}❌ Bob CANNOT access acme-corp-data (different tenant)${NC}"
-echo -e "  ${RED}❌ Alice CANNOT access widgets-inc-data (different tenant)${NC}"
-TESTS_PASSED=$((TESTS_PASSED + 1))
+echo "Summary written: $PROOF_DIR/jwt-gateway-summary.txt"
 
 echo ""
 

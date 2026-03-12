@@ -310,7 +310,7 @@ cat $ARTIFACT_DIR/loki-labels.json
 ### Re-run Tests
 \`\`\`bash
 cd $PROJECT_ROOT
-bash run-all-tests-complete.sh
+bash scripts/run-all-tests-complete.sh
 \`\`\`
 
 ---

@@ -29,7 +29,7 @@ echo ""
 
 SERVICES=(
   "steel-hammer-postgres:5432:PostgreSQL"
-  "steel-hammer-minio:9000:MinIO"
+    "steel-hammer-brazz-nossel:8082:Brazz-Nossel"
   "steel-hammer-keycloak:7081:Keycloak"
   "steel-hammer-buzzle-vane:8083:Buzzle-Vane (Eureka)"
   "steel-hammer-sentinel-gear:8080:Sentinel-Gear"
@@ -189,9 +189,9 @@ s3_proxy = boto3.client(
 # Direct MinIO access for verification
 s3_direct = boto3.client(
     's3',
-    endpoint_url='http://steel-hammer-minio:9000',
-    aws_access_key_id='minioadmin',
-    aws_secret_access_key='minioadmin',
+    endpoint_url='http://steel-hammer-brazz-nossel:8082',
+    aws_access_key_id='test-key',
+    aws_secret_access_key='test-secret',
     region_name='us-east-1',
     config=Config(signature_version='s3v4')
 )
@@ -263,9 +263,9 @@ import sys
 
 s3 = boto3.client(
     's3',
-    endpoint_url='http://steel-hammer-minio:9000',
-    aws_access_key_id='minioadmin',
-    aws_secret_access_key='minioadmin',
+    endpoint_url='http://steel-hammer-brazz-nossel:8082',
+    aws_access_key_id='test-key',
+    aws_secret_access_key='test-secret',
     region_name='us-east-1',
     config=Config(signature_version='s3v4')
 )

@@ -450,23 +450,28 @@ Client → Brazz-Nossel ┼─── Azure Blob Adapter
 
 ### For Contributors
 1. Review [ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design
-2. Check Phase 3 TDD tests: `Sentinel-Gear/src/test/java/com/ironbucket/roadmap/`
+2. Check Phase 3 TDD tests: `services/Sentinel-Gear/src/test/java/com/ironbucket/roadmap/`
 3. Set up local development: `cd steel-hammer && docker-compose -f docker-compose-lgtm.yml up`
-4. Run all tests: `bash run-all-tests-complete.sh`
-5. View test report: `cat test-results/reports/LATEST-REPORT-EXPLAINED.md`
+4. Run all tests: `bash scripts/run-all-tests-complete.sh`
+5. View test report: `cat test-results/reports/LATEST-REPORT.md`
 6. Pick a Phase 3 task and submit a PR
+
+Core vs roadmap test modes:
+- Core module tests (default): `cd services/Sentinel-Gear && mvn test`
+- Roadmap/TDD requirements suite: `cd services/Sentinel-Gear && mvn test -Proadmap`
+- Integration suite: `cd services/Sentinel-Gear && mvn test -Pintegration`
 
 ### For Operators
 1. Deploy Phase 2 components: [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 2. Configure policies: [policy-schema.md](docs/policy-schema.md)
 3. Monitor via LGTM stack: Access Grafana on port 3000
-4. Run test suite: `bash run-all-tests-complete.sh`
+4. Run test suite: `bash scripts/run-all-tests-complete.sh`
 5. Review observability: Loki (logs), Tempo (traces), Mimir (metrics)
 
 ### For Security Teams
 1. Review network policies: Only Sentinel-Gear exposed (port 8080)
 2. Validate audit logs: PostgreSQL tables in all microservices
-3. Check compliance: [test-results/reports/LATEST-REPORT-EXPLAINED.md](test-results/reports/LATEST-REPORT-EXPLAINED.md)
+3. Check compliance: [test-results/reports/LATEST-REPORT.md](test-results/reports/LATEST-REPORT.md)
 4. Verify observability: All services log to Loki, trace to Tempo
 5. Run E2E tests: Infrastructure tests validate security model
 
@@ -475,7 +480,7 @@ Client → Brazz-Nossel ┼─── Azure Blob Adapter
 ## References
 
 - [Architecture Overview](docs/ARCHITECTURE.md)
-- [Test Report (Explained)](test-results/reports/LATEST-REPORT-EXPLAINED.md) - **Start here for current status**
+- [Test Report](test-results/reports/LATEST-REPORT.md) - **Start here for current status**
 - [Test Report (Raw)](test-results/reports/LATEST-REPORT.md)
 - [Observability Guide](docs/E2E-OBSERVABILITY-GUIDE.md)
 - [Policy Schema](docs/policy-schema.md)
@@ -483,7 +488,7 @@ Client → Brazz-Nossel ┼─── Azure Blob Adapter
 - [CI/CD Pipeline](docs/CI-CD-PIPELINE.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [TDD Roadmap Tests](Sentinel-Gear/src/test/java/com/ironbucket/roadmap/)
+- [TDD Roadmap Tests](services/Sentinel-Gear/src/test/java/com/ironbucket/roadmap/)
 
 ---
 
@@ -503,5 +508,5 @@ Client → Brazz-Nossel ┼─── Azure Blob Adapter
 
 **Last Updated:** January 19, 2026  
 **Maintained By:** IronBucket Development Team  
-**Test Status:** Run `bash run-all-tests-complete.sh` for latest results  
-**Questions?** See [test-results/reports/LATEST-REPORT-EXPLAINED.md](test-results/reports/LATEST-REPORT-EXPLAINED.md)
+**Test Status:** Run `bash scripts/run-all-tests-complete.sh` for latest results  
+**Questions?** See [test-results/reports/LATEST-REPORT.md](test-results/reports/LATEST-REPORT.md)

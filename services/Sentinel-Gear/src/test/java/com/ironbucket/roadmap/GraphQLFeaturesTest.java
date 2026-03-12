@@ -27,8 +27,27 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Graphite-Forge GraphQL Feature Completeness")
 public class GraphQLFeaturesTest {
 
-    private static final String PROJECT_ROOT = System.getProperty("user.dir");
-    private static final String GRAPHITE_FORGE_PATH = "temp/Graphite-Forge";
+    private static final String PROJECT_ROOT = resolveRepoRoot().toString();
+    private static final String GRAPHITE_FORGE_PATH = resolveGraphiteForgePath();
+
+    private static Path resolveRepoRoot() {
+        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        while (current != null) {
+            if (Files.exists(current.resolve("README.md")) && Files.exists(current.resolve("services"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        throw new IllegalStateException("Unable to resolve repository root from user.dir=" + System.getProperty("user.dir"));
+    }
+
+    private static String resolveGraphiteForgePath() {
+        Path repoRoot = Paths.get(PROJECT_ROOT);
+        if (Files.exists(repoRoot.resolve("services/Graphite-Forge"))) {
+            return "services/Graphite-Forge";
+        }
+        return "temp/Graphite-Forge";
+    }
     
     @BeforeAll
     static void setup() {

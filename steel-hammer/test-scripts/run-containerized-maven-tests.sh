@@ -39,7 +39,7 @@ TEMP_DIR="${TEMP_DIR:-/workspaces/IronBucket/build/temp}"
 LOG_DIR="${LOG_DIR:-/workspaces/IronBucket/test-results/logs}"
 RESULTS_DIR="${RESULTS_DIR:-${TEMP_DIR}/results}"
 LOG_FILE="${LOG_FILE:-${LOG_DIR}/test-execution.log}"
-MINIO_URL="${MINIO_URL:-http://steel-hammer-minio:9000}"
+MINIO_URL="${MINIO_URL:-http://steel-hammer-brazz-nossel:8082}"
 MINIO_BUCKET="${MINIO_BUCKET:-test-results}"
 
 mkdir -p "$TEMP_DIR" "$RESULTS_DIR" "$LOG_DIR"
@@ -180,9 +180,9 @@ import os
 from botocore.config import Config
 
 # MinIO configuration
-endpoint = os.getenv('MINIO_URL', 'http://steel-hammer-minio:9000')
-access_key = 'minioadmin'
-secret_key = 'minioadmin'
+endpoint = os.getenv('MINIO_URL', 'http://steel-hammer-brazz-nossel:8082')
+access_key = 'test-key'
+secret_key = 'test-secret'
 bucket_name = os.getenv('MINIO_BUCKET', 'test-results')
 file_path = os.getenv('TEST_FILE', '/tmp/ironbucket-e2e-test.txt')
 upload_key = f'ironbucket-e2e-test-{int(__import__("time").time())}.txt'

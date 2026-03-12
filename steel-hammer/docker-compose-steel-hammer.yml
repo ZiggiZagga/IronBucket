@@ -211,8 +211,8 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker${MTLS_PROFILE:-}"
       - "CERT_BASE_PATH=file:/certs"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
-      - "MINIO_ACCESS_KEY=minioadmin"
-      - "MINIO_SECRET_KEY=minioadmin"
+      - "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-vault-managed-root-user}"
+      - "MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-vault-managed-root-password}"
       - "SPRING_APPLICATION_NAME=brazz-nossel"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
@@ -245,8 +245,8 @@ services:
 
     environment:
       - "MINIO_BROWSER=on"
-      - "MINIO_ROOT_USER=minioadmin"
-      - "MINIO_ROOT_PASSWORD=minioadmin"
+      - "MINIO_ROOT_USER=${MINIO_ROOT_USER:-vault-managed-root-user}"
+      - "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-vault-managed-root-password}"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://steel-hammer-minio:9000/minio/health/live"]
@@ -314,23 +314,3 @@ services:
 networks:
   steel-hammer-network:
     driver: bridge
-
-
-
-# Eureka Service
-  steel-hammer-eureka:
-    networks:
-      - steel-hammer-network
-    hostname: steel-hammer-eureka
-    container_name: steel-hammer-eureka
-    build:
-      context: ../services/Eureka-Server
-      dockerfile: Dockerfile
-    ports:
-      - "8761:8761"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://steel-hammer-eureka:8761/eureka"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always

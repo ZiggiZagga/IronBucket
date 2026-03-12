@@ -29,7 +29,25 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Governance, Integrity, and Resilience")
 public class GovernanceIntegrityResilienceTest {
 
-    private static final String PROJECT_ROOT = System.getProperty("user.dir");
+    private static final String PROJECT_ROOT = resolveRepoRoot().toString();
+
+    private static Path modulePath(String moduleName, String... parts) {
+        Path servicesPath = Paths.get(PROJECT_ROOT, "services", moduleName);
+        Path tempPath = Paths.get(PROJECT_ROOT, "temp", moduleName);
+        Path basePath = Files.exists(servicesPath) ? servicesPath : tempPath;
+        return basePath.resolve(Paths.get("", parts));
+    }
+
+    private static Path resolveRepoRoot() {
+        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        while (current != null) {
+            if (Files.exists(current.resolve("README.md")) && Files.exists(current.resolve("services"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        throw new IllegalStateException("Unable to resolve repository root from user.dir=" + System.getProperty("user.dir"));
+    }
 
     @BeforeAll
     static void setup() {
@@ -63,7 +81,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Direct backend admin actions audited with attestation (P0 Immediate)")
         void testDirectBackendAdminDetection() {
-            Path adminAudit = Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", "src", "main", "java",
+            Path adminAudit = modulePath("Sentinel-Gear", "src", "main", "java",
                 "com", "ironbucket", "sentinelgear", "audit", "AdminAuditLogger.java");
 
             assertTrue(Files.exists(adminAudit),
@@ -81,7 +99,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Quota and tenant isolation enforced across indirect paths (P1 Medium)")
         void testQuotaAndTenantIsolation() {
-            Path quotaService = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java",
+            Path quotaService = modulePath("Brazz-Nossel", "src", "main", "java",
                 "com", "ironbucket", "brazznossel", "quota", "QuotaEnforcementService.java");
 
             assertTrue(Files.exists(quotaService),
@@ -121,7 +139,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Checksum algorithm translation handled (P2 Medium)")
         void testChecksumAlgorithmTranslation() {
-            Path checksumTranslator = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java",
+            Path checksumTranslator = modulePath("Brazz-Nossel", "src", "main", "java",
                 "com", "ironbucket", "brazznossel", "checksum", "ChecksumTranslator.java");
 
             assertTrue(Files.exists(checksumTranslator),
@@ -161,7 +179,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Multipart abort cleans orphan parts within TTL (P1 High)")
         void testMultipartAbortCleansOrphans() {
-            Path cleanupJob = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java",
+            Path cleanupJob = modulePath("Brazz-Nossel", "src", "main", "java",
                 "com", "ironbucket", "brazznossel", "multipart", "MultipartCleanupJob.java");
 
             assertTrue(Files.exists(cleanupJob),
@@ -218,7 +236,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Dual write and cutover correctness validated (P1 High)")
         void testDualWriteCutoverConsistent() {
-            Path dualWriteService = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java",
+            Path dualWriteService = modulePath("Brazz-Nossel", "src", "main", "java",
                 "com", "ironbucket", "brazznossel", "cutover", "DualWriteService.java");
 
             assertTrue(Files.exists(dualWriteService),
@@ -236,7 +254,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Cross region replication ordering preserved (P2 Medium)")
         void testCrossRegionReplicationOrdering() {
-            Path replicationValidator = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java",
+            Path replicationValidator = modulePath("Brazz-Nossel", "src", "main", "java",
                 "com", "ironbucket", "brazznossel", "replication", "ReplicationOrderingValidator.java");
 
             assertTrue(Files.exists(replicationValidator),
@@ -276,7 +294,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("List pagination and delimiter parity validated (P2 Medium)")
         void testListPaginationDelimiterParity() {
-            Path paginationTest = Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", "src", "test", "java",
+            Path paginationTest = modulePath("Sentinel-Gear", "src", "test", "java",
                 "com", "ironbucket", "sentinelgear", "integration", "ListPaginationParityTest.java");
 
             assertTrue(Files.exists(paginationTest),
@@ -294,7 +312,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Presigned URL TTL and replay protections enforced (P0 Immediate)")
         void testPresignedUrlTTLReplayProtected() {
-            Path presignedTest = Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", "src", "test", "java",
+            Path presignedTest = modulePath("Sentinel-Gear", "src", "test", "java",
                 "com", "ironbucket", "sentinelgear", "security", "PresignedUrlSecurityTest.java");
 
             assertTrue(Files.exists(presignedTest),
@@ -312,7 +330,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("ACL and CORS edge cases covered (P2 Medium)")
         void testAclAndCorsEdgeCasesCovered() {
-            Path aclCorsTest = Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", "src", "test", "java",
+            Path aclCorsTest = modulePath("Sentinel-Gear", "src", "test", "java",
                 "com", "ironbucket", "sentinelgear", "integration", "AclAndCorsEdgeCasesTest.java");
 
             assertTrue(Files.exists(aclCorsTest),
@@ -352,7 +370,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Adapter upgrade with schema change is safe (P3 Low)")
         void testAdapterUpgradeWithSchemaChange() {
-            Path upgradeTest = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "test", "java",
+            Path upgradeTest = modulePath("Brazz-Nossel", "src", "test", "java",
                 "com", "ironbucket", "brazznossel", "upgrade", "AdapterSchemaUpgradeTest.java");
 
             assertTrue(Files.exists(upgradeTest),
@@ -392,7 +410,7 @@ public class GovernanceIntegrityResilienceTest {
         @Test
         @DisplayName("Tamper and replay detection enforced with high-priority alerts (P0 Immediate)")
         void testTamperAndReplayDetection() {
-            Path tamperDetector = Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", "src", "main", "java",
+            Path tamperDetector = modulePath("Sentinel-Gear", "src", "main", "java",
                 "com", "ironbucket", "sentinelgear", "security", "TamperReplayDetector.java");
 
             assertTrue(Files.exists(tamperDetector),
@@ -452,19 +470,19 @@ public class GovernanceIntegrityResilienceTest {
                 Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-policy-bypass.sh"),
                 Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-metadata-drift.sh"),
                 Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-adapter-crash-during-write.sh"),
-                Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "security", "PresignedUrlSecurityTest.java")
+                modulePath("Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "security", "PresignedUrlSecurityTest.java")
             );
 
             List<Path> highPaths = Arrays.asList(
-                Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "multipart", "MultipartCleanupJob.java"),
-                Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "cutover", "DualWriteService.java"),
+                modulePath("Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "multipart", "MultipartCleanupJob.java"),
+                modulePath("Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "cutover", "DualWriteService.java"),
                 Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-control-plane-ha.sh")
             );
 
             List<Path> mediumPaths = Arrays.asList(
-                Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "checksum", "ChecksumTranslator.java"),
-                Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "replication", "ReplicationOrderingValidator.java"),
-                Paths.get(PROJECT_ROOT, "temp", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "integration", "AclAndCorsEdgeCasesTest.java"),
+                modulePath("Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "checksum", "ChecksumTranslator.java"),
+                modulePath("Brazz-Nossel", "src", "main", "java", "com", "ironbucket", "brazznossel", "replication", "ReplicationOrderingValidator.java"),
+                modulePath("Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "integration", "AclAndCorsEdgeCasesTest.java"),
                 Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-streaming-latency.sh"),
                 Paths.get(PROJECT_ROOT, "steel-hammer", "tests", "test-versioning-delete-markers.sh")
             );

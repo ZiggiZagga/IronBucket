@@ -29,10 +29,10 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     private final S3Client s3Client;
     
     public S3ProxyServiceImpl(
-            @Value("${s3.endpoint:http://localhost:9000}") String endpoint,
-            @Value("${s3.access-key:minioadmin}") String accessKey,
-            @Value("${s3.secret-key:minioadmin}") String secretKey,
-            @Value("${s3.region:us-east-1}") String region) {
+            @Value("${app.s3.endpoint:http://localhost:9000}") String endpoint,
+            @Value("${app.s3.access-key:minioadmin}") String accessKey,
+            @Value("${app.s3.secret-key:minioadmin}") String secretKey,
+            @Value("${app.s3.region:us-east-1}") String region) {
         
         logger.info("Initializing S3 Proxy Service with endpoint: {}", endpoint);
         

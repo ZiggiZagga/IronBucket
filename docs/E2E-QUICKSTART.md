@@ -166,7 +166,7 @@ Run selective module tests:
 
 ```bash
 # Test single module
-cd temp/Brazz-Nossel
+cd services/Brazz-Nossel
 mvn test
 
 # Skip tests and only start services

@@ -28,7 +28,25 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("IronBucket S3 Feature Completeness")
 public class S3FeaturesTest {
 
-    private static final String PROJECT_ROOT = System.getProperty("user.dir");
+    private static final String PROJECT_ROOT = resolveRepoRoot().toString();
+
+    private static Path modulePath(String moduleName, String... parts) {
+        Path servicesPath = Paths.get(PROJECT_ROOT, "services", moduleName);
+        Path tempPath = Paths.get(PROJECT_ROOT, "temp", moduleName);
+        Path basePath = Files.exists(servicesPath) ? servicesPath : tempPath;
+        return basePath.resolve(Paths.get("", parts));
+    }
+
+    private static Path resolveRepoRoot() {
+        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        while (current != null) {
+            if (Files.exists(current.resolve("README.md")) && Files.exists(current.resolve("services"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        throw new IllegalStateException("Unable to resolve repository root from user.dir=" + System.getProperty("user.dir"));
+    }
     
     @BeforeAll
     static void setup() {
@@ -47,7 +65,7 @@ public class S3FeaturesTest {
         @DisplayName("CreateBucket operation implemented")
         void testCreateBucketImplemented() {
             // RED: Verify CreateBucket endpoint exists
-            Path controllerFile = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", 
+            Path controllerFile = modulePath("Brazz-Nossel",
                 "src", "main", "java", "com", "ironbucket", "brazznossel", "controller", "S3Controller.java");
             
             assertTrue(Files.exists(controllerFile), 
@@ -177,7 +195,7 @@ public class S3FeaturesTest {
         @DisplayName("InitiateMultipartUpload operation implemented")
         void testInitiateMultipartUploadImplemented() {
             // RED: Large file uploads require multipart support
-            Path proxyService = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", 
+            Path proxyService = modulePath("Brazz-Nossel",
                 "src", "main", "java", "com", "ironbucket", "brazznossel", "service", "S3ProxyService.java");
             
             assertTrue(Files.exists(proxyService), 
@@ -649,9 +667,9 @@ public class S3FeaturesTest {
             // This is a meta-test tracking overall S3 API completeness
             // Dynamically checks which operations are actually implemented
             
-            Path controllerFile = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", 
+            Path controllerFile = modulePath("Brazz-Nossel",
                 "src", "main", "java", "com", "ironbucket", "brazznossel", "controller", "S3Controller.java");
-            Path proxyService = Paths.get(PROJECT_ROOT, "temp", "Brazz-Nossel", 
+            Path proxyService = modulePath("Brazz-Nossel",
                 "src", "main", "java", "com", "ironbucket", "brazznossel", "service", "S3ProxyService.java");
             
             String controllerContent = "";

@@ -306,10 +306,10 @@ If you prefer to run tests manually:
 ### Run Maven Tests Only
 
 ```bash
-cd /workspaces/IronBucket/temp/Brazz-Nossel
+cd /workspaces/IronBucket/services/Brazz-Nossel
 mvn clean test
 
-cd /workspaces/IronBucket/temp/Sentinel-Gear
+cd /workspaces/IronBucket/services/Sentinel-Gear
 mvn clean test
 
 # ... and so on for each project
@@ -353,13 +353,16 @@ IronBucket/
 ├── e2e-alice-bob-test.sh             ← Alice & Bob scenario test
 ├── e2e-test-standalone.sh            ← Standalone E2E tests
 │
-├── temp/                              ← All 6 Maven projects
-│   ├── Brazz-Nossel/                 ← S3 Proxy Gateway (47 tests)
-│   ├── Claimspindel/                 ← Claims Router (72 tests)
-│   ├── Buzzle-Vane/                  ← Service Discovery (58 tests)
-│   ├── Sentinel-Gear/                ← Identity Gateway (44 tests)
-│   ├── Storage-Conductor/            ← S3 Compatibility (10 tests)
-│   └── Vault-Smith/                  ← Secrets Management (0 tests)
+├── services/                          ← Core service Maven projects
+│   ├── Brazz-Nossel/                 ← S3 Proxy Gateway
+│   ├── Claimspindel/                 ← Claims Router
+│   ├── Buzzle-Vane/                  ← Service Discovery
+│   ├── Sentinel-Gear/                ← Identity Gateway
+│   └── Pactum-Scroll/                ← Event Bus / Messaging
+│
+├── tools/                             ← Supporting Maven projects
+│   ├── Storage-Conductor/            ← S3 compatibility tooling
+│   └── Vault-Smith/                  ← Secrets tooling
 │
 ├── steel-hammer/                     ← Docker orchestration
 │   ├── docker-compose-steel-hammer.yml
@@ -392,8 +395,8 @@ IronBucket/
    - [docs/policy-schema.md](docs/policy-schema.md) - Policy language
 
 3. **🧪 Explore the code**:
-   - Look at test files in `temp/*/src/test/java`
-   - Read implementation files in `temp/*/src/main/java`
+   - Look at test files in `services/*/src/test/java`
+   - Read implementation files in `services/*/src/main/java`
    - Check Docker configuration in `steel-hammer/`
 
 4. **🚀 Deploy to production**:

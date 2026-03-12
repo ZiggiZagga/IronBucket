@@ -83,7 +83,7 @@ spring:
             - TokenRelay
           routes: 
             - id: route-hub
-              uri: lb://claimspindel
+              uri: lb://CLAIMSPINDEL
               predicates:
                 - Path=/**
           globalcors:

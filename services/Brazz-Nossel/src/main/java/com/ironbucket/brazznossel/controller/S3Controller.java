@@ -23,11 +23,6 @@ public class S3Controller {
 		this.s3ProxyService = s3ProxyService;
 	}
 	
-	// No-arg constructor for tests
-	public S3Controller() {
-		this.s3ProxyService = null;
-	}
-	
 	/**
 	 * Convert JWT to NormalizedIdentity
 	 */

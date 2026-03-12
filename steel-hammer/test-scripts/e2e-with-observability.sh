@@ -113,7 +113,7 @@ check_service_health() {
 # Check all services
 check_service_health "Keycloak" "http://localhost:7081/realms/dev/.well-known/openid-configuration" || TESTS_FAILED=$((TESTS_FAILED + 1))
 check_service_health "PostgreSQL" "http://localhost:5432" || TESTS_FAILED=$((TESTS_FAILED + 1))
-check_service_health "MinIO" "http://localhost:9000/minio/health/live" || TESTS_FAILED=$((TESTS_FAILED + 1))
+check_service_health "Brazz-Nossel (S3 Proxy)" "http://localhost:8082/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
 check_service_health "Sentinel-Gear (Gateway)" "http://localhost:8081/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
 check_service_health "Brazz-Nossel (S3 Proxy)" "http://localhost:8082/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
 

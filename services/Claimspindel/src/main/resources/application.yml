@@ -17,19 +17,15 @@ spring:
         webflux:
           routes:
             - id: s3-dev-route
-              uri: lb://brazz-nossel
+              uri: lb://BRAZZ-NOSSEL
               predicates:
-                - Path=/**
+                - Path=/s3/**
                 - Claims=role,devrole
-              filters:
-              - RewritePath=/s3,/s3/dev
             - id: s3-admin-route
-              uri: lb://brazz-nossel
+              uri: lb://BRAZZ-NOSSEL
               predicates:
-                - Path=/**
+                - Path=/s3/**
                 - Claims=role,adminrole	
-              filters:
-              - RewritePath=/s3,/s3/admin							
           globalcors:
             add-to-simple-url-handler-mapping: true
           discovery:

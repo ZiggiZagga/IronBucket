@@ -5,12 +5,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,12 +34,38 @@ public class ProductionReadinessTest {
      * existence checks match the actual project layout (module lives under
      * temp/Sentinel-Gear).
      */
-    private static final Path REPO_ROOT = Paths.get(System.getProperty("user.dir"))
-            .getParent()   // /workspaces/IronBucket/temp
-            .getParent();  // /workspaces/IronBucket
+    private static final Path REPO_ROOT = resolveRepoRoot();
+
+    private static Path resolveRepoRoot() {
+        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        while (current != null) {
+            if (Files.exists(current.resolve("README.md")) && Files.exists(current.resolve("services"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        throw new IllegalStateException("Unable to resolve repository root from user.dir=" + System.getProperty("user.dir"));
+    }
 
     private static Path fromRepoRoot(String first, String... more) {
         return REPO_ROOT.resolve(Paths.get(first, more));
+    }
+
+    private static Optional<Path> firstExisting(Path... candidates) {
+        return Arrays.stream(candidates).filter(Files::exists).findFirst();
+    }
+
+    private static Optional<Path> resolveModuleFile(String moduleName, String first, String... more) {
+        Path[] candidates = new Path[] {
+            fromRepoRoot("services", moduleName, first),
+            fromRepoRoot("temp", moduleName, first),
+            fromRepoRoot("tools", moduleName, first)
+        };
+
+        return Arrays.stream(candidates)
+                .map(path -> more.length == 0 ? path : path.resolve(Paths.get("", more)))
+                .filter(Files::exists)
+                .findFirst();
     }
     
     @BeforeAll
@@ -108,11 +134,11 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel", "Buzzle-Vane"};
             
             for (String service : services) {
-                Path pomFile = fromRepoRoot("temp", service, "pom.xml");
+                Optional<Path> pomFile = resolveModuleFile(service, "pom.xml");
                 
-                if (Files.exists(pomFile)) {
+                if (pomFile.isPresent()) {
                     try {
-                        String content = Files.readString(pomFile);
+                        String content = Files.readString(pomFile.get());
                         assertTrue(content.contains("spring-cloud-vault") || 
                                  content.contains("spring-vault"), 
                             "CRITICAL: " + service + " must have Vault dependencies. " +
@@ -131,11 +157,11 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel"};
             
             for (String service : services) {
-                Path appProps = fromRepoRoot("temp", service, "src", "main", "resources", "application.yml");
+                Optional<Path> appProps = resolveModuleFile(service, "src", "main", "resources", "application.yml");
                 
-                if (Files.exists(appProps)) {
+                if (appProps.isPresent()) {
                     try {
-                        String content = Files.readString(appProps);
+                        String content = Files.readString(appProps.get());
                         assertTrue(content.contains("ssl:") || content.contains("tls:") || 
                                  content.contains("key-store:") || content.contains("secure: true"),
                             "CRITICAL: " + service + " must have TLS/SSL configuration. " +
@@ -189,14 +215,16 @@ public class ProductionReadinessTest {
         @Test
         @DisplayName("Comprehensive JWT validation tests exist")
         void testJWTValidationTestsExist() {
-            Path jwtTestFile = fromRepoRoot("temp", "Sentinel-Gear",
-                "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java");
-            
-            assertTrue(Files.exists(jwtTestFile), 
-                "HIGH: JWT validation tests must exist");
+            Optional<Path> jwtTestFile = firstExisting(
+                fromRepoRoot("services", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java"),
+                fromRepoRoot("temp", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java"),
+                fromRepoRoot("tools", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java")
+            );
+
+            assertTrue(jwtTestFile.isPresent(), "HIGH: JWT validation tests must exist");
             
             try {
-                String content = Files.readString(jwtTestFile);
+                String content = Files.readString(jwtTestFile.get());
                 long testCount = content.lines().filter(line -> line.trim().startsWith("@Test")).count();
                 assertTrue(testCount >= 10, 
                     "HIGH: Need at least 10 JWT validation tests. Found: " + testCount + 
@@ -294,11 +322,11 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel"};
             
             for (String service : services) {
-                Path logbackFile = fromRepoRoot("temp", service, "src", "main", "resources", "logback-spring.xml");
+                Optional<Path> logbackFile = resolveModuleFile(service, "src", "main", "resources", "logback-spring.xml");
                 
-                if (Files.exists(logbackFile)) {
+                if (logbackFile.isPresent()) {
                     try {
-                        String content = Files.readString(logbackFile);
+                        String content = Files.readString(logbackFile.get());
                         assertTrue(content.contains("JsonLayout") || content.contains("JSONLayout") ||
                                  content.contains("LogstashEncoder"),
                             "HIGH: " + service + " must use JSON/structured logging. " +
@@ -317,11 +345,11 @@ public class ProductionReadinessTest {
             String[] services = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel"};
             
             for (String service : services) {
-                Path pomFile = fromRepoRoot("temp", service, "pom.xml");
+                Optional<Path> pomFile = resolveModuleFile(service, "pom.xml");
                 
-                if (Files.exists(pomFile)) {
+                if (pomFile.isPresent()) {
                     try {
-                        String content = Files.readString(pomFile);
+                        String content = Files.readString(pomFile.get());
                         assertTrue(content.contains("opentelemetry") || 
                                  content.contains("spring-cloud-sleuth") ||
                                  content.contains("micrometer-tracing"),
@@ -362,15 +390,18 @@ public class ProductionReadinessTest {
         @Test
         @DisplayName("Pactum-Scroll shared contracts module exists")
         void testPactumScrollModuleExists() {
-            // RED: This test will FAIL because Pactum-Scroll is not implemented
-            Path pactumScrollPom = fromRepoRoot("Pactum-Scroll", "pom.xml");
-            
-            assertTrue(Files.exists(pactumScrollPom), 
+            Optional<Path> pactumScrollPom = firstExisting(
+                fromRepoRoot("services", "Pactum-Scroll", "pom.xml"),
+                fromRepoRoot("temp", "Pactum-Scroll", "pom.xml"),
+                fromRepoRoot("tools", "Pactum-Scroll", "pom.xml")
+            );
+
+            assertTrue(pactumScrollPom.isPresent(), 
                 "MEDIUM: Pactum-Scroll module should exist with shared contracts/DTOs");
             
-            if (Files.exists(pactumScrollPom)) {
+            if (pactumScrollPom.isPresent()) {
                 try {
-                    String content = Files.readString(pactumScrollPom);
+                    String content = Files.readString(pactumScrollPom.get());
                     assertTrue(content.contains("<artifactId>pactum-scroll</artifactId>"),
                         "MEDIUM: POM must define pactum-scroll artifact");
                 } catch (Exception e) {
@@ -402,17 +433,112 @@ public class ProductionReadinessTest {
         @Test
         @DisplayName("Overall production readiness >= 80%")
         void testOverallProductionReadiness() {
-            // This is a meta-test that will pass only when enough features are implemented
-            // Current status: 45% (from PRODUCTION-READINESS-ROADMAP.md)
-            
             int criticalPassed = 0;
-            int criticalTotal = 4; // NetworkPolicies, Vault, TLS, Test refactoring
-            
+            int criticalTotal = 4;
+
             int highPassed = 0;
-            int highTotal = 5; // SLSA, Observability, Test quality
-            
+            int highTotal = 5;
+
             int mediumPassed = 0;
-            int mediumTotal = 4; // Pactum-Scroll, Performance tests, etc.
+            int mediumTotal = 4;
+
+            Path networkPolicyFile = fromRepoRoot("docs", "k8s-network-policies.yaml");
+            if (Files.exists(networkPolicyFile)) {
+                criticalPassed++;
+            }
+
+            boolean hasHardcodedCreds = false;
+            for (String filePath : List.of("steel-hammer/docker-compose.yml", "steel-hammer/docker-compose-steel-hammer.yml")) {
+                Path file = fromRepoRoot(filePath);
+                if (Files.exists(file)) {
+                    try {
+                        if (Files.readString(file).contains("minioadmin")) {
+                            hasHardcodedCreds = true;
+                            break;
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+            if (!hasHardcodedCreds) {
+                criticalPassed++;
+            }
+
+            String[] securityServices = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel", "Buzzle-Vane"};
+            boolean allVaultDepsPresent = true;
+            for (String service : securityServices) {
+                Optional<Path> pomFile = resolveModuleFile(service, "pom.xml");
+
+                if (pomFile.isPresent()) {
+                    try {
+                        String content = Files.readString(pomFile.get());
+                        if (!(content.contains("spring-cloud-vault") || content.contains("spring-vault"))) {
+                            allVaultDepsPresent = false;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        allVaultDepsPresent = false;
+                        break;
+                    }
+                }
+            }
+            if (allVaultDepsPresent) {
+                criticalPassed++;
+            }
+
+            String[] tlsServices = {"Sentinel-Gear", "Brazz-Nossel", "Claimspindel"};
+            boolean allTlsConfigured = true;
+            for (String service : tlsServices) {
+                Optional<Path> appConfig = resolveModuleFile(service, "src", "main", "resources", "application.yml");
+
+                if (appConfig.isPresent()) {
+                    try {
+                        String content = Files.readString(appConfig.get());
+                        if (!(content.contains("ssl:") || content.contains("tls:") || content.contains("key-store:") || content.contains("secure: true"))) {
+                            allTlsConfigured = false;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        allTlsConfigured = false;
+                        break;
+                    }
+                }
+            }
+            if (allTlsConfigured) {
+                criticalPassed++;
+            }
+
+            Path dashboards = fromRepoRoot("steel-hammer", "grafana", "dashboards");
+            Path alerts = fromRepoRoot("steel-hammer", "alerts", "alert-rules.yml");
+            Path tenantIsolation = fromRepoRoot("steel-hammer", "tests", "test-tenant-isolation.sh");
+            Path auditTrail = fromRepoRoot("steel-hammer", "tests", "test-audit-trail-e2e.sh");
+            Optional<Path> jwtTests = firstExisting(
+                fromRepoRoot("services", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java"),
+                fromRepoRoot("temp", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java"),
+                fromRepoRoot("tools", "Sentinel-Gear", "src", "test", "java", "com", "ironbucket", "sentinelgear", "identity", "SentinelGearJWTValidationTest.java")
+            );
+
+            if (Files.exists(dashboards)) highPassed++;
+            if (Files.exists(alerts)) highPassed++;
+            if (jwtTests.isPresent()) highPassed++;
+            if (Files.exists(tenantIsolation)) highPassed++;
+            if (Files.exists(auditTrail)) highPassed++;
+
+            Path policyE2E = fromRepoRoot("steel-hammer", "tests", "test-policy-enforcement-e2e.sh");
+            Path errorE2E = fromRepoRoot("steel-hammer", "tests", "test-error-handling-e2e.sh");
+            Optional<Path> pactumPom = firstExisting(
+                fromRepoRoot("services", "Pactum-Scroll", "pom.xml"),
+                fromRepoRoot("temp", "Pactum-Scroll", "pom.xml"),
+                fromRepoRoot("tools", "Pactum-Scroll", "pom.xml")
+            );
+            boolean hasPerf = Files.exists(fromRepoRoot("steel-hammer", "tests", "test-latency-targets.sh"))
+                    || Files.exists(fromRepoRoot("steel-hammer", "tests", "test-throughput-targets.sh"))
+                    || Files.exists(fromRepoRoot("steel-hammer", "tests", "test-load-1000rps.sh"));
+
+            if (Files.exists(policyE2E)) mediumPassed++;
+            if (Files.exists(errorE2E)) mediumPassed++;
+            if (pactumPom.isPresent()) mediumPassed++;
+            if (hasPerf) mediumPassed++;
             
             // Calculate weighted readiness
             // CRITICAL: 50%, HIGH: 30%, MEDIUM: 20%
