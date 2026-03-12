@@ -21,11 +21,11 @@ IronBucket has **excellent architecture and code quality** but requires **critic
 
 **⚠️ CRITICAL**: Before production deployment:
 1. Deploy [Kubernetes NetworkPolicies](docs/k8s-network-policies.yaml)
-2. Implement [Vault integration](docs/PRODUCTION-READINESS-ROADMAP.md#task-12-implement-vault-integration)
+2. Implement Vault-backed secret management and rotation (see [ROADMAP.md](ROADMAP.md))
 3. Enable TLS everywhere
 4. Complete [security hardening](docs/security/MINIO-ISOLATION-AUDIT.md)
 
-**📋 See**: [Architecture Assessment](docs/ARCHITECTURE-ASSESSMENT-2026.md) | [Roadmap](docs/PRODUCTION-READINESS-ROADMAP.md)
+**📋 See**: [Architecture Assessment](docs/ARCHITECTURE-ASSESSMENT-2026.md) | [Roadmap](ROADMAP.md)
 
 ---
 
@@ -84,7 +84,7 @@ PostgreSQL (Metadata)
 | Document | Purpose | Priority |
 |----------|---------|----------|
 | [Architecture Assessment 2026](docs/ARCHITECTURE-ASSESSMENT-2026.md) | **Complete architecture & security review** | 🔴 CRITICAL |
-| [Production Readiness Roadmap](docs/PRODUCTION-READINESS-ROADMAP.md) | **Implementation plan & timeline** | 🔴 CRITICAL |
+| [Production Readiness Roadmap](ROADMAP.md) | **Implementation plan & timeline** | 🔴 CRITICAL |
 | [MinIO Isolation Audit](docs/security/MINIO-ISOLATION-AUDIT.md) | **Network security analysis** | 🔴 CRITICAL |
 | [K8s NetworkPolicies](docs/k8s-network-policies.yaml) | **Network isolation rules** | 🔴 DEPLOY FIRST |
 | [Sentinel-Gear Security](docs/security/SENTINEL-CLAIMSPINDEL-SECURITY-VALIDATION.md) | Zero-trust validation | High |
@@ -110,8 +110,8 @@ PostgreSQL (Metadata)
 
 ## Test Results
 
-✅ **231 Tests Passing** (Unit Tests)  
-🔴 **3 Security Validation Issues** (See reports)
+✅ **Core module test pathways passing** (latest comprehensive run)  
+🔴 **Roadmap profile still contains failing implementation-gate tests** (see `services/Sentinel-Gear` roadmap suite)
 
 ### Run Comprehensive Tests
 

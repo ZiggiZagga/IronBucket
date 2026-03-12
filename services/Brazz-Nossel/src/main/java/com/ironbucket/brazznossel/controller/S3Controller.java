@@ -74,6 +74,32 @@ public class S3Controller {
 		NormalizedIdentity identity = extractIdentity(principal);
 		return s3ProxyService.listBuckets(identity);
 	}
+
+	@PostMapping(path="/bucket/{bucket}")
+	public Mono<String> createBucket(
+			@PathVariable String bucket,
+			@AuthenticationPrincipal Jwt principal) {
+
+		if (principal == null) {
+			return Mono.error(new IllegalStateException("No authentication principal found"));
+		}
+
+		NormalizedIdentity identity = extractIdentity(principal);
+		return s3ProxyService.createBucket(bucket, identity);
+	}
+
+	@GetMapping(path="/objects/{bucket}")
+	public Mono<String> listObjects(
+			@PathVariable String bucket,
+			@AuthenticationPrincipal Jwt principal) {
+
+		if (principal == null) {
+			return Mono.error(new IllegalStateException("No authentication principal found"));
+		}
+
+		NormalizedIdentity identity = extractIdentity(principal);
+		return s3ProxyService.listObjects(bucket, identity);
+	}
 	
 	/**
 	 * Get object from S3

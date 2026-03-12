@@ -12,6 +12,14 @@ logging:
 server:
   port: 8080
   shutdown: graceful
+  ssl:
+    enabled: ${SERVER_SSL_ENABLED:false}
+    key-store: ${SERVER_SSL_KEYSTORE:}
+    key-store-password: ${SERVER_SSL_KEYSTORE_PASSWORD:}
+    key-store-type: ${SERVER_SSL_KEYSTORE_TYPE:PKCS12}
+    trust-store: ${SERVER_SSL_TRUSTSTORE:}
+    trust-store-password: ${SERVER_SSL_TRUSTSTORE_PASSWORD:}
+    trust-store-type: ${SERVER_SSL_TRUSTSTORE_TYPE:PKCS12}
   servlet:
     context-path: /
 

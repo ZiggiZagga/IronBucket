@@ -713,7 +713,7 @@ docker logs brazz-nossel-service | grep ERROR
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System design
 - [policy-schema.md](docs/policy-schema.md) - Policy specification
 - [s3-proxy-contract.md](docs/s3-proxy-contract.md) - API contract
-- [COMMUNITY-ROADMAP.md](COMMUNITY-ROADMAP.md) - Future plans
+- [../ROADMAP.md](../ROADMAP.md) - Future plans and delivery phases
 
 ### Tools & References
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)

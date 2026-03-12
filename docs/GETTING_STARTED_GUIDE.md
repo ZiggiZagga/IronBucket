@@ -411,7 +411,7 @@ IronBucket/
 - **Issues**: Open a GitHub issue for bugs and feature requests
 - **Discussions**: Join community discussions for questions and ideas
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines
-- **Roadmap**: Check [ROADMAP.md](ROADMAP.md) for planned features
+- **Roadmap**: Check [../ROADMAP.md](../ROADMAP.md) for planned features
 
 ---
 

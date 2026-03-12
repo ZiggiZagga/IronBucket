@@ -3,6 +3,9 @@ package com.ironbucket.brazznossel.service;
 import com.ironbucket.brazznossel.model.NormalizedIdentity;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+
 /**
  * S3ProxyService - Interface for S3 proxy operations.
  * 
@@ -19,6 +22,12 @@ public interface S3ProxyService {
      * @return A Mono containing the bucket list response
      */
     Mono<String> listBuckets(NormalizedIdentity identity);
+
+    Mono<String> createBucket(String bucket, NormalizedIdentity identity);
+
+    Mono<Void> deleteBucket(String bucket, NormalizedIdentity identity);
+
+    Mono<String> listObjects(String bucket, NormalizedIdentity identity);
     
     /**
      * Get an object from a bucket.
@@ -29,6 +38,10 @@ public interface S3ProxyService {
      * @return A Mono containing the object bytes
      */
     Mono<byte[]> getObject(String bucket, String key, NormalizedIdentity identity);
+
+    Mono<String> headObject(String bucket, String key, NormalizedIdentity identity);
+
+    Mono<String> headBucket(String bucket, NormalizedIdentity identity);
     
     /**
      * Get a range of bytes from an object (partial read).
@@ -62,6 +75,12 @@ public interface S3ProxyService {
      * @return A Mono that completes when deletion is done
      */
     Mono<Void> deleteObject(String bucket, String key, NormalizedIdentity identity);
+
+    Mono<Void> deleteObjectVersion(String bucket, String key, String versionId, NormalizedIdentity identity);
+
+    Mono<byte[]> getObjectVersion(String bucket, String key, String versionId, NormalizedIdentity identity);
+
+    Mono<String> listObjectVersions(String bucket, NormalizedIdentity identity);
     
     /**
      * Initiate a multipart upload.
@@ -72,4 +91,18 @@ public interface S3ProxyService {
      * @return A Mono containing the upload ID
      */
     Mono<String> initiateMultipartUpload(String bucket, String key, NormalizedIdentity identity);
+
+    Mono<String> uploadPart(String bucket, String key, String uploadId, int partNumber, byte[] content, NormalizedIdentity identity);
+
+    Mono<String> completeMultipartUpload(String bucket, String key, String uploadId, List<CompletedPart> parts, NormalizedIdentity identity);
+
+    Mono<Void> abortMultipartUpload(String bucket, String key, String uploadId, NormalizedIdentity identity);
+
+    Mono<String> listMultipartUploads(String bucket, NormalizedIdentity identity);
+
+    Mono<String> listParts(String bucket, String key, String uploadId, NormalizedIdentity identity);
+
+    Mono<String> getBucketVersioning(String bucket, NormalizedIdentity identity);
+
+    Mono<String> putBucketVersioning(String bucket, String status, NormalizedIdentity identity);
 }

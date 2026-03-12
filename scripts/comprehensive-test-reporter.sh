@@ -841,7 +841,6 @@ main() {
   [[ "$RUN_E2E" == "true" ]] && run_e2e_tests
   [[ "$RUN_SECURITY" == "true" ]] && run_security_tests
   [[ "$RUN_ROADMAP" == "true" ]] && run_roadmap_tests
-  [[ "$RUN_SECURITY" == "true" ]] && run_security_tests
   
   # Generate reports
   log_header "Generating Reports"

@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
       'password',
       { username, password, scope: 'openid' }
     );
-    return NextResponse.json({ token: tokenSet.id_token || tokenSet.access_token });
+    return NextResponse.json({
+      token: tokenSet.id_token || tokenSet.access_token,
+      accessToken: tokenSet.access_token,
+      idToken: tokenSet.id_token,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: 'Authentication failed', details: err.message }, { status: 401 });
   }

@@ -1,35 +1,25 @@
-
-import fetch from 'node-fetch';
+import request from 'supertest';
+import app from '../src/index';
 
 describe('Authentication API Route', () => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
   it('should return 400 if no credentials are provided', async () => {
-    const res = await fetch(`${baseUrl}/api/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    });
+    const res = await request(app).post('/api/auth').send({});
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body).toHaveProperty('error');
+    expect(res.body).toHaveProperty('error');
   });
 
   it('should authenticate with Keycloak and return a valid token', async () => {
-    const res = await fetch(`${baseUrl}/api/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'bob', password: 'bobpass1' }),
-    });
+    const res = await request(app).post('/api/auth').send({ username: 'bob', password: 'bobpass1' });
     // Accept 200 or 401 depending on Keycloak availability
     expect([200, 401]).toContain(res.status);
     if (res.status === 200) {
-      const body = await res.json();
-      expect(body).toHaveProperty('token');
-      expect(typeof body.token).toBe('string');
+      expect(res.body).toHaveProperty('token');
+      expect(typeof res.body.token).toBe('string');
+      expect(res.body).toHaveProperty('accessToken');
+      expect(res.body).toHaveProperty('idToken');
     } else {
-      const body = await res.json();
-      expect(body).toHaveProperty('error');
+      expect(res.body).toHaveProperty('error');
     }
   });
 });
