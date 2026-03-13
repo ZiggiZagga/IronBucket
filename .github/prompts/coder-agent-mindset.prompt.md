@@ -132,4 +132,4 @@ tasks: |
   - Follow the Roadmap and begin fixing tests and production-readiness issues immediately.
   - Address root causes of failures, not symptoms.
   - Observe logs and reports before summarizing.
-- Great. Please always respond in English. According to the roadmap, what are the next steps and phase? Please implement the actual requirements from the roadmap into working code. Make sure e2e tests are always kept up to date and in sync with docs.
+- Great. Please always respond in English. According to the roadmap, what are the next steps and phase? Please implement the actual requirements from the roadmap into working code. Make sure e2e tests are always kept up to date and in sync with docs. It is crucial to identify and implement the missing tests  and ensure they are passing before summarizing.
