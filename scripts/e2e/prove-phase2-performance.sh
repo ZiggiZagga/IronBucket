@@ -16,6 +16,8 @@ PERF_REUSE_STACK="${PERF_REUSE_STACK:-false}"
 PERF_TARGET_URL="${PERF_TARGET_URL:-http://steel-hammer-graphite-forge:8084/actuator/health}"
 PERF_REQUESTS="${PERF_REQUESTS:-120}"
 PERF_CONCURRENCY="${PERF_CONCURRENCY:-12}"
+PERF_SERVICE_REQUESTS="${PERF_SERVICE_REQUESTS:-60}"
+PERF_SERVICE_CONCURRENCY="${PERF_SERVICE_CONCURRENCY:-6}"
 PERF_P95_MS_THRESHOLD="${PERF_P95_MS_THRESHOLD:-350}"
 PERF_RPS_THRESHOLD="${PERF_RPS_THRESHOLD:-20}"
 
@@ -43,46 +45,40 @@ wait_internal_http() {
   return 1
 }
 
-if [[ "$PERF_REUSE_STACK" != "true" ]]; then
-  log "Starting LGTM + services stack for performance proof"
-  (
-    cd "$STACK_DIR"
-    docker compose -f "$COMPOSE_FILE" up -d --build
-  ) > "$EVIDENCE_DIR/compose-up.log" 2>&1
-else
-  log "Reusing existing LGTM + services stack for performance proof"
-fi
+run_load_samples() {
+  local mode="$1"
+  local target="$2"
+  local requests="$3"
+  local concurrency="$4"
+  local out_file="$5"
 
-NETWORK_NAME="$(docker inspect steel-hammer-loki --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' 2>/dev/null | head -n1 | tr -d '\r')"
-if [[ -z "$NETWORK_NAME" ]]; then
-  echo "Failed to discover compose network name (is stack running?)" >&2
-  exit 1
-fi
-log "Discovered network: $NETWORK_NAME"
+  if [[ "$mode" == "container" ]]; then
+    local container_name="$6"
+    docker run --rm --network "container:${container_name}" \
+      -e TARGET="$target" \
+      -e REQUESTS="$requests" \
+      -e CONCURRENCY="$concurrency" \
+      curlimages/curl:8.12.1 sh -lc '
+        seq "$REQUESTS" | xargs -I{} -P "$CONCURRENCY" sh -c "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" \"$TARGET\" || true"
+      ' > "$out_file"
+  else
+    docker run --rm --network "$NETWORK_NAME" \
+      -e TARGET="$target" \
+      -e REQUESTS="$requests" \
+      -e CONCURRENCY="$concurrency" \
+      curlimages/curl:8.12.1 sh -lc '
+        seq "$REQUESTS" | xargs -I{} -P "$CONCURRENCY" sh -c "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" \"$TARGET\" || true"
+      ' > "$out_file"
+  fi
+}
 
-STACK_OK=true
-wait_internal_http "Graphite-Forge" "http://steel-hammer-graphite-forge:8084/actuator/health" || STACK_OK=false
-wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
-wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
-wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
+compute_summary() {
+  local samples_file="$1"
+  local start_ns="$2"
+  local end_ns="$3"
+  local out_file="$4"
 
-if [[ "$STACK_OK" != "true" ]]; then
-  echo "Stack not ready for performance proof" >&2
-  exit 1
-fi
-
-log "Running latency/throughput load: requests=$PERF_REQUESTS concurrency=$PERF_CONCURRENCY target=$PERF_TARGET_URL"
-START_NS="$(date +%s%N)"
-docker run --rm --network "$NETWORK_NAME" \
-  -e TARGET="$PERF_TARGET_URL" \
-  -e REQUESTS="$PERF_REQUESTS" \
-  -e CONCURRENCY="$PERF_CONCURRENCY" \
-  curlimages/curl:8.12.1 sh -lc '
-    seq "$REQUESTS" | xargs -I{} -P "$CONCURRENCY" sh -c "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" \"$TARGET\""
-  ' > "$EVIDENCE_DIR/latency-samples.txt"
-END_NS="$(date +%s%N)"
-
-python3 - "$EVIDENCE_DIR/latency-samples.txt" "$START_NS" "$END_NS" "$EVIDENCE_DIR/performance-summary.txt" <<'PY'
+  python3 - "$samples_file" "$start_ns" "$end_ns" "$out_file" <<'PY'
 import math
 import statistics
 import sys
@@ -121,15 +117,50 @@ else:
     p50 = p95 = avg = 0.0
 
 with open(out_path, 'w', encoding='utf-8') as out:
-    out.write(f"total={total}\n")
-    out.write(f"success={success}\n")
-    out.write(f"success_rate={success_rate:.2f}\n")
-    out.write(f"duration_s={duration_s:.3f}\n")
-    out.write(f"rps={rps:.2f}\n")
-    out.write(f"latency_avg_ms={avg:.2f}\n")
-    out.write(f"latency_p50_ms={p50:.2f}\n")
-    out.write(f"latency_p95_ms={p95:.2f}\n")
+  out.write(f"total={total}\n")
+  out.write(f"success={success}\n")
+  out.write(f"success_rate={success_rate:.2f}\n")
+  out.write(f"duration_s={duration_s:.3f}\n")
+  out.write(f"rps={rps:.2f}\n")
+  out.write(f"latency_avg_ms={avg:.2f}\n")
+  out.write(f"latency_p50_ms={p50:.2f}\n")
+  out.write(f"latency_p95_ms={p95:.2f}\n")
 PY
+}
+
+if [[ "$PERF_REUSE_STACK" != "true" ]]; then
+  log "Starting LGTM + services stack for performance proof"
+  (
+    cd "$STACK_DIR"
+    docker compose -f "$COMPOSE_FILE" up -d --build
+  ) > "$EVIDENCE_DIR/compose-up.log" 2>&1
+else
+  log "Reusing existing LGTM + services stack for performance proof"
+fi
+
+NETWORK_NAME="$(docker inspect steel-hammer-loki --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' 2>/dev/null | head -n1 | tr -d '\r')"
+if [[ -z "$NETWORK_NAME" ]]; then
+  echo "Failed to discover compose network name (is stack running?)" >&2
+  exit 1
+fi
+log "Discovered network: $NETWORK_NAME"
+
+STACK_OK=true
+wait_internal_http "Graphite-Forge" "http://steel-hammer-graphite-forge:8084/actuator/health" || STACK_OK=false
+wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
+wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
+wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
+
+if [[ "$STACK_OK" != "true" ]]; then
+  echo "Stack not ready for performance proof" >&2
+  exit 1
+fi
+
+log "Running latency/throughput load: requests=$PERF_REQUESTS concurrency=$PERF_CONCURRENCY target=$PERF_TARGET_URL"
+START_NS="$(date +%s%N)"
+run_load_samples "internal" "$PERF_TARGET_URL" "$PERF_REQUESTS" "$PERF_CONCURRENCY" "$EVIDENCE_DIR/latency-samples.txt"
+END_NS="$(date +%s%N)"
+compute_summary "$EVIDENCE_DIR/latency-samples.txt" "$START_NS" "$END_NS" "$EVIDENCE_DIR/performance-summary.txt"
 
 source "$EVIDENCE_DIR/performance-summary.txt"
 
@@ -160,6 +191,76 @@ then
   SUCCESS_RATE_OK=true
 fi
 
+mkdir -p "$EVIDENCE_DIR/service-level"
+SERVICE_STATS_ROWS=""
+SERVICE_LEVEL_OK=true
+
+for service in graphite-forge buzzle-vane claimspindel brazz-nossel minio keycloak sentinel-gear-mgmt; do
+  mode="internal"
+  target=""
+  container_name=""
+
+  case "$service" in
+    graphite-forge)
+      target="http://steel-hammer-graphite-forge:8084/actuator/health"
+      ;;
+    buzzle-vane)
+      target="http://steel-hammer-buzzle-vane:8083/actuator/health"
+      ;;
+    claimspindel)
+      target="http://steel-hammer-claimspindel:8081/actuator/health"
+      ;;
+    brazz-nossel)
+      target="http://steel-hammer-brazz-nossel:8082/actuator/health"
+      ;;
+    minio)
+      target="http://steel-hammer-minio:9000/minio/health/live"
+      ;;
+    keycloak)
+      target="http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration"
+      ;;
+    sentinel-gear-mgmt)
+      mode="container"
+      container_name="steel-hammer-sentinel-gear"
+      target="http://localhost:8081/actuator/health-check"
+      ;;
+  esac
+
+  sample_file="$EVIDENCE_DIR/service-level/${service}-latency-samples.txt"
+  summary_file="$EVIDENCE_DIR/service-level/${service}-summary.txt"
+
+  service_start_ns="$(date +%s%N)"
+  if [[ "$mode" == "container" ]]; then
+    run_load_samples "$mode" "$target" "$PERF_SERVICE_REQUESTS" "$PERF_SERVICE_CONCURRENCY" "$sample_file" "$container_name"
+  else
+    run_load_samples "$mode" "$target" "$PERF_SERVICE_REQUESTS" "$PERF_SERVICE_CONCURRENCY" "$sample_file"
+  fi
+  service_end_ns="$(date +%s%N)"
+
+  compute_summary "$sample_file" "$service_start_ns" "$service_end_ns" "$summary_file"
+
+  service_total="$(awk -F= '/^total=/{print $2}' "$summary_file")"
+  service_success_rate="$(awk -F= '/^success_rate=/{print $2}' "$summary_file")"
+  service_rps="$(awk -F= '/^rps=/{print $2}' "$summary_file")"
+  service_p95="$(awk -F= '/^latency_p95_ms=/{print $2}' "$summary_file")"
+
+  service_ok="true"
+  if ! python3 - <<PY
+import sys
+sys.exit(0 if (
+  float("${service_success_rate:-0}") >= 99.0 and
+  float("${service_rps:-0}") >= float("${PERF_RPS_THRESHOLD}") and
+  float("${service_p95:-0}") <= float("${PERF_P95_MS_THRESHOLD}")
+) else 1)
+PY
+  then
+    service_ok="false"
+    SERVICE_LEVEL_OK=false
+  fi
+
+  SERVICE_STATS_ROWS+="| ${service} | ${service_total} | ${service_success_rate} | ${service_rps} | ${service_p95} | ${service_ok} |"$'\n'
+done
+
 mkdir -p "$(dirname "$HISTORY_CSV")"
 if [[ ! -f "$HISTORY_CSV" ]]; then
   echo "timestamp,target,requests,concurrency,success_rate,rps,latency_avg_ms,latency_p50_ms,latency_p95_ms,latency_ok,throughput_ok,success_rate_ok" > "$HISTORY_CSV"
@@ -183,6 +284,7 @@ cat > "$REPORT_FILE" <<EOF
 | Success rate >= 99% | $SUCCESS_RATE_OK | 99.0% |
 | Throughput (requests/sec) | $THROUGHPUT_OK | >= $PERF_RPS_THRESHOLD |
 | P95 latency (ms) | $LATENCY_OK | <= $PERF_P95_MS_THRESHOLD |
+| Service-level stats checks | $SERVICE_LEVEL_OK | all services meet p95/rps/success thresholds |
 
 ## Measured Stats
 
@@ -195,6 +297,12 @@ cat > "$REPORT_FILE" <<EOF
 - latency p50 (ms): $latency_p50_ms
 - latency p95 (ms): $latency_p95_ms
 
+## Service-Level Stats
+
+| Service | Requests | Success Rate (%) | Throughput (req/s) | P95 Latency (ms) | Threshold Result |
+|---|---:|---:|---:|---:|---|
+$SERVICE_STATS_ROWS
+
 ## Continuous Tracking
 
 - History CSV: test-results/phase2-performance/performance-history.csv
@@ -204,7 +312,7 @@ cat > "$REPORT_FILE" <<EOF
 EOF
 
 OVERALL_OK=false
-if [[ "$STACK_OK" == "true" && "$SUCCESS_RATE_OK" == "true" && "$LATENCY_OK" == "true" && "$THROUGHPUT_OK" == "true" ]]; then
+if [[ "$STACK_OK" == "true" && "$SUCCESS_RATE_OK" == "true" && "$LATENCY_OK" == "true" && "$THROUGHPUT_OK" == "true" && "$SERVICE_LEVEL_OK" == "true" ]]; then
   echo "✅ Phase 2 performance proof passed." >> "$REPORT_FILE"
   OVERALL_OK=true
 else

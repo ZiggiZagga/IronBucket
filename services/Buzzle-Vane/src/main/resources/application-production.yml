@@ -4,6 +4,8 @@
 spring:
   application:
     name: buzzle-vane
+  main:
+    web-application-type: servlet
   
   profiles:
     active: production

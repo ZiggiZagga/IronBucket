@@ -1,12 +1,12 @@
 # IronBucket Roadmap: Journey to Graphite Forge
 
-**Last Updated:** March 13, 2026  
+**Last Updated:** March 13, 2026 (22:30 UTC)  
 **Current Phase:** Phase E - Gate Hardening, Release Policy & Phase 4 Kickoff  
 **Overall Status:** 🟢 **Roadmap Gates Met for Current Sentinel Profile** | 🟡 **Production Hardening In Progress**
 
 **Verified Test Snapshot (2026-03-13):**
-- Backend modules: 8/8 passing via `scripts/comprehensive-test-reporter.sh --all`
-- Full orchestrator: 187/187 passing via `scripts/run-all-tests-complete.sh`
+- Backend modules: 9/9 passing via `scripts/run-all-tests-complete.sh`
+- Full orchestrator: 187/187 passing via `scripts/run-all-tests-complete.sh` (report `2026-03-13 22:22:00`)
 - E2E smoke: passing in container-network mode with transient 5xx retry hardening
 - Security validation (reporter): 4/4 passing
 - Sentinel roadmap profile: 105 tests run, 0 failing (`mvn test -Proadmap` in `services/Sentinel-Gear`)
@@ -236,8 +236,12 @@ Verified completed:
   - GraphQL parse-error evidence (`InvalidSyntax`) and `X-Correlation-ID` response propagation.
 - ✅ Phase-2 performance gate added and integrated into observability infra gate:
   - Throughput and latency proof (`scripts/e2e/prove-phase2-performance.sh`)
-  - Latest baseline: 106.37 req/s, p95 latency 57.77 ms, success rate 100.00%
+  - Latest baseline: 131.88 req/s, p95 latency 37.24 ms, success rate 100.00%
   - Continuous history tracking in `test-results/phase2-performance/performance-history.csv`
+
+**Reactive migration reality check (repo-aligned):**
+- `tools/Vault-Smith` uses `spring-boot-starter-webflux`.
+- `services/Buzzle-Vane` intentionally remains on `spring-boot-starter-web` because forcing reactive mode breaks Eureka server discovery contracts in container E2E.
 
 Verified not completed:
 - ⚠️ No mandatory gate assertion yet for correlation-id semantic search in Loki across multiple services (stream presence is verified, semantic correlation join is not).

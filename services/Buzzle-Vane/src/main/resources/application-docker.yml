@@ -6,6 +6,8 @@ server:
 spring:
   application:
     name: buzzle-vane
+  main:
+    web-application-type: servlet
   cloud:
     client:
       registration:

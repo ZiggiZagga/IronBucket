@@ -94,7 +94,7 @@ PostgreSQL (Metadata)
 ```
 
 **Discovery:** Buzzle-Vane (Eureka) :8083  
-**Identity:** Keycloak :8080
+**Identity:** Keycloak :7081
 
 ## Documentation
 
@@ -131,6 +131,7 @@ PostgreSQL (Metadata)
 
 ✅ **Core module test pathways passing** (latest comprehensive run)  
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
+✅ **Full orchestrator green** (187/187 passing, 2026-03-13 22:22:00 UTC)
 
 ### Run Comprehensive Tests
 
@@ -190,8 +191,11 @@ See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](do
 
 ## Observability Runtime Status (2026-03-13)
 
-Latest verified proof: `test-results/phase2-observability/20260313T211751Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
-Latest verified performance proof: `test-results/phase2-performance/20260313T212324Z/PHASE2_PERFORMANCE_REPORT.md`
+Latest verified proof: `test-results/phase2-observability/20260313T222356Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
+Latest verified performance proof: `test-results/phase2-performance/20260313T222700Z/PHASE2_PERFORMANCE_REPORT.md`
+
+Latest complete system validation:
+- `test-results/reports/COMPLETE-TEST-REPORT-2026-03-13 22:22:00.md` (187/187 passing)
 
 Verified completed:
 - ✅ Logs (Loki): service streams queryable (`service_name` fallback active)
@@ -206,6 +210,10 @@ Verified not completed (remaining gaps):
 - ⚠️ Trace-by-id assertion from UI E2E artifact to Tempo query is not yet mandatory in the gate.
 
 Planned next additions are tracked in [ROADMAP.md](ROADMAP.md) under observability gate hardening.
+
+Reactive migration status:
+- `tools/Vault-Smith` is migrated to `spring-boot-starter-webflux`.
+- `services/Buzzle-Vane` remains on `spring-boot-starter-web` for Eureka server compatibility and stable discovery behavior.
 
 Continuous performance tracking:
 - [docs/OBSERVABILITY-PERFORMANCE-TRACKING.md](docs/OBSERVABILITY-PERFORMANCE-TRACKING.md)

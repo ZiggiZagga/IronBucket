@@ -7,6 +7,9 @@ server:
 spring:
   application:
     name: graphite-forge
+  threads:
+    virtual:
+      enabled: true
   main:
     web-application-type: reactive
 
