@@ -211,6 +211,22 @@ run_internal_curl "http://steel-hammer-tempo:3200/metrics" "$EVIDENCE_DIR/tempo-
 # Collector telemetry endpoint is frequently bound to localhost inside container.
 run_container_local_curl "steel-hammer-otel-collector" "http://localhost:8888/metrics" "$EVIDENCE_DIR/otel-collector-metrics.txt" || true
 
+log "Running error-handling and correlation-id checks"
+ERROR_CORR_ID="phase2-proof-corr-${TIMESTAMP}"
+GRAPHQL_CORR_ID="phase2-proof-gql-${TIMESTAMP}"
+
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+  -H "X-Correlation-ID: ${ERROR_CORR_ID}" \
+  "http://steel-hammer-graphite-forge:8084/non-existent-endpoint" \
+  > "$EVIDENCE_DIR/graphite-404-response.txt" || true
+
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+  -H "Content-Type: application/json" \
+  -H "X-Correlation-ID: ${GRAPHQL_CORR_ID}" \
+  --data '{"query":"{"}' \
+  "http://steel-hammer-graphite-forge:8084/graphql" \
+  > "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt" || true
+
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
   "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=up' \
@@ -369,6 +385,32 @@ for service_container in \
   fi
 done
 
+ERROR_404_STATUS_OK=false
+if grep -q '^HTTP/1.1 404' "$EVIDENCE_DIR/graphite-404-response.txt"; then
+  ERROR_404_STATUS_OK=true
+fi
+
+ERROR_404_CORR_HEADER_OK=false
+if grep -Eiq "^X-Correlation-ID: ${ERROR_CORR_ID}" "$EVIDENCE_DIR/graphite-404-response.txt"; then
+  ERROR_404_CORR_HEADER_OK=true
+fi
+
+GRAPHQL_PARSE_ERROR_OK=false
+if grep -q '^HTTP/1.1 200' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt" && \
+   grep -q '"classification":"InvalidSyntax"' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt"; then
+  GRAPHQL_PARSE_ERROR_OK=true
+fi
+
+GRAPHQL_CORR_HEADER_OK=false
+if grep -Eiq "^X-Correlation-ID: ${GRAPHQL_CORR_ID}" "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt"; then
+  GRAPHQL_CORR_HEADER_OK=true
+fi
+
+ERROR_HANDLING_OK=false
+if [[ "$ERROR_404_STATUS_OK" == "true" && "$ERROR_404_CORR_HEADER_OK" == "true" && "$GRAPHQL_PARSE_ERROR_OK" == "true" && "$GRAPHQL_CORR_HEADER_OK" == "true" ]]; then
+  ERROR_HANDLING_OK=true
+fi
+
 cat > "$REPORT_FILE" <<EOF
 # Phase 2 Observability Proof Report
 
@@ -391,6 +433,7 @@ cat > "$REPORT_FILE" <<EOF
 | Infra metrics endpoint content | $INFRA_ENDPOINTS_CONTENT_OK | keycloak/minio/postgres exporter metric dumps |
 | Infra metrics in Mimir (Keycloak/MinIO/Postgres exporter) | $INFRA_METRICS_IN_MIMIR_OK | mimir-query-*-up.json |
 | Runtime services OTEL env wiring | $SERVICE_OTEL_ENV_OK | docker inspect env for sentinel/claimspindel/brazz/buzzle |
+| Error handling + correlation propagation (Graphite-Forge) | $ERROR_HANDLING_OK | graphite-404-response.txt + graphite-graphql-parse-error-response.txt |
 
 ## Key Counters
 
@@ -404,6 +447,10 @@ cat > "$REPORT_FILE" <<EOF
 - mimir keycloak up sum: $MIMIR_KEYCLOAK_UP_SUM
 - mimir minio up sum: $MIMIR_MINIO_UP_SUM
 - mimir postgres exporter up sum: $MIMIR_POSTGRES_EXPORTER_UP_SUM
+- graphite 404 status check: $ERROR_404_STATUS_OK
+- graphite 404 correlation header check: $ERROR_404_CORR_HEADER_OK
+- graphite graphql parse error check: $GRAPHQL_PARSE_ERROR_OK
+- graphite graphql correlation header check: $GRAPHQL_CORR_HEADER_OK
 
 ## Thresholds
 
@@ -415,7 +462,7 @@ cat > "$REPORT_FILE" <<EOF
 
 EOF
 
-if [[ "$STACK_OK" == "true" && "$PROM_ENDPOINTS_OK" == "true" && "$OTLP_POST_OK" == "true" && "$TRACES_OK" == "true" && "$LOGS_OK" == "true" && "$INFRA_METRICS_IN_MIMIR_OK" == "true" && "$SERVICE_OTEL_ENV_OK" == "true" ]]; then
+if [[ "$STACK_OK" == "true" && "$PROM_ENDPOINTS_OK" == "true" && "$OTLP_POST_OK" == "true" && "$TRACES_OK" == "true" && "$LOGS_OK" == "true" && "$INFRA_METRICS_IN_MIMIR_OK" == "true" && "$SERVICE_OTEL_ENV_OK" == "true" && "$ERROR_HANDLING_OK" == "true" ]]; then
   echo "✅ Phase 2 observability is operational and proven with executable evidence." >> "$REPORT_FILE"
   OVERALL_OK=true
 else

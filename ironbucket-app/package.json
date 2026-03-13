@@ -8,8 +8,12 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
+    "@opentelemetry/auto-instrumentations-node": "^0.71.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.213.0",
+    "@opentelemetry/sdk-node": "^0.213.0",
     "express": "^4.19.2",
-    "openid-client": "^6.8.1"
+    "openid-client": "^6.8.1",
+    "prom-client": "^15.1.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

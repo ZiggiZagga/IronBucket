@@ -21,6 +21,7 @@ Thumbs.db
 *.key
 
 # Node.js / frontend artifacts
+node_modules/
 **/node_modules/
 **/.next/
 **/dist/

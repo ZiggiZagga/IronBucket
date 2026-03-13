@@ -17,7 +17,7 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 | Security Design | ✅ A+ | Zero-trust, multi-layer |
 | **Network Isolation** | 🔴 **C** | **NetworkPolicies required** |
 | **Credential Mgmt** | 🔴 **D** | **Vault integration needed** |
-| Observability | 🟡 B | Logs/Metrics operational; tracing hardening active |
+| Observability | ✅ A- | Logs/Metrics/Tracing operational in Phase-2 proof; advanced coverage still expanding |
 
 **⚠️ Remaining production actions:**
 1. Enforce required branch checks and release preflight in protected-branch policy
@@ -190,9 +190,25 @@ See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](do
 
 ## Observability Runtime Status (2026-03-13)
 
-- Logs (Loki): ✅ operational
-- Metrics (Mimir): ✅ operational
-- Traces (Tempo): ⚠️ degraded (container restart loop caused by Kafka-topic distributor config mismatch)
+Latest verified proof: `test-results/phase2-observability/20260313T211751Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
+Latest verified performance proof: `test-results/phase2-performance/20260313T212324Z/PHASE2_PERFORMANCE_REPORT.md`
+
+Verified completed:
+- ✅ Logs (Loki): service streams queryable (`service_name` fallback active)
+- ✅ Metrics (Mimir): service + infra metrics ingested and queryable
+- ✅ Traces (Tempo + OTEL): synthetic OTLP trace accepted and ingestion counters > 0
+- ✅ Runtime wiring: OTEL env wiring validated for sentinel/claimspindel/brazz/buzzle
+- ✅ Error handling + correlation propagation: Graphite-Forge 404 + GraphQL parse-error checks with `X-Correlation-ID` propagation
+
+Verified not completed (remaining gaps):
+- ⚠️ Cross-service correlation-id search in Loki is not yet a blocking gate assertion (current gate verifies stream presence, not semantic correlation joins).
+- ⚠️ Authenticated error-path proof across JWT-protected service endpoints is not yet automated in Phase-2 proof (current error checks run on Graphite-Forge).
+- ⚠️ Trace-by-id assertion from UI E2E artifact to Tempo query is not yet mandatory in the gate.
+
+Planned next additions are tracked in [ROADMAP.md](ROADMAP.md) under observability gate hardening.
+
+Continuous performance tracking:
+- [docs/OBSERVABILITY-PERFORMANCE-TRACKING.md](docs/OBSERVABILITY-PERFORMANCE-TRACKING.md)
 
 Latest UI evidence artifacts:
 - `test-results/ui-e2e-traces/ui-live-upload-persistence.json`
