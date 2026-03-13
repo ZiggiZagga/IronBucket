@@ -56,7 +56,7 @@ Use this workflow as the primary end-to-end release confidence gate.
 
 **Actions:**
 - ✅ Runs all Java + UI projects gate (`scripts/ci/run-all-projects-e2e-gate.sh`)
-- ✅ Enforces Next.js UI browser scenarios (`alice-bob-upload-trace.spec.ts`, `object-browser-baseline.spec.ts`)
+- ✅ Enforces Next.js live UI persistence scenario (`ui-live-upload-persistence.spec.ts`) with real backend round-trip verification
 - ✅ Runs Phase 1-4 roadmap E2E proof gate
 - ✅ Runs Phase 2 observability infrastructure gate (`scripts/ci/run-observability-infra-gate.sh`)
 - ✅ Uses deterministic Phase 2 proof command (`scripts/e2e/prove-phase2-observability.sh`)

@@ -36,16 +36,15 @@ Artifacts are written to:
 test-results/all-projects-e2e-gate/
 ```
 
-The Next.js UI gate now enforces both baseline scenarios inspired by the object browser flow:
+The Next.js UI gate now enforces the live persistence baseline scenario:
 
 ```bash
 cd ironbucket-app-nextjs
 npm run test:e2e:ui
 ```
 
-Included scenarios:
-- `tests/alice-bob-upload-trace.spec.ts`
-- `tests/object-browser-baseline.spec.ts`
+Included scenario:
+- `tests/ui-live-upload-persistence.spec.ts`
 
 UI trace artifacts are written to:
 

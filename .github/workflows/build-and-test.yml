@@ -28,6 +28,9 @@ jobs:
       - name: Test E2E docs/workflow sync guardrail script
         run: bash scripts/testing/test-verify-e2e-doc-sync.sh
 
+      - name: Test branch protection guardrail script
+        run: bash scripts/testing/test-verify-main-branch-protection.sh
+
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
 

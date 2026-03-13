@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest --passWithNoTests",
-    "test:e2e:ui": "playwright test --config playwright.config.ts tests/alice-bob-upload-trace.spec.ts tests/object-browser-baseline.spec.ts"
+    "test:e2e:ui": "playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts",
+    "test:e2e:ui:live": "playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.8.0",

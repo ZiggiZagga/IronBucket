@@ -1,400 +1,188 @@
-#!/bin/bash
-# Complete E2E Test with JWT Authentication
-# This script verifies the entire IronBucket flow with valid JWT tokens
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+# Canonical complete E2E runner.
+# Runs full all-projects gate (Java + UI), first-user containerized proof,
+# and Phase 2 observability proof, then records Alice upload evidence + LGTM logs.
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+OUT_DIR="$ROOT_DIR/test-results/e2e-complete/$TIMESTAMP"
+REPORT_FILE="$OUT_DIR/E2E_COMPLETE_REPORT.md"
+LOG_DIR="$OUT_DIR/logs"
 
-echo -e "${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║         IronBucket E2E Test: Complete Flow Validation          ║${NC}"
-echo -e "${BLUE}║      Tests + Services + JWT Auth + File Upload + MinIO        ║${NC}"
-echo -e "${BLUE}╚════════════════════════════════════════════════════════════════╝${NC}"
-echo ""
+mkdir -p "$LOG_DIR"
 
-# ============================================================================
-# PHASE 1: RUN MAVEN TESTS
-# ============================================================================
+log() {
+  printf '[run-e2e-complete] %s\n' "$*"
+}
 
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Phase 1: Maven Unit Tests${NC}"
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
+latest_file() {
+  local pattern="$1"
+  find "$ROOT_DIR" -path "$pattern" -type f 2>/dev/null | sort | tail -1 || true
+}
 
-TEMP_DIR="/workspaces/IronBucket/temp"
-TOTAL_TESTS=231  # Pre-verified count
-TOTAL_FAILURES=0
-PROJECTS_PASSED=6
+extract_alice_object() {
+  local alice_log="$1"
+  grep -E 'Object: default-alice-files/' "$alice_log" | tail -1 | sed -E 's/.*Object: //' || true
+}
 
-# Inform user about Maven tests
-echo -e "${CYAN}Maven tests pre-verified on host system...${NC}"
-echo -e "${CYAN}All 231 unit tests already passing (verified separately)${NC}"
-echo -e "${CYAN}Skipping Maven execution in container (Maven runs in host, not in container)${NC}"
-
-cd /
-echo ""
-echo -e "${GREEN}Maven Tests Complete:${NC}"
-echo "  Projects Passed: $PROJECTS_PASSED/6"
-echo "  Total Tests: $TOTAL_TESTS"
-echo "  Total Failures: $TOTAL_FAILURES"
-echo ""
-
-# ============================================================================
-# PHASE 2: SERVICE HEALTH CHECK
-# ============================================================================
-
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Phase 2: Service Health & Startup Verification${NC}"
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
-
-echo -e "${CYAN}Service Startup Logs:${NC}"
-echo ""
-
-echo "Buzzle-Vane (Eureka Discovery):"
-docker logs steel-hammer-buzzle-vane 2>&1 | grep -i "Starting DiscoveryApp\|profile is active\|DiscoveryJerseyProvider" | head -3 | sed 's/^/  /'
-
-echo ""
-echo "Sentinel-Gear (JWT Validator):"
-docker logs steel-hammer-sentinel-gear 2>&1 | grep -i "Starting GatewayApp\|Netty started on port" | head -3 | sed 's/^/  /'
-
-echo ""
-echo "Brazz-Nossel (S3 Proxy):"
-docker logs steel-hammer-brazz-nossel 2>&1 | grep -i "Starting GatewayApp\|profile is active\|Started GatewayApp" | head -3 | sed 's/^/  /'
-
-echo ""
-echo -e "${GREEN}✅ All services operational${NC}"
-echo ""
-
-# ============================================================================
-# PHASE 3: E2E TEST WITH VALID JWT
-# ============================================================================
-
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Phase 3: E2E Flow - Direct MinIO Upload (Proof of Concept)${NC}"
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
-
-echo "NOTE: Direct MinIO upload demonstrates successful S3 operations."
-echo "JWT proxy validation is enforced in production and prevents unsigned access."
-echo ""
-
-python3 << 'EOFPYTHON'
-import boto3
-from botocore.config import Config
-import sys
-import time
+extract_json_value() {
+  local json_file="$1"
+  local key="$2"
+  python3 - "$json_file" "$key" <<'PY'
 import json
+import sys
 
-print("Step 1: Gateway-mediated S3 Connection")
-print("  Endpoint: http://steel-hammer-brazz-nossel:8082")
-print("  Credentials: minioadmin/minioadmin (dev only; production uses JWT)")
-print("")
+path = sys.argv[1]
+key = sys.argv[2]
 
-try:
-    s3 = boto3.client(
-        's3',
-        endpoint_url='http://steel-hammer-brazz-nossel:8082',
-        aws_access_key_id='test-key',
-        aws_secret_access_key='test-secret',
-        region_name='us-east-1',
-        config=Config(signature_version='s3v4')
-    )
-    
-    # Get bucket location (metadata)
-    bucket = "ironbucket-e2e-proof"
-    print(f"Step 2: Create bucket '{bucket}'")
-    try:
-        create_resp = s3.create_bucket(Bucket=bucket)
-        print(f"  ✅ Bucket created")
-        print(f"  Location: {create_resp.get('Location', 'N/A')}")
-    except Exception as e:
-        if "BucketAlreadyOwnedByYou" in str(e) or "BucketAlreadyExists" in str(e):
-            print(f"  ✓ Bucket already exists")
-        else:
-            raise
-    
-    # Get bucket versioning status
-    try:
-        versioning = s3.get_bucket_versioning(Bucket=bucket)
-        print(f"  Versioning: {versioning.get('Status', 'Not set')}")
-    except:
-        pass
-    
-    # Upload test file with metadata
-    print("")
-    test_key = f"e2e-test-{int(time.time())}.txt"
-    test_content = "IronBucket E2E Test - Complete Flow Verification"
-    
-    print(f"Step 3: Upload file to MinIO with metadata")
-    print(f"  Bucket: {bucket}")
-    print(f"  Key: {test_key}")
-    print(f"  Content: {test_content}")
-    
-    put_response = s3.put_object(
-        Bucket=bucket, 
-        Key=test_key, 
-        Body=test_content.encode(),
-        Metadata={'test-source': 'e2e-validation', 'deployment': 'docker'}
-    )
-    
-    # Extract upload metadata
-    etag = put_response.get('ETag', 'N/A').strip('"')
-    version_id = put_response.get('VersionId', 'N/A')
-    
-    print(f"  ✅ File uploaded successfully")
-    print(f"  ETag: {etag}")
-    print(f"  VersionId: {version_id}")
-    print(f"  ServerSideEncryption: {put_response.get('ServerSideEncryption', 'None')}")
-    
-    # Verify file with HEAD (metadata only)
-    print("")
-    print(f"Step 4: Verify file metadata in MinIO")
-    head_response = s3.head_object(Bucket=bucket, Key=test_key)
-    
-    content_length = head_response.get('ContentLength', 0)
-    last_modified = head_response.get('LastModified', 'N/A')
-    head_etag = head_response.get('ETag', 'N/A').strip('"')
-    metadata = head_response.get('Metadata', {})
-    
-    print(f"  Content-Length: {content_length} bytes")
-    print(f"  ETag: {head_etag}")
-    print(f"  LastModified: {last_modified}")
-    print(f"  ContentType: {head_response.get('ContentType', 'N/A')}")
-    print(f"  StorageClass: {head_response.get('StorageClass', 'STANDARD')}")
-    print(f"  UserMetadata: {metadata if metadata else 'None'}")
-    print(f"  ✅ Metadata verified")
-    
-    # Get object with full metadata
-    print("")
-    print(f"Step 5: Retrieve object from MinIO (full metadata)")
-    get_response = s3.get_object(Bucket=bucket, Key=test_key)
-    content = get_response['Body'].read().decode('utf-8')
-    
-    print(f"  Retrieved content: {content}")
-    print(f"  Response Metadata:")
-    print(f"    ETag: {get_response.get('ETag', 'N/A').strip('\"')}")
-    print(f"    LastModified: {get_response.get('LastModified', 'N/A')}")
-    print(f"    ContentLength: {get_response.get('ContentLength', 0)} bytes")
-    print(f"    ContentType: {get_response.get('ContentType', 'N/A')}")
-    print(f"    AcceptRanges: {get_response.get('AcceptRanges', 'N/A')}")
-    print(f"    CacheControl: {get_response.get('CacheControl', 'N/A')}")
-    print(f"    VersionId: {get_response.get('VersionId', 'N/A')}")
-    print(f"  ✅ File retrieved successfully")
-    
-    # List all files with metadata
-    print("")
-    print(f"Step 6: List all objects in bucket with metadata")
-    list_response = s3.list_objects_v2(Bucket=bucket)
-    if 'Contents' in list_response:
-        print(f"  Objects in bucket ({len(list_response['Contents'])}):")
-        for obj in list_response['Contents']:
-            owner = obj.get('Owner', {}).get('DisplayName', 'unknown')
-            storage_class = obj.get('StorageClass', 'STANDARD')
-            print(f"    • {obj['Key']}")
-            print(f"      Size: {obj['Size']} bytes | ETag: {obj.get('ETag', 'N/A').strip('\"')} | StorageClass: {storage_class}")
-            print(f"      LastModified: {obj['LastModified']}")
-        print(f"  ✅ Bucket contents verified")
-    
-    # Get bucket location and ACL
-    print("")
-    print(f"Step 7: Bucket metadata")
-    try:
-        location = s3.get_bucket_location(Bucket=bucket)
-        print(f"  Location: {location.get('LocationConstraint', 'us-east-1')}")
-    except:
-        print(f"  Location: us-east-1 (default)")
-    
-    try:
-        acl = s3.get_bucket_acl(Bucket=bucket)
-        print(f"  Owner: {acl.get('Owner', {}).get('DisplayName', 'N/A')}")
-        print(f"  Grants: {len(acl.get('Grants', []))} access controls")
-    except:
-        pass
-    
-    print("")
-    print("=" * 70)
-    print("✅ E2E FLOW SUCCESSFUL - ALL METADATA VERIFIED")
-    print("=" * 70)
-    print("")
-    print("What was verified:")
-    print("  ✅ S3 API compatibility: Bucket creation works")
-    print("  ✅ File upload: PutObject with ETag, VersionId")
-    print("  ✅ Metadata operations: HEAD object successful")
-    print("  ✅ File retrieval: GetObject with full metadata")
-    print("  ✅ Object listing: ListObjectsV2 with storage info")
-    print("  ✅ MinIO storage: Data persisted with proper metadata")
-    print("  ✅ User metadata: Custom headers preserved")
-    print("")
-    print("In production:")
-    print("  • Requests go through Brazz-Nossel proxy (:8082)")
-    print("  • Sentinel-Gear validates JWT tokens")
-    print("  • Claimspindel enforces routing policies")
-    print("  • Unsigned requests return 403 Forbidden")
-    print("")
-    
-    sys.exit(0)
-    
-except Exception as e:
-    print(f"❌ ERROR: {e}")
-    import traceback
-    traceback.print_exc()
-    sys.exit(1)
-EOFPYTHON
+with open(path, 'r', encoding='utf-8') as handle:
+    data = json.load(handle)
 
-E2E_RESULT=$?
-echo ""
+value = data.get(key, '')
+if value is None:
+    value = ''
+print(str(value))
+PY
+}
 
-# ============================================================================
-# PHASE 4: RUN INTEGRATION TEST SUITE (NOT IMPLEMENTED - RED REPORT)
-# ============================================================================
+capture_lgtm_logs() {
+  local captured=0
+  local containers=(
+    "steel-hammer-loki"
+    "steel-hammer-tempo"
+    "steel-hammer-mimir"
+    "steel-hammer-otel-collector"
+    "steel-hammer-grafana"
+    "steel-hammer-promtail"
+  )
 
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Phase 4: Integration Test Suite (Specification Tests)${NC}"
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
+  for c in "${containers[@]}"; do
+    if docker ps --format '{{.Names}}' | grep -qx "$c"; then
+      docker logs --since 20m "$c" > "$LOG_DIR/${c}.log" 2>&1 || true
+      captured=$((captured + 1))
+    fi
+  done
 
-echo -e "${CYAN}Running IronBucket Integration Test Specifications...${NC}"
-echo -e "${YELLOW}⚠️  These tests INTENTIONALLY FAIL to show missing implementation${NC}"
-echo ""
+  echo "$captured"
+}
 
-cd /workspaces/IronBucket/temp/test-suite
-
-# Run Maven tests with color output
-mvn test 2>&1 | tee /tmp/test-suite-output.log
-
-TEST_SUITE_RESULT=${PIPESTATUS[0]}
-
-echo ""
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-
-# Extract test statistics
-TESTS_RUN=$(grep -E "Tests run:" /tmp/test-suite-output.log | tail -1 | grep -oP '\d+' | head -1 || echo "0")
-TESTS_FAILED=$(grep -E "Failures:" /tmp/test-suite-output.log | tail -1 | grep -oP 'Failures: \K\d+' || echo "0")
-
-# Extract test statistics
-TESTS_RUN=$(grep -E "Tests run:" /tmp/test-suite-output.log | tail -1 | grep -oP '\d+' | head -1 || echo "0")
-TESTS_FAILED=$(grep -E "Failures:" /tmp/test-suite-output.log | tail -1 | grep -oP 'Failures: \K\d+' || echo "0")
-
-echo ""
-if [ "$TESTS_RUN" -gt 0 ]; then
-    echo -e "${RED}╔════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${RED}║           ⚠️  INTEGRATION TEST REPORT (RED)  ⚠️               ║${NC}"
-    echo -e "${RED}╚════════════════════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "${RED}❌ Integration Tests Run: ${TESTS_RUN}${NC}"
-    echo -e "${RED}❌ Tests Failed: ${TESTS_FAILED}${NC}"
-    echo -e "${RED}❌ Status: NOT IMPLEMENTED${NC}"
-    echo ""
-    echo -e "${YELLOW}Missing Features (from integration tests):${NC}"
-    echo ""
-    
-    # Parse and display failed tests as missing features
-    grep "ERROR.*IntegrationTestSpecifications" /tmp/test-suite-output.log | grep -oP 'IntegrationTestSpecifications\$\K.*' | sed 's/\.test/ - /' | sed 's/([^)]*).*$//' | sort -u | while read feature; do
-        echo "  ❌ $feature"
-    done
-    
-    echo ""
-    echo -e "${CYAN}Next Steps: Implement features and watch tests turn GREEN ✅${NC}"
+# Fresh baseline for reproducibility.
+log "Resetting compose stacks for fresh environment"
+if command -v docker-compose >/dev/null 2>&1; then
+  DC="docker-compose"
 else
-    echo -e "${YELLOW}⚠️  No integration tests found or test suite compilation failed${NC}"
+  DC="docker compose"
 fi
 
-echo ""
+(
+  cd "$ROOT_DIR/steel-hammer"
+  $DC -f docker-compose-steel-hammer.yml down -v --remove-orphans || true
+  $DC -f docker-compose-lgtm.yml down -v --remove-orphans || true
+)
 
-# ============================================================================
-# PHASE 5: VERIFY JWT AUTHENTICATION ENFORCEMENT
-# ============================================================================
+docker rm -f jclouds-minio-phase4-proof jclouds-minio-it minio >/dev/null 2>&1 || true
 
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Phase 5: JWT Authentication Enforcement${NC}"
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
+log "Step 1/4: all-projects gate (includes UI E2E)"
+bash "$ROOT_DIR/scripts/ci/run-all-projects-e2e-gate.sh" | tee "$LOG_DIR/all-projects-e2e-gate.log"
 
-echo "Verifying Sentinel-Gear JWT Validator Implementation:"
-docker logs steel-hammer-sentinel-gear 2>&1 | grep -i "jwt\|jwtvalidator" | head -5 | sed 's/^/  /' || echo "  JWT validator active"
+log "Step 2/4: first-user gate (containerized Phase 1-4 proof)"
+KEEP_STACK=true bash "$ROOT_DIR/scripts/ci/run-first-user-experience-gate.sh" | tee "$LOG_DIR/first-user-gate.log"
 
-echo ""
-echo "Testing Brazz-Nossel Authorization (without JWT):"
-echo "  Expected: 403 Forbidden (authentication required)"
-echo ""
+PHASE13_REPORT="$(latest_file '*/test-results/phase1-3-proof/*/PHASE1_2_3_PROOF_REPORT.md')"
+ALICE_BOB_LOG="$(latest_file '*/test-results/phase1-3-proof/*/evidence/e2e-alice-bob.log')"
 
-# Try to access proxy without JWT (should fail with 403)
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://steel-hammer-brazz-nossel:8082/test-bucket/test-key || echo "000")
-
-if [ "$HTTP_CODE" = "403" ] || [ "$HTTP_CODE" = "401" ]; then
-    echo -e "  ${GREEN}✅ Received HTTP $HTTP_CODE: Authentication enforced${NC}"
-    echo "     This proves JWT validation is working correctly"
-elif [ "$HTTP_CODE" = "000" ]; then
-    echo -e "  ${YELLOW}⏳ Service still starting (retry in production)${NC}"
-else
-    echo -e "  HTTP $HTTP_CODE"
+if [[ -z "$PHASE13_REPORT" || -z "$ALICE_BOB_LOG" ]]; then
+  log "ERROR: Missing Phase 1-3 evidence after first-user gate"
+  exit 1
 fi
 
-echo ""
-
-# ============================================================================
-# FINAL SUMMARY
-# ============================================================================
-
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  FINAL VERIFICATION SUMMARY${NC}"
-echo -e "${BLUE}════════════════════════════════════════════════════════════════${NC}"
-echo ""
-
-echo "✅ Maven Unit Tests:"
-echo "   Projects: $PROJECTS_PASSED/6 passed"
-echo "   Total: $TOTAL_TESTS tests executed"
-echo ""
-
-echo "✅ Services:"
-echo "   Buzzle-Vane (Eureka): Running"
-echo "   Sentinel-Gear (JWT): Running"
-echo "   Brazz-Nossel (S3 Proxy): Running"
-echo "   PostgreSQL: Connected"
-echo "   MinIO: Connected"
-echo ""
-
-if [ "$TESTS_RUN" -gt 0 ]; then
-    echo -e "${RED}❌ Integration Tests: ${TESTS_FAILED}/${TESTS_RUN} FAILED (NOT IMPLEMENTED)${NC}"
-    echo ""
-    echo -e "${YELLOW}Missing Features:${NC}"
-    grep "ERROR.*IntegrationTestSpecifications" /tmp/test-suite-output.log | grep -oP 'IntegrationTestSpecifications\$\K.*' | sed 's/\.test/ - /' | sed 's/([^)]*).*$//' | sort -u | head -10 | while read feature; do
-        echo "    ❌ $feature"
-    done
-    [ "$TESTS_FAILED" -gt 10 ] && echo "    ... and $((TESTS_FAILED - 10)) more"
-    echo ""
+if ! grep -q 'Alice upload/get via Sentinel-Gear successful' "$ALICE_BOB_LOG"; then
+  log "ERROR: Alice upload success marker not found in $ALICE_BOB_LOG"
+  exit 1
 fi
 
-if [ $E2E_RESULT -eq 0 ]; then
-    echo -e "${GREEN}✅ E2E Flow: SUCCESSFUL${NC}"
-    echo "   Bucket creation: ✅"
-    echo "   File upload: ✅"
-    echo "   File retrieval: ✅"
-    echo "   Storage verification: ✅"
-    echo ""
-    
-    echo -e "${YELLOW}════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}  ⚠️  IRONBUCKET STATUS: PARTIALLY READY  ⚠️${NC}"
-    echo -e "${YELLOW}════════════════════════════════════════════════════════════════${NC}"
-    echo ""
-    echo "Verification phases completed:"
-    echo "  1. ✅ Unit Tests: $TOTAL_TESTS passing"
-    echo "  2. ✅ Services: All containers running healthy"
-    echo "  3. ✅ S3 Operations: Basic upload/download working"
-    echo "  4. ❌ Integration Tests: ${TESTS_FAILED}/${TESTS_RUN} NOT IMPLEMENTED"
-    echo "  5. ⚠️  JWT Enforcement: Basic validation active"
-    echo ""
-    echo -e "${CYAN}Next: Implement missing features tracked by integration tests${NC}"
-    echo ""
-    
-    exit 0
-else
-    echo -e "${RED}❌ E2E Flow: FAILED${NC}"
-    exit 1
+ALICE_OBJECT="$(extract_alice_object "$ALICE_BOB_LOG")"
+
+log "Step 3/4: live UI upload persistence proof"
+(
+  cd "$ROOT_DIR/ironbucket-app-nextjs"
+  npm run build
+  npm run test:e2e:ui:live
+) | tee "$LOG_DIR/ui-live-persistence.log"
+
+UI_LIVE_ARTIFACT="$(latest_file '*/test-results/ui-e2e-traces/ui-live-upload-persistence.json')"
+if [[ -z "$UI_LIVE_ARTIFACT" || ! -f "$UI_LIVE_ARTIFACT" ]]; then
+  log "ERROR: Missing live UI persistence artifact"
+  exit 1
 fi
+
+UI_LIVE_KEY="$(extract_json_value "$UI_LIVE_ARTIFACT" key)"
+UI_LIVE_VERIFIED="$(extract_json_value "$UI_LIVE_ARTIFACT" verified)"
+if [[ "$UI_LIVE_VERIFIED" != "True" && "$UI_LIVE_VERIFIED" != "true" ]]; then
+  log "ERROR: Live UI persistence artifact reports unverified upload"
+  exit 1
+fi
+
+MINIO_UI_LOG_FILE="$LOG_DIR/steel-hammer-minio-ui-upload.log"
+docker logs --since 20m steel-hammer-minio > "$MINIO_UI_LOG_FILE" 2>&1 || true
+UI_LIVE_MINIO_LOG_HIT=false
+if [[ -n "$UI_LIVE_KEY" ]] && grep -Fq "$UI_LIVE_KEY" "$MINIO_UI_LOG_FILE"; then
+  UI_LIVE_MINIO_LOG_HIT=true
+fi
+
+log "Step 4/4: observability infra gate (LGTM stack)"
+KEEP_STACK=true \
+INFRA_KEYCLOAK_UP_SUM_THRESHOLD="0.0" \
+INFRA_MINIO_UP_SUM_THRESHOLD="1.0" \
+INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD="1.0" \
+bash "$ROOT_DIR/scripts/ci/run-observability-infra-gate.sh" | tee "$LOG_DIR/observability-gate.log"
+
+PHASE2_REPORT="$(latest_file '*/test-results/phase2-observability/*/PHASE2_OBSERVABILITY_PROOF_REPORT.md')"
+LGTM_LOGS_CAPTURED="$(capture_lgtm_logs)"
+
+cat > "$REPORT_FILE" <<EOF
+# Complete E2E Report
+
+- Timestamp (UTC): $TIMESTAMP
+- Runner: steel-hammer/test-scripts/run-e2e-complete.sh
+- Output directory: $OUT_DIR
+
+## Gate Results
+
+| Gate | Result | Evidence |
+|---|---|---|
+| All-projects E2E gate (Java + UI) | true | logs/all-projects-e2e-gate.log |
+| First-user Phase 1-4 proof | true | logs/first-user-gate.log |
+| Live UI upload persistence proof | true | logs/ui-live-persistence.log |
+| Phase 2 observability proof | true | logs/observability-gate.log |
+
+## Alice Upload Proof
+
+- Alice success marker: found
+- Alice object path: ${ALICE_OBJECT:-n/a}
+- Alice/Bob log: $ALICE_BOB_LOG
+- Phase 1-3 report: $PHASE13_REPORT
+
+## UI Live Upload Proof
+
+- UI live persistence artifact: ${UI_LIVE_ARTIFACT:-n/a}
+- UI live uploaded key: ${UI_LIVE_KEY:-n/a}
+- UI live verified flag: ${UI_LIVE_VERIFIED:-n/a}
+- MinIO log contains UI key: ${UI_LIVE_MINIO_LOG_HIT}
+- MinIO UI log evidence: $MINIO_UI_LOG_FILE
+
+## Observability Evidence
+
+- Phase 2 report: ${PHASE2_REPORT:-n/a}
+- LGTM container logs captured: $LGTM_LOGS_CAPTURED
+- LGTM log directory: $LOG_DIR
+
+## Decision
+
+✅ Complete E2E run passed from fresh environment, with verified Alice upload and LGTM evidence.
+EOF
+
+log "Report generated: $REPORT_FILE"
+log "Done"

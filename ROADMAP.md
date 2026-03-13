@@ -212,10 +212,16 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - Prefer Loki `service_name` query fallback when container-label query returns no streams during fresh startup windows.
 - Latest gate run (`20260312T231739Z`) is green with strict MinIO/Postgres scrape thresholds and Keycloak warning-path threshold.
 
+**Fresh environment complete run update (2026-03-13):**
+- Executed `steel-hammer/test-scripts/run-e2e-complete.sh` from a clean Docker baseline (compose down + orphan cleanup before run).
+- Full all-projects gate passed, including UI Playwright scenarios (`ironbucket-app-nextjs` UI baseline).
+- First-user containerized proof passed with explicit Alice upload evidence: `default-alice-files/jwt-alice-20260313T082402Z.txt`.
+- Phase 2 observability proof passed and LGTM evidence/log capture completed (Loki, Tempo, Mimir, OTEL collector, Grafana, Promtail).
+
 **UI feature baseline update (2026-03-13):**
 - Added Next.js object-browser baseline scenario route (`/e2e-object-browser`) with bucket/object browse, search, sort, upload, download, and delete interactions.
-- Added Playwright scenario `tests/object-browser-baseline.spec.ts` with trace header assertions and evidence output.
-- `scripts/ci/run-all-projects-e2e-gate.sh` now executes both UI scenarios through `npm run test:e2e:ui`.
+- Added live Playwright scenario `tests/ui-live-upload-persistence.spec.ts` that validates UI upload through Sentinel-Gear with real backend read-back verification.
+- `scripts/ci/run-all-projects-e2e-gate.sh` now executes the non-mocked UI baseline through `npm run test:e2e:ui`.
 
 ### 3) Kick Off Phase 4 (Next Sprint)
 - ✅ Created `jclouds-adapter-core` skeleton and capability matrix baseline document.
@@ -224,7 +230,7 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 
 ### 3b) Object Browser Parity Program (Active)
 - Use `docs/OBJECT-BROWSER-PARITY-PLAN.md` as the implementation contract for MinIO-aligned UI parity waves.
-- Keep `ironbucket-app-nextjs/tests/object-browser-baseline.spec.ts` as the baseline blocking scenario.
+- Keep `ironbucket-app-nextjs/tests/ui-live-upload-persistence.spec.ts` as the baseline blocking scenario.
 - Promote each parity wave only after red->green test-first implementation and gate integration in `npm run test:e2e:ui`.
 
 ### 4) Exit Criteria to Move Phase to “Active Phase 4”

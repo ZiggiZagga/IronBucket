@@ -18,7 +18,7 @@ ALL_PROJECTS_GATE_SCRIPT="${ALL_PROJECTS_GATE_SCRIPT:-scripts/ci/run-all-project
 PHASE14_ARTIFACT="${PHASE14_ARTIFACT:-test-results/phase1-4-proof/}"
 PHASE2_ARTIFACT="${PHASE2_ARTIFACT:-test-results/phase2-observability/}"
 UI_TRACE_ARTIFACT="${UI_TRACE_ARTIFACT:-test-results/ui-e2e-traces/}"
-UI_BASELINE_TEST="${UI_BASELINE_TEST:-tests/object-browser-baseline.spec.ts}"
+UI_BASELINE_TEST="${UI_BASELINE_TEST:-tests/ui-live-upload-persistence.spec.ts}"
 
 assert_file_exists() {
   local path="$1"
