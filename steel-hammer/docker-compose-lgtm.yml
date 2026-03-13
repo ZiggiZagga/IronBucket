@@ -216,6 +216,7 @@ services:
     depends_on:
       - steel-hammer-keycloak
       - steel-hammer-postgres
+      - steel-hammer-graphite-forge
       - otel-collector
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
@@ -238,6 +239,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    restart: always
+
+  steel-hammer-graphite-forge:
+    networks:
+      - steel-hammer-network
+    hostname: steel-hammer-graphite-forge
+    container_name: steel-hammer-graphite-forge
+    build:
+      context: ../services/Graphite-Forge
+      dockerfile: Dockerfile
+    environment:
+      - "SPRING_APPLICATION_NAME=graphite-forge"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     restart: always
 
   steel-hammer-claimspindel:

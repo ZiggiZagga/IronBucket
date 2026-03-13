@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
 export const UPLOAD_OBJECT = gql`
-  mutation UploadObject($bucket: String!, $key: String!, $content: Upload!, $contentType: String) {
+  mutation UploadObject($bucket: String!, $key: String!, $content: String!, $contentType: String) {
     uploadObject(bucket: $bucket, key: $key, content: $content, contentType: $contentType) {
       key
       bucket

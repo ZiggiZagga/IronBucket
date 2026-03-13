@@ -90,6 +90,10 @@ spring:
           default-filters:
             - TokenRelay
           routes: 
+            - id: route-graphite-forge-graphql
+              uri: ${GRAPHITE_FORGE_URI:http://steel-hammer-graphite-forge:8084}
+              predicates:
+                - Path=/graphql,/graphql/**
             - id: route-hub
               uri: lb://CLAIMSPINDEL
               predicates:

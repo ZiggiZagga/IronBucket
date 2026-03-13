@@ -68,6 +68,20 @@ capture_lgtm_logs() {
   echo "$captured"
 }
 
+graphite_forge_runtime_integrated() {
+  local compose_file="$ROOT_DIR/steel-hammer/docker-compose-lgtm.yml"
+  if [[ ! -f "$compose_file" ]]; then
+    echo "false"
+    return
+  fi
+
+  if grep -Eq '^\s*steel-hammer-graphite-forge:' "$compose_file"; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
 # Fresh baseline for reproducibility.
 log "Resetting compose stacks for fresh environment"
 if command -v docker-compose >/dev/null 2>&1; then
@@ -141,6 +155,7 @@ bash "$ROOT_DIR/scripts/ci/run-observability-infra-gate.sh" | tee "$LOG_DIR/obse
 
 PHASE2_REPORT="$(latest_file '*/test-results/phase2-observability/*/PHASE2_OBSERVABILITY_PROOF_REPORT.md')"
 LGTM_LOGS_CAPTURED="$(capture_lgtm_logs)"
+GRAPHITE_FORGE_RUNTIME_INTEGRATED="$(graphite_forge_runtime_integrated)"
 
 cat > "$REPORT_FILE" <<EOF
 # Complete E2E Report
@@ -178,6 +193,11 @@ cat > "$REPORT_FILE" <<EOF
 - Phase 2 report: ${PHASE2_REPORT:-n/a}
 - LGTM container logs captured: $LGTM_LOGS_CAPTURED
 - LGTM log directory: $LOG_DIR
+
+## Graphite-Forge Integration Status
+
+- Runtime integrated in steel-hammer compose: ${GRAPHITE_FORGE_RUNTIME_INTEGRATED}
+- Note: UI live upload proof currently validates Sentinel-Gear data path; Graphite-Forge-backed UI parity remains pending until runtime integration is present.
 
 ## Decision
 

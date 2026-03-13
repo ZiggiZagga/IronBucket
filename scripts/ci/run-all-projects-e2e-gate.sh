@@ -56,19 +56,49 @@ run_ui_projects() {
     log "UI project checks (npm ci/test/build): $project"
     if (cd "$ROOT_DIR/$project" && npm ci --no-audit --no-fund && npm test && npm run build) >>"$LOG_FILE" 2>&1; then
       if [[ "$project" == "ironbucket-app-nextjs" ]]; then
-        log "Installing Playwright Chromium browser: $project"
-        if ! (cd "$ROOT_DIR/$project" && npx playwright install chromium) >>"$LOG_FILE" 2>&1; then
-          log "FAIL: $project playwright browser install"
-          UI_FAILED_PROJECTS+="$project (playwright install)\n"
+        local dc="docker compose"
+        if command -v docker-compose >/dev/null 2>&1; then
+          dc="docker-compose"
+        fi
+
+        log "Starting backend stack for live UI e2e: $project"
+        if ! (cd "$ROOT_DIR/steel-hammer" && $dc -f docker-compose-steel-hammer.yml up -d steel-hammer-postgres steel-hammer-keycloak steel-hammer-buzzle-vane steel-hammer-graphite-forge steel-hammer-sentinel-gear) >>"$LOG_FILE" 2>&1; then
+          log "FAIL: $project backend stack startup"
+          UI_FAILED_PROJECTS+="$project (backend stack startup)\n"
           continue
         fi
 
-        log "UI playwright e2e scenario: $project"
-        if ! (cd "$ROOT_DIR/$project" && npm run test:e2e:ui) >>"$LOG_FILE" 2>&1; then
-          log "FAIL: $project playwright e2e"
-          UI_FAILED_PROJECTS+="$project (playwright e2e)\n"
+        log "Waiting for Sentinel-Gear and Keycloak readiness: $project"
+        if ! (
+          for _ in {1..75}; do
+            keycloak_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-keycloak 2>/dev/null || echo missing)"
+            sentinel_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-sentinel-gear 2>/dev/null || echo missing)"
+            graphite_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-graphite-forge 2>/dev/null || echo missing)"
+
+            if [[ "$keycloak_health" == "healthy" && "$sentinel_health" == "healthy" && "$graphite_health" == "healthy" ]]; then
+              exit 0
+            fi
+
+            sleep 4
+          done
+          exit 1
+        ) >>"$LOG_FILE" 2>&1; then
+          log "FAIL: $project backend readiness"
+          UI_FAILED_PROJECTS+="$project (backend readiness)\n"
+          (cd "$ROOT_DIR/steel-hammer" && $dc -f docker-compose-steel-hammer.yml down -v --remove-orphans) >>"$LOG_FILE" 2>&1 || true
           continue
         fi
+
+        log "UI playwright e2e scenario in container: $project"
+        if ! (cd "$ROOT_DIR/steel-hammer" && $dc -f docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e) >>"$LOG_FILE" 2>&1; then
+          log "FAIL: $project playwright e2e"
+          UI_FAILED_PROJECTS+="$project (playwright e2e)\n"
+          (cd "$ROOT_DIR/steel-hammer" && $dc -f docker-compose-steel-hammer.yml down -v --remove-orphans) >>"$LOG_FILE" 2>&1 || true
+          continue
+        fi
+
+        log "Stopping backend stack after live UI e2e: $project"
+        (cd "$ROOT_DIR/steel-hammer" && $dc -f docker-compose-steel-hammer.yml down -v --remove-orphans) >>"$LOG_FILE" 2>&1 || true
       fi
 
       UI_PASSED=$((UI_PASSED + 1))

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.ironbucket.adminshell.shell.AdminCommandsTest
 -------------------------------------------------------------------------------
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.277 s -- in com.ironbucket.adminshell.shell.AdminCommandsTest
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.137 s -- in com.ironbucket.adminshell.shell.AdminCommandsTest

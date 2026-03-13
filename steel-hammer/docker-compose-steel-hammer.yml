@@ -122,6 +122,7 @@ services:
       - steel-hammer-keycloak
       - steel-hammer-postgres
       - steel-hammer-buzzle-vane
+      - steel-hammer-graphite-forge
 
     volumes:
       # Mount certificates for mTLS (if --with-mtls flag is used)
@@ -239,6 +240,28 @@ services:
 
     restart: "always"
 
+  steel-hammer-graphite-forge:
+    networks:
+      - steel-hammer-network
+
+    hostname: steel-hammer-graphite-forge
+    container_name: steel-hammer-graphite-forge
+
+    build:
+      context: ../services/Graphite-Forge
+      dockerfile: Dockerfile
+
+    environment:
+      - "SPRING_APPLICATION_NAME=graphite-forge"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+    restart: "always"
+
   steel-hammer-minio:
     networks:
       - steel-hammer-network
@@ -321,6 +344,40 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  steel-hammer-ui-e2e:
+    networks:
+      - steel-hammer-network
+
+    image: mcr.microsoft.com/playwright:v1.57.0-jammy
+    container_name: steel-hammer-ui-e2e
+    working_dir: /workspace/ironbucket-app-nextjs
+
+    volumes:
+      - ../ironbucket-app-nextjs:/workspace/ironbucket-app-nextjs
+      - /workspaces/IronBucket/test-results:/workspaces/IronBucket/test-results
+
+    depends_on:
+      steel-hammer-keycloak:
+        condition: service_healthy
+      steel-hammer-sentinel-gear:
+        condition: service_healthy
+      steel-hammer-graphite-forge:
+        condition: service_healthy
+
+    environment:
+      - "CI=true"
+      - "NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://steel-hammer-sentinel-gear:8080/graphql"
+      - "E2E_SENTINEL_URL=http://steel-hammer-sentinel-gear:8080"
+      - "E2E_GATEWAY_GRAPHQL_URL=http://steel-hammer-sentinel-gear:8080/graphql"
+      - "E2E_KEYCLOAK_TOKEN_URL=http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/token"
+
+    entrypoint:
+      - /bin/bash
+      - -lc
+      - npm ci --no-audit --no-fund && npx playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts --workers=1
+
+    restart: "no"
 
 networks:
   steel-hammer-network:

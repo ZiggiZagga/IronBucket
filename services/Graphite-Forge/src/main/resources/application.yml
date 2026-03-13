@@ -1,0 +1,27 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: graphite-forge
+  main:
+    web-application-type: reactive
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://steel-hammer-buzzle-vane:8083/eureka}
+    region: ${EUREKA_REGION:dev-region-1}
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    status-page-url-path: /actuator/info
+    health-check-url-path: /actuator/health
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

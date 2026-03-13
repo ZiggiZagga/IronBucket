@@ -41,6 +41,7 @@ public class SecurityConfig {
         http
             .authorizeExchange(authz -> authz
                 .pathMatchers("/actuator/**").permitAll()
+                .pathMatchers("/graphql", "/graphql/**").permitAll()
                 .anyExchange().authenticated())
             .csrf(csrf -> csrf.disable())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwkSetUri("http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs")));

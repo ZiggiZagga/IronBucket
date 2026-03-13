@@ -33,9 +33,13 @@ High-value patterns identified:
 - Empty state
 - Actor-based trace headers
 
+Important scope note:
+- Current live UI persistence proof validates the Sentinel-Gear data path.
+- Graphite-Forge runtime integration is not yet part of the steel-hammer runtime stack and is therefore not yet proven by UI E2E.
+
 Validation evidence:
-- `ironbucket-app-nextjs/tests/object-browser-baseline.spec.ts`
-- `test-results/ui-e2e-traces/object-browser-baseline-trace.json`
+- `ironbucket-app-nextjs/tests/ui-live-upload-persistence.spec.ts`
+- `test-results/ui-e2e-traces/ui-live-upload-persistence.json`
 
 ## Parity Gaps To Close
 
@@ -78,3 +82,5 @@ Parity is considered achieved when all waves are green in CI and each feature is
 - at least one UI flow assertion,
 - at least one behavioral assertion on request payload/headers,
 - and one evidence artifact proving execution.
+
+Additionally, management-plane parity requires Graphite-Forge to be integrated in runtime (not just module/unit scope), with live E2E evidence for Graphite-Forge-backed browser flows.
