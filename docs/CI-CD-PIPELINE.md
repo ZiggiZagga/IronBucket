@@ -38,6 +38,7 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 
 This is the canonical first-user experience verification workflow and now triggers all required E2E-adjacent checks:
 
+- Cross-project gate via `scripts/ci/run-all-projects-e2e-gate.sh` (all Java + UI projects)
 - First-user experience gate via `scripts/ci/run-first-user-experience-gate.sh` (Phase 1-4 proof)
 - Observability infrastructure gate via `scripts/ci/run-observability-infra-gate.sh`
 - Deterministic observability proof command: `scripts/e2e/prove-phase2-observability.sh`
@@ -54,6 +55,8 @@ Use this workflow as the primary end-to-end release confidence gate.
 - Pull requests to `main` or `develop`
 
 **Actions:**
+- ✅ Runs all Java + UI projects gate (`scripts/ci/run-all-projects-e2e-gate.sh`)
+- ✅ Enforces Next.js UI browser scenarios (`alice-bob-upload-trace.spec.ts`, `object-browser-baseline.spec.ts`)
 - ✅ Runs Phase 1-4 roadmap E2E proof gate
 - ✅ Runs Phase 2 observability infrastructure gate (`scripts/ci/run-observability-infra-gate.sh`)
 - ✅ Uses deterministic Phase 2 proof command (`scripts/e2e/prove-phase2-observability.sh`)

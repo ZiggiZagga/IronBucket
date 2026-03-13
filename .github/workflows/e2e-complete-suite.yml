@@ -41,6 +41,11 @@ jobs:
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
 
+      - name: Run all Java/UI projects e2e gate
+        run: |
+          chmod +x scripts/ci/run-all-projects-e2e-gate.sh
+          bash scripts/ci/run-all-projects-e2e-gate.sh
+
       - name: Run first-user-experience gate
         env:
           KEEP_STACK: "false"
@@ -69,7 +74,9 @@ jobs:
         with:
           name: e2e-complete-suite-artifacts
           path: |
+            test-results/all-projects-e2e-gate/
             test-results/phase1-3-proof/
             test-results/phase1-4-proof/
             test-results/phase2-observability/
+            test-results/ui-e2e-traces/
           retention-days: 30

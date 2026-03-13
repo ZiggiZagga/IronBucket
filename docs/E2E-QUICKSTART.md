@@ -22,6 +22,37 @@ Artifacts are written to:
 test-results/phase1-4-proof/
 ```
 
+## All Java/UI Projects Gate
+
+Run the cross-project gate used by the canonical E2E workflow:
+
+```bash
+bash scripts/ci/run-all-projects-e2e-gate.sh
+```
+
+Artifacts are written to:
+
+```bash
+test-results/all-projects-e2e-gate/
+```
+
+The Next.js UI gate now enforces both baseline scenarios inspired by the object browser flow:
+
+```bash
+cd ironbucket-app-nextjs
+npm run test:e2e:ui
+```
+
+Included scenarios:
+- `tests/alice-bob-upload-trace.spec.ts`
+- `tests/object-browser-baseline.spec.ts`
+
+UI trace artifacts are written to:
+
+```bash
+test-results/ui-e2e-traces/
+```
+
 ## What It Does
 
 1. **Prerequisites Check** (5s)

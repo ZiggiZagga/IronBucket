@@ -32,6 +32,24 @@ run_container_local_curl() {
   docker run --rm --network "container:$container_name" curlimages/curl:8.12.1 -sS "$url" > "$output_file"
 }
 
+has_required_otel_env() {
+  local container_name="$1"
+  local inspect_out
+
+  inspect_out="$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$container_name" 2>/dev/null || true)"
+
+  if [[ -z "$inspect_out" ]]; then
+    return 1
+  fi
+
+  if grep -q '^OTEL_EXPORTER_OTLP_ENDPOINT=' <<<"$inspect_out" && \
+     grep -q '^MANAGEMENT_OTLP_TRACING_ENDPOINT=' <<<"$inspect_out"; then
+    return 0
+  fi
+
+  return 1
+}
+
 wait_internal_http() {
   local name="$1"
   local url="$2"
@@ -340,6 +358,17 @@ if [[ "$PROM_ENDPOINTS_OK" == "true" && "$MIMIR_STATUS" == "success" ]]; then
   METRICS_PIPELINE_OK=true
 fi
 
+SERVICE_OTEL_ENV_OK=true
+for service_container in \
+  steel-hammer-sentinel-gear \
+  steel-hammer-claimspindel \
+  steel-hammer-brazz-nossel \
+  steel-hammer-buzzle-vane; do
+  if ! has_required_otel_env "$service_container"; then
+    SERVICE_OTEL_ENV_OK=false
+  fi
+done
+
 cat > "$REPORT_FILE" <<EOF
 # Phase 2 Observability Proof Report
 
@@ -361,6 +390,7 @@ cat > "$REPORT_FILE" <<EOF
 | Infra metrics endpoints reachable | $INFRA_ENDPOINTS_READY | keycloak/minio/postgres exporter endpoint probes |
 | Infra metrics endpoint content | $INFRA_ENDPOINTS_CONTENT_OK | keycloak/minio/postgres exporter metric dumps |
 | Infra metrics in Mimir (Keycloak/MinIO/Postgres exporter) | $INFRA_METRICS_IN_MIMIR_OK | mimir-query-*-up.json |
+| Runtime services OTEL env wiring | $SERVICE_OTEL_ENV_OK | docker inspect env for sentinel/claimspindel/brazz/buzzle |
 
 ## Key Counters
 
@@ -385,7 +415,7 @@ cat > "$REPORT_FILE" <<EOF
 
 EOF
 
-if [[ "$STACK_OK" == "true" && "$PROM_ENDPOINTS_OK" == "true" && "$OTLP_POST_OK" == "true" && "$TRACES_OK" == "true" && "$LOGS_OK" == "true" && "$INFRA_METRICS_IN_MIMIR_OK" == "true" ]]; then
+if [[ "$STACK_OK" == "true" && "$PROM_ENDPOINTS_OK" == "true" && "$OTLP_POST_OK" == "true" && "$TRACES_OK" == "true" && "$LOGS_OK" == "true" && "$INFRA_METRICS_IN_MIMIR_OK" == "true" && "$SERVICE_OTEL_ENV_OK" == "true" ]]; then
   echo "✅ Phase 2 observability is operational and proven with executable evidence." >> "$REPORT_FILE"
   OVERALL_OK=true
 else

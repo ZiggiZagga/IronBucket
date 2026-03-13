@@ -205,16 +205,27 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 
 ### 2b) Stabilize Observability Runtime Gates (Now)
 - Keep `e2e-complete-suite` as the first-user canonical verification workflow, with Phase 1-4 UX proof + Phase 2 observability proof.
+- Keep UI E2E baseline parity with object-browser core flows (bucket browse, object list/search/sort, upload/download/delete) as a blocking scenario in the all-projects gate.
 - Use window-based infra scrape checks (`max_over_time(up[10m])`) for Keycloak, MinIO, and Postgres exporter to avoid startup-sample false negatives.
 - Keep MinIO/Postgres exporter scrape checks as blocking; treat Keycloak scrape as tracked warning path until scrape stability reaches sustained green baseline.
 - Keep Keycloak startup readiness budgets explicit in proof scripts (cold-start can take 2-4 minutes).
 - Prefer Loki `service_name` query fallback when container-label query returns no streams during fresh startup windows.
 - Latest gate run (`20260312T231739Z`) is green with strict MinIO/Postgres scrape thresholds and Keycloak warning-path threshold.
 
+**UI feature baseline update (2026-03-13):**
+- Added Next.js object-browser baseline scenario route (`/e2e-object-browser`) with bucket/object browse, search, sort, upload, download, and delete interactions.
+- Added Playwright scenario `tests/object-browser-baseline.spec.ts` with trace header assertions and evidence output.
+- `scripts/ci/run-all-projects-e2e-gate.sh` now executes both UI scenarios through `npm run test:e2e:ui`.
+
 ### 3) Kick Off Phase 4 (Next Sprint)
 - ✅ Created `jclouds-adapter-core` skeleton and capability matrix baseline document.
 - ✅ Implemented provider capability probe contract tests (S3 baseline first).
 - ✅ Implemented first integration milestone: provider-neutral object CRUD + policy enforcement parity.
+
+### 3b) Object Browser Parity Program (Active)
+- Use `docs/OBJECT-BROWSER-PARITY-PLAN.md` as the implementation contract for MinIO-aligned UI parity waves.
+- Keep `ironbucket-app-nextjs/tests/object-browser-baseline.spec.ts` as the baseline blocking scenario.
+- Promote each parity wave only after red->green test-first implementation and gate integration in `npm run test:e2e:ui`.
 
 ### 4) Exit Criteria to Move Phase to “Active Phase 4”
 - Required CI gates enforced on `main` with no policy exceptions.

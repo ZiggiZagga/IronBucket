@@ -62,6 +62,10 @@ The plan focuses on converting roadmap assertions into implementation increments
   - Phase 1-4 first-user E2E proof,
   - Phase 2 observability infra proof,
   - observability dashboard/alert asset validation.
+- Added UI baseline parity scenario based on object-browser core interactions:
+  - route `/e2e-object-browser`
+  - Playwright test `tests/object-browser-baseline.spec.ts`
+  - enforced in cross-project gate via `npm run test:e2e:ui`.
 - Observability hardening from evidence:
   - keycloak readiness budget increased for proof waits,
   - infra scrape verification switched to window-based `max_over_time(up[10m])` checks,

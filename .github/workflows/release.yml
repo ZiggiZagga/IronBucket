@@ -42,6 +42,13 @@ jobs:
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
 
+      - name: Verify main branch protection policy
+        env:
+          BRANCH_PROTECTION_STRICT: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: bash scripts/ci/verify-main-branch-protection.sh
+
       - name: Resolve release commit SHA
         id: release_sha
         run: |
