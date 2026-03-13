@@ -4,7 +4,7 @@ Production-ready S3-compatible microservices platform with JWT authentication, m
 
 ## 🚨 Production Readiness Status
 
-**Current Status**: 🟢 **Roadmap/Test Gates Green** | 🟡 **Operational Hardening Active**
+**Current Status**: 🟢 **Core Build/Test Gates Green** | 🟡 **Operational Hardening Active**
 
 IronBucket has validated Java test baselines and roadmap/behavioral gates, with ongoing hardening focused on release governance and production operations.
 
@@ -25,7 +25,7 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 3. Complete platform-level hardening items in [ROADMAP.md](ROADMAP.md)
 4. Complete [security hardening](docs/security/MINIO-ISOLATION-AUDIT.md)
 
-**📋 See**: [Architecture Assessment](docs/ARCHITECTURE-ASSESSMENT-2026.md) | [Roadmap](ROADMAP.md)
+**📋 See**: [Production Readiness Roadmap](docs/PRODUCTION-READINESS-ROADMAP.md) | [Roadmap](ROADMAP.md)
 
 ---
 
@@ -47,6 +47,23 @@ docker-compose -f docker-compose-steel-hammer.yml up -d --build
 ```
 
 **Result:** End-to-end orchestrator runs Maven suites + infrastructure checks + full E2E + observability proof and writes reports to `test-results/`.
+
+## What Pain IronBucket Solves (Real-World Examples)
+
+IronBucket exists to remove common, expensive storage and access-control pain in teams.
+
+- "I just need secure file storage, but setting up S3 auth is too complex."
+  IronBucket provides a single path for JWT-based authentication and S3-compatible access.
+- "One customer should never see another customer's files."
+  IronBucket enforces tenant-aware routing and policy checks before object access.
+- "Our audit/compliance review failed because access decisions were not traceable."
+  IronBucket integrates metadata + observability evidence so decisions can be tracked and verified.
+- "Different services implement storage rules differently, and bugs keep recurring."
+  IronBucket centralizes auth, policy evaluation, and routing so teams stop re-implementing security logic.
+- "We need cloud-like object storage on-prem without vendor lock-in."
+  IronBucket runs with MinIO and standard S3 semantics, enabling portable deployments.
+
+In short: IronBucket turns storage access from ad-hoc app logic into a consistent, testable platform control plane.
 
 ## Features
 
@@ -85,7 +102,7 @@ PostgreSQL (Metadata)
 
 | Document | Purpose | Priority |
 |----------|---------|----------|
-| [Architecture Assessment 2026](docs/ARCHITECTURE-ASSESSMENT-2026.md) | **Complete architecture & security review** | 🔴 CRITICAL |
+| [Production Readiness Roadmap](docs/PRODUCTION-READINESS-ROADMAP.md) | **Implementation plan & operational hardening roadmap** | 🔴 CRITICAL |
 | [Production Readiness Roadmap](ROADMAP.md) | **Implementation plan & timeline** | 🔴 CRITICAL |
 | [MinIO Isolation Audit](docs/security/MINIO-ISOLATION-AUDIT.md) | **Network security analysis** | 🔴 CRITICAL |
 | [K8s NetworkPolicies](docs/k8s-network-policies.yaml) | **Network isolation rules** | 🔴 DEPLOY FIRST |
@@ -105,10 +122,10 @@ PostgreSQL (Metadata)
 
 | Document | Purpose |
 |----------|---------|
-| [TEST-REPORTING-SYSTEM.md](docs/TEST-REPORTING-SYSTEM.md) | **Comprehensive test reporting & todos** |
+| [TESTING-QUICK-START.md](docs/testing/TESTING-QUICK-START.md) | **Comprehensive test execution quick start** |
 | [CI-CD-PIPELINE.md](docs/CI-CD-PIPELINE.md) | CI/CD, security scanning, SLSA provenance |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Developer guidelines |
-| [TESTING.md](docs/TESTING.md) | Test execution & results |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Developer guidelines |
+| [REFACTOR-AND-TEST-PLAN-2026-03-12.md](docs/testing/REFACTOR-AND-TEST-PLAN-2026-03-12.md) | Testing and validation work plan |
 
 ## Test Results
 
@@ -150,7 +167,7 @@ bash scripts/ci/release-preflight.sh
 RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
 ```
 
-See [TEST-REPORTING-SYSTEM.md](docs/TEST-REPORTING-SYSTEM.md) for details.
+See [TESTING-QUICK-START.md](docs/testing/TESTING-QUICK-START.md) for details.
 
 ## E2E Verification (Production Ready)
 
@@ -161,7 +178,7 @@ From clean Docker environment:
 - ✅ JWT authentication enforced (HTTP 401)
 - ✅ Complete S3 API compatibility verified
 
-See [E2E-COMPLETE.md](E2E-COMPLETE.md) for details.
+See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md) and [E2E-OBSERVABILITY-GUIDE.md](docs/E2E-OBSERVABILITY-GUIDE.md) for details.
 
 ## Components
 
@@ -203,10 +220,12 @@ See [E2E-COMPLETE.md](E2E-COMPLETE.md) for details.
 
 Core components, Java suites, and Sentinel roadmap/behavioral gates are green; operational hardening continues per roadmap.
 
+Latest release details: [Release Notes v1.2.8](docs/RELEASE-NOTES-v1.2.8.md)
+
 ## License
 
-See [LICENSE](LICENSE)
+Project licensing details are currently documented through repository governance and release policy documents.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md)
