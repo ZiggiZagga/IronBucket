@@ -1,35 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'node:crypto';
+import { callGatewayGraphql, fetchActorAccessToken } from '@/lib/e2e/gateway-client';
+import { resolveActor } from '@/lib/e2e/runtime';
 
 type MethodsRequest = {
   actor?: string;
   content?: string;
 };
 
-type ActorCredentials = {
-  username: string;
-  password: string;
-};
-
-const ACTOR_CREDENTIALS: Record<string, ActorCredentials> = {
-  alice: { username: 'alice', password: 'aliceP@ss' },
-  bob: { username: 'bob', password: 'bobP@ss' }
-};
-
-const TOKEN_URL =
-  process.env.E2E_KEYCLOAK_TOKEN_URL ??
-  'http://127.0.0.1:7081/realms/dev/protocol/openid-connect/token';
-const SENTINEL_URL = process.env.E2E_SENTINEL_URL ?? 'http://127.0.0.1:8080';
-const GATEWAY_GRAPHQL_URL = process.env.E2E_GATEWAY_GRAPHQL_URL ?? `${SENTINEL_URL}/graphql`;
-const CLIENT_ID = process.env.E2E_OIDC_CLIENT_ID ?? 'dev-client';
-const CLIENT_SECRET = process.env.E2E_OIDC_CLIENT_SECRET ?? 'dev-secret';
-
 export async function POST(req: NextRequest) {
   const requestBody = (await req.json()) as MethodsRequest;
-  const actor = (requestBody.actor ?? 'alice').toLowerCase();
+  const actor = resolveActor(requestBody.actor);
 
-  if (!ACTOR_CREDENTIALS[actor]) {
-    return NextResponse.json({ error: `Unsupported actor '${actor}'` }, { status: 400 });
+  if (!actor) {
+    return NextResponse.json({ error: `Unsupported actor '${requestBody.actor ?? ''}'` }, { status: 400 });
   }
 
   const bucket = `default-${actor}-methods-${Date.now()}`;
@@ -41,9 +25,9 @@ export async function POST(req: NextRequest) {
   const traceparent = `00-${traceId}-${parentSpanId}-01`;
 
   try {
-    const token = await fetchAccessToken(actor);
+    const token = await fetchActorAccessToken(actor);
 
-    const createBucketResponse = await graphqlCall(
+    const createBucketResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -59,13 +43,12 @@ export async function POST(req: NextRequest) {
           ownerTenant
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const createBucketWorked = createBucketResponse?.data?.createBucket?.name === bucket;
 
-    const beforeBucketsResponse = await graphqlCall(
+    const beforeBucketsResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -79,14 +62,13 @@ export async function POST(req: NextRequest) {
           jwtToken: token
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const beforeBuckets = beforeBucketsResponse?.data?.listBuckets ?? [];
     const listBucketsWorked = Array.isArray(beforeBuckets) && beforeBuckets.some((item: { name?: string }) => item?.name === bucket);
 
-    const getBucketResponse = await graphqlCall(
+    const getBucketResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -102,13 +84,12 @@ export async function POST(req: NextRequest) {
           bucketName: bucket
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const getBucketWorked = getBucketResponse?.data?.getBucket?.name === bucket;
 
-    const uploadResponse = await graphqlCall(
+    const uploadResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -128,14 +109,13 @@ export async function POST(req: NextRequest) {
           contentType: 'text/plain'
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const uploaded = uploadResponse?.data?.uploadObject;
     const uploadWorked = Boolean(uploaded && uploaded.key === key && uploaded.bucket === bucket);
 
-    const listAfterUploadResponse = await graphqlCall(
+    const listAfterUploadResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -152,14 +132,13 @@ export async function POST(req: NextRequest) {
           query: key
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const listAfterUpload = listAfterUploadResponse?.data?.listObjects ?? [];
     const listObjectsWorked = Array.isArray(listAfterUpload) && listAfterUpload.some((item: { key?: string }) => item?.key === key);
 
-    const getObjectResponse = await graphqlCall(
+    const getObjectResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -176,13 +155,12 @@ export async function POST(req: NextRequest) {
           objectKey: key
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const getObjectWorked = getObjectResponse?.data?.getObject?.key === key;
 
-    const routingDecisionResponse = await graphqlCall(
+    const routingDecisionResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -210,15 +188,14 @@ export async function POST(req: NextRequest) {
           requiredCapability: 'OBJECT_READ'
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const routingDecisionWorked =
       typeof routingDecisionResponse?.data?.getBucketRoutingDecision?.selectedProvider === 'string'
       && routingDecisionResponse.data.getBucketRoutingDecision.selectedProvider.length > 0;
 
-    const downloadResponse = await graphqlCall(
+    const downloadResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -234,14 +211,13 @@ export async function POST(req: NextRequest) {
           key
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const downloadUrl = downloadResponse?.data?.downloadObject?.url ?? '';
     const downloadWorked = typeof downloadUrl === 'string' && downloadUrl.length > 0;
 
-    const deleteResponse = await graphqlCall(
+    const deleteResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -255,13 +231,12 @@ export async function POST(req: NextRequest) {
           key
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const deleteWorked = Boolean(deleteResponse?.data?.deleteObject === true);
 
-    const listAfterDeleteResponse = await graphqlCall(
+    const listAfterDeleteResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -277,14 +252,13 @@ export async function POST(req: NextRequest) {
           query: key
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const listAfterDelete = listAfterDeleteResponse?.data?.listObjects ?? [];
     const deleteVerifiedByList = Array.isArray(listAfterDelete) && !listAfterDelete.some((item: { key?: string }) => item?.key === key);
 
-    const deleteBucketResponse = await graphqlCall(
+    const deleteBucketResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -297,14 +271,13 @@ export async function POST(req: NextRequest) {
           bucketName: bucket
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const deleteBucketValue = deleteBucketResponse?.data?.deleteBucket;
     const deleteBucketWorked = typeof deleteBucketValue === 'boolean';
 
-    const bucketsAfterDeleteResponse = await graphqlCall(
+    const bucketsAfterDeleteResponse = await callGatewayGraphql(
       token,
       {
         query: `
@@ -318,8 +291,7 @@ export async function POST(req: NextRequest) {
           jwtToken: token
         }
       },
-      traceparent,
-      actor
+      { traceparent, actor }
     );
 
     const bucketsAfterDelete = bucketsAfterDeleteResponse?.data?.listBuckets ?? [];
@@ -370,64 +342,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function fetchAccessToken(actor: string): Promise<string> {
-  const credentials = ACTOR_CREDENTIALS[actor];
-  if (!credentials) {
-    throw new Error(`Unsupported actor: ${actor}`);
-  }
-
-  const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    grant_type: 'password',
-    scope: 'openid profile email roles',
-    username: credentials.username,
-    password: credentials.password
-  });
-
-  const tokenResponse = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
-  });
-
-  if (!tokenResponse.ok) {
-    const details = await tokenResponse.text();
-    throw new Error(`Token request failed (${tokenResponse.status}): ${details}`);
-  }
-
-  const tokenData = (await tokenResponse.json()) as { access_token?: string };
-  if (!tokenData.access_token) {
-    throw new Error('Token response did not include access_token');
-  }
-
-  return tokenData.access_token;
-}
-
-async function graphqlCall(
-  token: string,
-  payload: { query: string; variables?: Record<string, unknown> },
-  traceparent: string,
-  actor: string
-) {
-  const response = await fetch(GATEWAY_GRAPHQL_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      traceparent,
-      'x-ironbucket-actor': actor
-    },
-    body: JSON.stringify(payload)
-  });
-
-  const body = await response.json();
-  if (!response.ok) {
-    throw new Error(`GraphQL HTTP ${response.status}: ${JSON.stringify(body)}`);
-  }
-  if (body.errors) {
-    throw new Error(`GraphQL errors: ${JSON.stringify(body.errors)}`);
-  }
-
-  return body;
-}

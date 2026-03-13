@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import UploadDialog from '@/components/ironbucket/UploadDialog';
+import { useActorBucket } from '@/hooks/useActorBucket';
 
 type UploadEvent = {
   actor: string;
@@ -14,14 +15,12 @@ type UploadEvent = {
 const ACTORS = ['alice', 'bob'] as const;
 
 export default function UiUploadE2ePage() {
-  const [activeActor, setActiveActor] = useState<string>('alice');
+  const { actor: activeActor, setActor: setActiveActor, bucket } = useActorBucket('files');
   const [events, setEvents] = useState<UploadEvent[]>([]);
 
   useEffect(() => {
     window.localStorage.setItem('ironbucket.e2e.actor', activeActor);
   }, [activeActor]);
-
-  const bucket = useMemo(() => `default-${activeActor}-files`, [activeActor]);
 
   return (
     <section className="space-y-6">
@@ -39,7 +38,7 @@ export default function UiUploadE2ePage() {
         <select
           id="actor-select"
           value={activeActor}
-          onChange={(event) => setActiveActor(event.target.value)}
+          onChange={(event) => setActiveActor(event.target.value as 'alice' | 'bob')}
           className="border rounded px-3 py-2"
         >
           {ACTORS.map((actor) => (

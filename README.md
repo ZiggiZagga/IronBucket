@@ -191,10 +191,13 @@ See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](do
 
 Latest UI evidence artifacts:
 - `test-results/ui-e2e-traces/ui-live-upload-persistence.json`
+- `test-results/ui-e2e-traces/ui-live-upload-proof.png`
 - `test-results/ui-e2e-traces/ui-s3-methods-e2e.json`
 - `test-results/ui-e2e-traces/ui-s3-methods-proof.png`
 
-Screenshot proof (live UI E2E):
+Screenshot proofs (live UI E2E):
+
+![UI Live Upload Proof](docs/assets/e2e/ui-live-upload-proof.png)
 
 ![UI S3 Methods Proof](docs/assets/e2e/ui-s3-methods-proof.png)
 

@@ -1,6 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import { useActorBucket } from '@/hooks/useActorBucket';
+import { useScenarioAction } from '@/hooks/useScenarioAction';
 
 type UploadResult = {
   actor: string;
@@ -12,61 +14,53 @@ type UploadResult = {
 };
 
 export default function E2eUploadLivePage() {
-  const [actor, setActor] = useState<'alice' | 'bob'>('alice');
+  const { actor, setActor, bucket } = useActorBucket('files');
   const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [result, setResult] = useState<UploadResult | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const bucket = useMemo(() => `default-${actor}-files`, [actor]);
+  const scenario = useScenarioAction<UploadResult>();
 
   const onUpload = async () => {
-    setStatus('');
-    setError('');
-    setResult(null);
+    scenario.setStatus('');
+    scenario.setError('');
+    scenario.setResult(null);
 
     if (!file) {
-      setError('Select a file first.');
+      scenario.setError('Select a file first.');
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      const content = await file.text();
-      const key = `${actor}-live-ui-${Date.now()}-${file.name}`;
+      const uploadResult = await scenario.run(async () => {
+        const content = await file.text();
+        const key = `${actor}-live-ui-${Date.now()}-${file.name}`;
 
-      const response = await fetch('/api/e2e/live-upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          actor,
-          key,
-          content,
-          contentType: file.type || 'text/plain'
-        })
+        const response = await fetch('/api/e2e/live-upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            actor,
+            key,
+            content,
+            contentType: file.type || 'text/plain'
+          })
+        });
+
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload?.details || payload?.error || `Upload failed with ${response.status}`);
+        }
+
+        return payload as UploadResult;
       });
 
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.details || payload?.error || `Upload failed with ${response.status}`);
-      }
-
-      const uploadResult = payload as UploadResult;
-      setResult(uploadResult);
-
       if (uploadResult.verified) {
-        setStatus(`Live upload verified for ${uploadResult.key}`);
+        scenario.setStatus(`Live upload verified for ${uploadResult.key}`);
       } else {
-        setError(`Upload completed but round-trip verification failed for ${uploadResult.key}`);
+        scenario.setError(`Upload completed but round-trip verification failed for ${uploadResult.key}`);
       }
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : String(uploadError));
-    } finally {
-      setIsSubmitting(false);
+      scenario.setError(uploadError instanceof Error ? uploadError.message : String(uploadError));
     }
   };
 
@@ -110,24 +104,24 @@ export default function E2eUploadLivePage() {
         <button
           type="button"
           onClick={onUpload}
-          disabled={isSubmitting}
+          disabled={scenario.isRunning}
           className="border rounded px-3 py-2"
         >
-          {isSubmitting ? 'Uploading...' : 'Upload live'}
+          {scenario.isRunning ? 'Uploading...' : 'Upload live'}
         </button>
       </div>
 
-      {status && <p className="text-sm font-medium text-green-700">{status}</p>}
-      {error && <p className="text-sm font-medium text-red-700">{error}</p>}
+      {scenario.status && <p className="text-sm font-medium text-green-700">{scenario.status}</p>}
+      {scenario.error && <p className="text-sm font-medium text-red-700">{scenario.error}</p>}
 
-      {result && (
+      {scenario.result && (
         <div className="border rounded p-4 text-sm" data-testid="live-upload-result">
-          <p>actor: {result.actor}</p>
-          <p>bucket: {result.bucket}</p>
-          <p>key: {result.key}</p>
-          <p>verified: {String(result.verified)}</p>
-          <p>roundtripSize: {result.roundtripSize}</p>
-          <p>timestamp: {result.timestamp}</p>
+          <p>actor: {scenario.result.actor}</p>
+          <p>bucket: {scenario.result.bucket}</p>
+          <p>key: {scenario.result.key}</p>
+          <p>verified: {String(scenario.result.verified)}</p>
+          <p>roundtripSize: {scenario.result.roundtripSize}</p>
+          <p>timestamp: {scenario.result.timestamp}</p>
         </div>
       )}
     </section>

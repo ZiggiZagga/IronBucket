@@ -27,8 +27,19 @@ test('live UI upload persists through backend round-trip', async ({ page }) => {
   const keyMatch = keyLine.match(/key:\s*([^\n\r]+)/);
   expect(keyMatch?.[1]?.trim().length ?? 0).toBeGreaterThan(0);
 
-  const outDir = path.resolve(process.cwd(), '../test-results/ui-e2e-traces');
+  const screenshotBuffer = await page.screenshot({
+    fullPage: true,
+    animations: 'disabled'
+  });
+
+  const preferredOutDir = '/workspaces/IronBucket/test-results/ui-e2e-traces';
+  const fallbackOutDir = path.resolve(process.cwd(), '../test-results/ui-e2e-traces');
+  const outDir = await fs
+    .access('/workspaces/IronBucket/test-results')
+    .then(() => preferredOutDir)
+    .catch(() => fallbackOutDir);
   await fs.mkdir(outDir, { recursive: true });
+  await fs.writeFile(path.join(outDir, 'ui-live-upload-proof.png'), screenshotBuffer);
   await fs.writeFile(
     path.join(outDir, 'ui-live-upload-persistence.json'),
     JSON.stringify(
@@ -37,7 +48,8 @@ test('live UI upload persists through backend round-trip', async ({ page }) => {
         actor: 'alice',
         bucket: 'default-alice-files',
         key: keyMatch?.[1]?.trim() ?? '',
-        verified: true
+        verified: true,
+        screenshotProof: 'ui-live-upload-proof.png'
       },
       null,
       2
