@@ -17,6 +17,48 @@ bash scripts/e2e/prove-phase2-observability.sh
 - Loki container-specific label queries can intermittently return zero streams while broader `service_name` queries still return active streams.
 - Mimir infra scrape checks are more stable with `max_over_time(up[10m])` than point-in-time `up` queries during startup churn.
 
+## Current Runtime Status (2026-03-13)
+
+- Loki: operational (logs queryable by `service_name`).
+- Mimir: operational (Prometheus query API returns `up` vectors for core services).
+- Tempo: degraded in current compose runtime (restart loop).
+
+Observed Tempo runtime error:
+
+```text
+failed to init module services: error initialising module: distributor: failed to create distributor: the Kafka topic has not been configured
+```
+
+Practical implication:
+
+- Logs + metrics proofs are currently reliable and should remain blocking checks.
+- Trace proof should be treated as warning-path until Tempo distributor configuration is corrected in local runtime.
+
+For the canonical runtime matrix and remediation plan, see [OBSERVABILITY-FEATURESET-STATUS.md](OBSERVABILITY-FEATURESET-STATUS.md).
+
+## UI Screenshot Proof Artifacts
+
+The UI E2E pipeline now emits screenshot-based proof artifacts and stores them as object evidence:
+
+- Playwright creates screenshot during `/e2e-s3-methods` scenario.
+- Screenshot proof is uploaded to MinIO (`default-alice-proofs/*`).
+- Screenshot is downloaded again through GraphQL path and rendered in UI for round-trip proof.
+
+Local artifacts:
+
+- `test-results/ui-e2e-traces/ui-s3-methods-proof.png`
+- `test-results/ui-e2e-traces/ui-s3-methods-e2e.json`
+
+Versioned documentation artifact:
+
+- `docs/assets/e2e/ui-s3-methods-proof.png`
+
+## Screenshot Evidence
+
+The following screenshot was captured during the full UI S3-method E2E scenario and then used for MinIO upload/download proof:
+
+![UI S3 methods screenshot proof](assets/e2e/ui-s3-methods-proof.png)
+
 These findings are now reflected in proof and E2E test scripts to reduce false negatives while preserving strict gate intent.
 
 ## Architecture

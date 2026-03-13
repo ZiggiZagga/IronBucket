@@ -24,6 +24,8 @@
 ### Operations
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Docker Compose and Kubernetes deployment
 - [E2E-OBSERVABILITY-GUIDE.md](E2E-OBSERVABILITY-GUIDE.md) - Loki, Tempo, Grafana, Mimir setup
+- [OBSERVABILITY-FEATURESET-STATUS.md](OBSERVABILITY-FEATURESET-STATUS.md) - Runtime featureset, gaps, and roadmap alignment
+- [assets/e2e/ui-s3-methods-proof.png](assets/e2e/ui-s3-methods-proof.png) - UI E2E screenshot proof artifact
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
 
 ### Development
@@ -48,7 +50,7 @@
 **Test Coverage:**
 - Core Platform: 100% (7/7 tests passing)
 - Infrastructure: 89% (16/18 tests passing)
-- Observability: 100% (Loki, Tempo, Grafana, Mimir operational)
+- Observability: logs/metrics operational; tracing runtime hardening active (see Observability Featureset)
 - Maven Tests: 79% (103/131 - 28 are TDD roadmap tests for Phase 3)
 
 ---
