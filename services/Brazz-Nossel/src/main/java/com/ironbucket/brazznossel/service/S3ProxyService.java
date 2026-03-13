@@ -4,6 +4,7 @@ import com.ironbucket.brazznossel.model.NormalizedIdentity;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
 
 /**
@@ -105,4 +106,34 @@ public interface S3ProxyService {
     Mono<String> getBucketVersioning(String bucket, NormalizedIdentity identity);
 
     Mono<String> putBucketVersioning(String bucket, String status, NormalizedIdentity identity);
+
+    Mono<String> putObjectTagging(String bucket, String key, Map<String, String> tags, NormalizedIdentity identity);
+
+    Mono<Map<String, String>> getObjectTagging(String bucket, String key, NormalizedIdentity identity);
+
+    Mono<Void> deleteObjectTagging(String bucket, String key, NormalizedIdentity identity);
+
+    Mono<String> getBucketPolicy(String bucket, NormalizedIdentity identity);
+
+    Mono<String> putBucketPolicy(String bucket, String policyJson, NormalizedIdentity identity);
+
+    Mono<Void> deleteBucketPolicy(String bucket, NormalizedIdentity identity);
+
+    Mono<String> getObjectAcl(String bucket, String key, NormalizedIdentity identity);
+
+    Mono<String> putObjectAcl(String bucket, String key, String acl, NormalizedIdentity identity);
+
+    Mono<String> getBucketAcl(String bucket, NormalizedIdentity identity);
+
+    Mono<String> putBucketAcl(String bucket, String acl, NormalizedIdentity identity);
+
+    Mono<String> copyObject(
+        String sourceBucket,
+        String sourceKey,
+        String destinationBucket,
+        String destinationKey,
+        NormalizedIdentity identity
+    );
+
+    Mono<String> getBucketLocation(String bucket, NormalizedIdentity identity);
 }

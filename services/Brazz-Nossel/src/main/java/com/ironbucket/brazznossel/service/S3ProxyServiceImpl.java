@@ -498,4 +498,169 @@ public class S3ProxyServiceImpl implements S3ProxyService {
             return targetStatus.toString();
         });
     }
+
+    @Override
+    public Mono<String> putObjectTagging(String bucket, String key, Map<String, String> tags, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            List<Tag> tagSet = tags == null ? List.of() : tags.entrySet().stream()
+                    .map(entry -> Tag.builder().key(entry.getKey()).value(entry.getValue()).build())
+                    .toList();
+            PutObjectTaggingRequest request = PutObjectTaggingRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .tagging(Tagging.builder().tagSet(tagSet).build())
+                    .build();
+            routedClient(identity, bucket, RequiredCapability.OBJECT_WRITE).putObjectTagging(request);
+            return "OK";
+        });
+    }
+
+    @Override
+    public Mono<Map<String, String>> getObjectTagging(String bucket, String key, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            GetObjectTaggingRequest request = GetObjectTaggingRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            GetObjectTaggingResponse response = routedClient(identity, bucket, RequiredCapability.OBJECT_READ)
+                    .getObjectTagging(request);
+            return response.tagSet().stream().collect(Collectors.toMap(Tag::key, Tag::value));
+        });
+    }
+
+    @Override
+    public Mono<Void> deleteObjectTagging(String bucket, String key, NormalizedIdentity identity) {
+        return Mono.fromRunnable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            DeleteObjectTaggingRequest request = DeleteObjectTaggingRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            routedClient(identity, bucket, RequiredCapability.OBJECT_DELETE).deleteObjectTagging(request);
+        });
+    }
+
+    @Override
+    public Mono<String> getBucketPolicy(String bucket, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            GetBucketPolicyRequest request = GetBucketPolicyRequest.builder().bucket(bucket).build();
+            GetBucketPolicyResponse response = routedClient(identity, bucket, RequiredCapability.OBJECT_READ)
+                    .getBucketPolicy(request);
+            return response.policy();
+        });
+    }
+
+    @Override
+    public Mono<String> putBucketPolicy(String bucket, String policyJson, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            PutBucketPolicyRequest request = PutBucketPolicyRequest.builder()
+                    .bucket(bucket)
+                    .policy(policyJson)
+                    .build();
+            routedClient(identity, bucket, RequiredCapability.OBJECT_WRITE).putBucketPolicy(request);
+            return "OK";
+        });
+    }
+
+    @Override
+    public Mono<Void> deleteBucketPolicy(String bucket, NormalizedIdentity identity) {
+        return Mono.fromRunnable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            DeleteBucketPolicyRequest request = DeleteBucketPolicyRequest.builder().bucket(bucket).build();
+            routedClient(identity, bucket, RequiredCapability.OBJECT_DELETE).deleteBucketPolicy(request);
+        });
+    }
+
+    @Override
+    public Mono<String> getObjectAcl(String bucket, String key, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            GetObjectAclRequest request = GetObjectAclRequest.builder().bucket(bucket).key(key).build();
+            GetObjectAclResponse response = routedClient(identity, bucket, RequiredCapability.OBJECT_READ)
+                    .getObjectAcl(request);
+            return response.grants().stream()
+                    .map(grant -> grant.permissionAsString())
+                    .collect(Collectors.joining(","));
+        });
+    }
+
+    @Override
+    public Mono<String> putObjectAcl(String bucket, String key, String acl, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            ObjectCannedACL cannedAcl = ObjectCannedACL.fromValue(acl.toLowerCase(Locale.ROOT));
+            PutObjectAclRequest request = PutObjectAclRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .acl(cannedAcl)
+                    .build();
+            routedClient(identity, bucket, RequiredCapability.OBJECT_WRITE).putObjectAcl(request);
+            return cannedAcl.toString();
+        });
+    }
+
+    @Override
+    public Mono<String> getBucketAcl(String bucket, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            GetBucketAclRequest request = GetBucketAclRequest.builder().bucket(bucket).build();
+            GetBucketAclResponse response = routedClient(identity, bucket, RequiredCapability.OBJECT_READ)
+                    .getBucketAcl(request);
+            return response.grants().stream()
+                    .map(grant -> grant.permissionAsString())
+                    .collect(Collectors.joining(","));
+        });
+    }
+
+    @Override
+    public Mono<String> putBucketAcl(String bucket, String acl, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            BucketCannedACL cannedAcl = BucketCannedACL.fromValue(acl.toLowerCase(Locale.ROOT));
+            PutBucketAclRequest request = PutBucketAclRequest.builder()
+                    .bucket(bucket)
+                    .acl(cannedAcl)
+                    .build();
+            routedClient(identity, bucket, RequiredCapability.OBJECT_WRITE).putBucketAcl(request);
+            return cannedAcl.toString();
+        });
+    }
+
+    @Override
+    public Mono<String> copyObject(
+        String sourceBucket,
+        String sourceKey,
+        String destinationBucket,
+        String destinationKey,
+        NormalizedIdentity identity
+    ) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(sourceBucket, identity);
+            assertTenantBucketAccess(destinationBucket, identity);
+            CopyObjectRequest request = CopyObjectRequest.builder()
+                    .copySource(sourceBucket + "/" + sourceKey)
+                    .destinationBucket(destinationBucket)
+                    .destinationKey(destinationKey)
+                    .build();
+            CopyObjectResponse response = routedClient(identity, destinationBucket, RequiredCapability.OBJECT_WRITE)
+                    .copyObject(request);
+            return response.copyObjectResult().eTag();
+        });
+    }
+
+    @Override
+    public Mono<String> getBucketLocation(String bucket, NormalizedIdentity identity) {
+        return Mono.fromCallable(() -> {
+            assertTenantBucketAccess(bucket, identity);
+            GetBucketLocationRequest request = GetBucketLocationRequest.builder().bucket(bucket).build();
+            GetBucketLocationResponse response = routedClient(identity, bucket, RequiredCapability.OBJECT_READ)
+                    .getBucketLocation(request);
+            String location = response.locationConstraintAsString();
+            return location == null || location.isBlank() ? "us-east-1" : location;
+        });
+    }
 }

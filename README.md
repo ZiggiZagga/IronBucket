@@ -270,7 +270,7 @@ Screenshot proofs (live UI E2E):
 
 Core components, Java suites, and Sentinel roadmap/behavioral gates are green; operational hardening continues per roadmap.
 
-Latest release details: [Release Notes v1.2.8](docs/RELEASE-NOTES-v1.2.8.md)
+Latest release details: [Release Notes v1.2.12](docs/RELEASE-NOTES-v1.2.12.md)
 
 ## License
 

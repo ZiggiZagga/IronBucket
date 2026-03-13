@@ -39,7 +39,7 @@ The plan focuses on converting roadmap assertions into implementation increments
 
 ### ✅ Phase C — S3 API Completion Tranche (Completed for roadmap gate)
 - S3 roadmap suite is green.
-- S3 completeness score reached 90% (target gate 80%).
+- S3 completeness score reached 100% (target gate 80%).
 
 ### ✅ Phase D — Governance & Resilience Harness (Completed)
 - Required immediate/high/medium artifacts and files added.
@@ -88,7 +88,7 @@ The plan focuses on converting roadmap assertions into implementation increments
 - Status tracking and remediation are documented in `docs/OBSERVABILITY-FEATURESET-STATUS.md`.
 
 ### ✅ Phase F — Full Orchestrator Stability Verification (Completed)
-- End-to-end orchestrator run is now green at 157/157 (`scripts/run-all-tests-complete.sh`).
+- End-to-end orchestrator run is now green at 190/190 (`scripts/run-all-tests-complete.sh`).
 - Alice/Bob scenario is stabilized for containerized execution path used by the orchestrator.
 - Transient upstream readiness responses in E2E path are now handled with bounded retries (502/503/504) to reduce flaky false negatives.
 

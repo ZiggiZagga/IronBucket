@@ -13,8 +13,10 @@ import com.ironbucket.graphiteforge.resolver.StatsQueryResolver;
 import com.ironbucket.graphiteforge.resolver.TenantMutationResolver;
 import com.ironbucket.graphiteforge.resolver.TenantQueryResolver;
 import com.ironbucket.graphiteforge.service.AuditLogService;
+import com.ironbucket.graphiteforge.service.IdentityDirectoryService;
 import com.ironbucket.graphiteforge.service.IronBucketS3Service;
 import com.ironbucket.graphiteforge.service.PolicyManagementService;
+import com.ironbucket.graphiteforge.service.TenantDirectoryService;
 
 /**
  * Central runtime wiring for Graphite-Forge.
@@ -27,6 +29,8 @@ public class GraphiteForgeRuntime {
     private final PolicyManagementService policyManagementService = new PolicyManagementService();
     private final IronBucketS3Service s3Service = new IronBucketS3Service();
     private final AuditLogService auditLogService = new AuditLogService();
+    private final IdentityDirectoryService identityDirectoryService = new IdentityDirectoryService();
+    private final TenantDirectoryService tenantDirectoryService = new TenantDirectoryService();
 
     private final PolicyQueryResolver policyQueryResolver = new PolicyQueryResolver(policyManagementService);
     private final PolicyMutationResolver policyMutationResolver = new PolicyMutationResolver(policyManagementService);
@@ -38,10 +42,10 @@ public class GraphiteForgeRuntime {
     private final AuditQueryResolver auditQueryResolver = new AuditQueryResolver(auditLogService);
     private final AuditSubscriptionResolver auditSubscriptionResolver = new AuditSubscriptionResolver(auditLogService);
 
-    private final IdentityQueryResolver identityQueryResolver = new IdentityQueryResolver();
-    private final IdentityMutationResolver identityMutationResolver = new IdentityMutationResolver();
-    private final TenantQueryResolver tenantQueryResolver = new TenantQueryResolver();
-    private final TenantMutationResolver tenantMutationResolver = new TenantMutationResolver();
+    private final IdentityQueryResolver identityQueryResolver = new IdentityQueryResolver(identityDirectoryService);
+    private final IdentityMutationResolver identityMutationResolver = new IdentityMutationResolver(identityDirectoryService);
+    private final TenantQueryResolver tenantQueryResolver = new TenantQueryResolver(tenantDirectoryService);
+    private final TenantMutationResolver tenantMutationResolver = new TenantMutationResolver(tenantDirectoryService);
     private final StatsQueryResolver statsQueryResolver = new StatsQueryResolver(policyManagementService, auditLogService);
 
     public static GraphiteForgeRuntime create() {
