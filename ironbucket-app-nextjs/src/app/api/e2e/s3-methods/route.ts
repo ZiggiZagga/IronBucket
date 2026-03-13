@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'node:crypto';
 import { callGatewayGraphql, fetchActorAccessToken } from '@/lib/e2e/gateway-client';
 import { resolveActor } from '@/lib/e2e/runtime';
+import { logger } from '@/lib/observability/logger';
+import { observeApiRequest } from '@/lib/observability/metrics';
 
 type MethodsRequest = {
   actor?: string;
@@ -9,10 +11,15 @@ type MethodsRequest = {
 };
 
 export async function POST(req: NextRequest) {
+  const started = performance.now();
+  const route = '/api/e2e/s3-methods';
+  const inboundTraceparent = req.headers.get('traceparent') ?? undefined;
   const requestBody = (await req.json()) as MethodsRequest;
   const actor = resolveActor(requestBody.actor);
 
   if (!actor) {
+    const durationMs = performance.now() - started;
+    observeApiRequest(route, 'POST', 400, durationMs);
     return NextResponse.json({ error: `Unsupported actor '${requestBody.actor ?? ''}'` }, { status: 400 });
   }
 
@@ -313,6 +320,18 @@ export async function POST(req: NextRequest) {
 
     const allMethodsVerified = Object.values(checks).every(Boolean);
 
+    const durationMs = performance.now() - started;
+    observeApiRequest(route, 'POST', 200, durationMs);
+    logger.info('S3 methods E2E flow completed.', {
+      route,
+      status: 200,
+      actor,
+      traceparent,
+      inboundTraceparent,
+      durationMs,
+      allMethodsVerified
+    });
+
     return NextResponse.json({
       actor,
       bucket,
@@ -330,6 +349,17 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    const durationMs = performance.now() - started;
+    observeApiRequest(route, 'POST', 500, durationMs);
+    logger.error('S3 methods E2E flow failed.', {
+      route,
+      status: 500,
+      actor,
+      traceparent,
+      inboundTraceparent,
+      durationMs,
+      error: error instanceof Error ? error.message : String(error)
+    });
     return NextResponse.json(
       {
         error: 'S3 methods e2e flow failed on gateway GraphQL path',

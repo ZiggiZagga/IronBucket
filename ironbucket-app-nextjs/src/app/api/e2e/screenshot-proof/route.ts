@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGatewayGraphql, fetchActorAccessToken } from '@/lib/e2e/gateway-client';
 import { resolveActor } from '@/lib/e2e/runtime';
+import { logger } from '@/lib/observability/logger';
+import { observeApiRequest } from '@/lib/observability/metrics';
 
 type ScreenshotProofRequest = {
   actor?: string;
@@ -9,16 +11,23 @@ type ScreenshotProofRequest = {
 };
 
 export async function POST(req: NextRequest) {
+  const started = performance.now();
+  const route = '/api/e2e/screenshot-proof';
+  const traceparent = req.headers.get('traceparent') ?? undefined;
   const requestBody = (await req.json()) as ScreenshotProofRequest;
   const actor = resolveActor(requestBody.actor);
   const screenshotBase64 = requestBody.screenshotBase64 ?? '';
   const mimeType = requestBody.mimeType ?? 'image/png';
 
   if (!actor) {
+    const durationMs = performance.now() - started;
+    observeApiRequest(route, 'POST', 400, durationMs);
     return NextResponse.json({ error: `Unsupported actor '${requestBody.actor ?? ''}'` }, { status: 400 });
   }
 
   if (!screenshotBase64) {
+    const durationMs = performance.now() - started;
+    observeApiRequest(route, 'POST', 400, durationMs);
     return NextResponse.json({ error: 'Missing screenshotBase64' }, { status: 400 });
   }
 
@@ -102,6 +111,16 @@ export async function POST(req: NextRequest) {
     const downloadedBase64 = await fetchDownloadedBase64(downloadUrl, token);
     const previewDataUrl = `data:${mimeType};base64,${downloadedBase64}`;
 
+    const durationMs = performance.now() - started;
+    observeApiRequest(route, 'POST', 200, durationMs);
+    logger.info('Screenshot proof flow completed.', {
+      route,
+      status: 200,
+      actor,
+      traceparent,
+      durationMs
+    });
+
     return NextResponse.json({
       actor,
       bucket,
@@ -112,6 +131,16 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    const durationMs = performance.now() - started;
+    observeApiRequest(route, 'POST', 500, durationMs);
+    logger.error('Screenshot proof flow failed.', {
+      route,
+      status: 500,
+      actor,
+      traceparent,
+      durationMs,
+      error: error instanceof Error ? error.message : String(error)
+    });
     return NextResponse.json(
       {
         error: 'Screenshot proof upload/download flow failed',

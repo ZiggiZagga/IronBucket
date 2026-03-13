@@ -253,6 +253,12 @@ services:
 
     environment:
       - "SPRING_APPLICATION_NAME=graphite-forge"
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
@@ -302,6 +308,7 @@ services:
     volumes:
       - ./tests:/tests
       - /tmp/ironbucket-test:/tmp/ironbucket-test
+      - /workspaces/IronBucket/test-results:/workspaces/IronBucket/test-results
       - ./test-scripts:/scripts:ro
       - ../scripts:/workspaces/IronBucket/scripts:ro
       - ../services:/workspaces/IronBucket/services:ro
@@ -333,6 +340,9 @@ services:
       - "CLAIMSPINDEL_URL=http://steel-hammer-claimspindel:8081"
       - "BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082"
       - "BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083"
+      - "OTEL_SERVICE_NAME=steel-hammer-test"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4318"
+      - "PLAYWRIGHT_REPORT_DIR=/workspaces/IronBucket/test-results"
 
     # Test will run automatically when container starts
     # Runs complete E2E verification: Maven tests + services + S3 + JWT
@@ -371,6 +381,9 @@ services:
       - "E2E_SENTINEL_URL=http://steel-hammer-sentinel-gear:8080"
       - "E2E_GATEWAY_GRAPHQL_URL=http://steel-hammer-sentinel-gear:8080/graphql"
       - "E2E_KEYCLOAK_TOKEN_URL=http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/token"
+      - "OTEL_SERVICE_NAME=ironbucket-ui-e2e"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4318"
+      - "PLAYWRIGHT_REPORT_DIR=/workspaces/IronBucket/test-results"
 
     entrypoint:
       - /bin/bash

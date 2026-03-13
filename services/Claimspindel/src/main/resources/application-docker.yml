@@ -32,13 +32,26 @@ management:
   endpoint:
     health:
       show-details: always
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://steel-hammer-otel-collector:4317}
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: docker
 
 logging:
   level:
     root: INFO
     com.ironbucket: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId}] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{traceId:-},%X{spanId:-}] [%X{requestId:-}] %-5level %logger{36} - %msg%n"
 
 # Service configuration
 app:

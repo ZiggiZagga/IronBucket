@@ -1,7 +1,16 @@
 import express, { Request, Response } from 'express';
+import {
+  metricsContentType,
+  metricsSnapshot,
+  requestObservabilityMiddleware,
+  startObservability
+} from './observability';
 
 const app = express();
 app.use(express.json());
+app.use(requestObservabilityMiddleware);
+
+void startObservability();
 
 async function authenticate(username: string, password: string) {
   const { discovery, ClientSecretPost, genericGrantRequest } = await import('openid-client');
@@ -39,6 +48,12 @@ async function authHandler(req: Request, res: Response) {
 
 app.post('/auth', authHandler);
 app.post('/api/auth', authHandler);
+
+app.get('/metrics', async (_req: Request, res: Response) => {
+  const metrics = await metricsSnapshot();
+  res.setHeader('Content-Type', metricsContentType());
+  res.status(200).send(metrics);
+});
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {

@@ -32,7 +32,7 @@ services:
     restart: always
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.9.0
     container_name: steel-hammer-tempo
     hostname: steel-hammer-tempo
     networks:
@@ -251,6 +251,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - "SPRING_APPLICATION_NAME=graphite-forge"
+      - "SPRING_PROFILES_ACTIVE=docker"
+      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0"
+      - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
       interval: 10s
