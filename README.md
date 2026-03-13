@@ -17,7 +17,7 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 | Security Design | ✅ A+ | Zero-trust, multi-layer |
 | **Network Isolation** | 🔴 **C** | **NetworkPolicies required** |
 | **Credential Mgmt** | 🔴 **D** | **Vault integration needed** |
-| Observability | ✅ B+ | LGTM stack and executable proof path present |
+| Observability | 🟡 B | Logs/Metrics operational; tracing hardening active |
 
 **⚠️ Remaining production actions:**
 1. Enforce required branch checks and release preflight in protected-branch policy
@@ -181,7 +181,18 @@ From clean Docker environment:
 - ✅ JWT authentication enforced (HTTP 401)
 - ✅ Complete S3 API compatibility verified
 
-See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md) and [E2E-OBSERVABILITY-GUIDE.md](docs/E2E-OBSERVABILITY-GUIDE.md) for details.
+See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](docs/E2E-OBSERVABILITY-GUIDE.md), and [OBSERVABILITY-FEATURESET-STATUS.md](docs/OBSERVABILITY-FEATURESET-STATUS.md) for details.
+
+## Observability Runtime Status (2026-03-13)
+
+- Logs (Loki): ✅ operational
+- Metrics (Mimir): ✅ operational
+- Traces (Tempo): ⚠️ degraded (container restart loop caused by Kafka-topic distributor config mismatch)
+
+Latest UI evidence artifacts:
+- `test-results/ui-e2e-traces/ui-live-upload-persistence.json`
+- `test-results/ui-e2e-traces/ui-s3-methods-e2e.json`
+- `test-results/ui-e2e-traces/ui-s3-methods-proof.png`
 
 ## Components
 

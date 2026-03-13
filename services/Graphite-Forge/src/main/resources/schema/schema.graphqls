@@ -49,6 +49,8 @@ type Query {
 }
 
 type Mutation {
+  createBucket(jwtToken: String!, bucketName: String!, ownerTenant: String!): S3Bucket!
+  deleteBucket(jwtToken: String!, bucketName: String!): Boolean!
   uploadObject(jwtToken: String, bucket: String!, key: String!, content: String!, contentType: String): UploadObjectResult!
   deleteObject(jwtToken: String, bucket: String!, key: String!): Boolean!
   downloadObject(jwtToken: String, bucket: String!, key: String!): DownloadObjectResult!

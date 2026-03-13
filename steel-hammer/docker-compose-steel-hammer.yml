@@ -349,7 +349,7 @@ services:
     networks:
       - steel-hammer-network
 
-    image: mcr.microsoft.com/playwright:v1.57.0-jammy
+    image: node:20-bookworm
     container_name: steel-hammer-ui-e2e
     working_dir: /workspace/ironbucket-app-nextjs
 
@@ -375,7 +375,7 @@ services:
     entrypoint:
       - /bin/bash
       - -lc
-      - npm ci --no-audit --no-fund && npx playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts --workers=1
+      - npm ci --no-audit --no-fund && npx playwright install --with-deps chromium && npm run build && npx playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts tests/ui-s3-methods-e2e.spec.ts --workers=1
 
     restart: "no"
 

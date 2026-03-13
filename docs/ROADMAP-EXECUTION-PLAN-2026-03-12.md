@@ -81,6 +81,12 @@ The plan focuses on converting roadmap assertions into implementation increments
   - minio up sum `1.0` (threshold `1.0`, blocking)
   - postgres-exporter up sum `1.0` (threshold `1.0`, blocking)
 
+**Runtime anomaly update (2026-03-13):**
+- Tempo in local compose runtime may enter restart loop with:
+  - `failed to init module services: ... distributor: failed to create distributor: the Kafka topic has not been configured`
+- Until corrected, tracing remains explicit warning-path while logs/metrics remain blocking-path observability checks.
+- Status tracking and remediation are documented in `docs/OBSERVABILITY-FEATURESET-STATUS.md`.
+
 ### ✅ Phase F — Full Orchestrator Stability Verification (Completed)
 - End-to-end orchestrator run is now green at 157/157 (`scripts/run-all-tests-complete.sh`).
 - Alice/Bob scenario is stabilized for containerized execution path used by the orchestrator.

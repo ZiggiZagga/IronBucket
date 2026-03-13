@@ -1,177 +1,219 @@
 package com.ironbucket.graphiteforge.service;
 
 import com.ironbucket.graphiteforge.exception.BucketNotFoundException;
+import com.ironbucket.graphiteforge.exception.IronBucketServiceException;
 import com.ironbucket.graphiteforge.model.ProviderRoutingDecision;
 import com.ironbucket.graphiteforge.model.S3Bucket;
 import com.ironbucket.graphiteforge.model.S3Object;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class IronBucketS3Service {
 
-    private final List<S3Bucket> buckets = new CopyOnWriteArrayList<>();
-    private final List<S3Object> objects = new CopyOnWriteArrayList<>();
-    private final Map<String, RoutingProvider> tenantDefaultProviders = new ConcurrentHashMap<>();
-    private final Map<String, RoutingProvider> bucketOverrideProviders = new ConcurrentHashMap<>();
+    private static final String ROUTED_PROVIDER = "CLAIMSPINDEL";
+    private static final String ROUTED_REASON = "sentinel-gear-gateway;claimspindel-policy-route";
+    private static final Pattern CREATED_PATTERN = Pattern.compile("\\(created:\\s*([^\\)]+)\\)");
+
+    private final WebClient webClient;
+    private final String gatewayBaseUrl;
+
+    public IronBucketS3Service() {
+        this(resolveGatewayBaseUrl());
+    }
+
+    public IronBucketS3Service(String gatewayBaseUrl) {
+        this(
+            WebClient.builder()
+                .baseUrl(normalizeBaseUrl(gatewayBaseUrl))
+                .build(),
+            normalizeBaseUrl(gatewayBaseUrl)
+        );
+    }
+
+    IronBucketS3Service(WebClient webClient, String gatewayBaseUrl) {
+        this.webClient = webClient;
+        this.gatewayBaseUrl = normalizeBaseUrl(gatewayBaseUrl);
+    }
 
     public List<S3Bucket> listBuckets(String jwtToken) {
-        return buckets.stream()
-            .map(bucket -> {
-                ProviderRoutingDecision decision = resolveRouting(
-                    bucket.ownerTenant(),
-                    bucket.name(),
-                    RoutingCapability.OBJECT_READ
-                );
-                return new S3Bucket(
-                    bucket.name(),
-                    bucket.creationDate(),
-                    bucket.ownerTenant(),
-                    decision.selectedProvider(),
-                    decision.reason()
-                );
-            })
-            .toList();
+        String response = webClient.get()
+            .uri("/s3/buckets")
+            .header("Authorization", authorizationHeader(jwtToken))
+            .retrieve()
+            .bodyToMono(String.class)
+            .block();
+
+        return parseBuckets(response == null ? "" : response);
     }
 
     public S3Bucket getBucket(String jwtToken, String bucketName) {
-        S3Bucket bucket = buckets.stream()
+        return listBuckets(jwtToken).stream()
             .filter(existingBucket -> existingBucket.name().equals(bucketName))
             .findFirst()
             .orElseThrow(() -> new BucketNotFoundException(bucketName));
-
-        ProviderRoutingDecision decision = resolveRouting(
-            bucket.ownerTenant(),
-            bucket.name(),
-            RoutingCapability.OBJECT_READ
-        );
-
-        return new S3Bucket(
-            bucket.name(),
-            bucket.creationDate(),
-            bucket.ownerTenant(),
-            decision.selectedProvider(),
-            decision.reason()
-        );
     }
 
     public S3Bucket createBucket(String jwtToken, String bucketName, String ownerTenant) {
-        S3Bucket persisted = new S3Bucket(bucketName, Instant.now(), ownerTenant);
-        buckets.add(persisted);
+        webClient.post()
+            .uri("/s3/bucket/{bucket}", bucketName)
+            .header("Authorization", authorizationHeader(jwtToken))
+            .retrieve()
+            .bodyToMono(String.class)
+            .block();
 
-        ProviderRoutingDecision decision = resolveRouting(ownerTenant, bucketName, RoutingCapability.OBJECT_WRITE);
         return new S3Bucket(
-            persisted.name(),
-            persisted.creationDate(),
-            persisted.ownerTenant(),
-            decision.selectedProvider(),
-            decision.reason()
+            bucketName,
+            Instant.now(),
+            ownerTenant,
+            ROUTED_PROVIDER,
+            ROUTED_REASON
         );
     }
 
     public boolean deleteBucket(String jwtToken, String bucketName) {
-        objects.removeIf(object -> object.bucketName().equals(bucketName));
-        return buckets.removeIf(bucket -> bucket.name().equals(bucketName));
+        try {
+            webClient.delete()
+                .uri("/s3/bucket/{bucket}", bucketName)
+                .header("Authorization", authorizationHeader(jwtToken))
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+            return true;
+        } catch (RuntimeException runtimeException) {
+            return false;
+        }
     }
 
     public List<S3Object> listObjects(String jwtToken, String bucketName, String prefix) {
-        ProviderRoutingDecision decision = resolveRouting(
-            tenantForBucket(bucketName),
-            bucketName,
-            RoutingCapability.OBJECT_READ
-        );
+        String body = webClient.get()
+            .uri("/s3/objects/{bucket}", bucketName)
+            .header("Authorization", authorizationHeader(jwtToken))
+            .retrieve()
+            .bodyToMono(String.class)
+            .block();
 
-        return objects.stream()
-            .filter(object -> object.bucketName().equals(bucketName))
-            .filter(object -> prefix == null || prefix.isBlank() || object.key().startsWith(prefix))
-            .map(object -> new S3Object(
-                object.key(),
-                object.bucketName(),
-                object.size(),
-                object.lastModified(),
-                object.contentType(),
-                object.metadata(),
-                decision.selectedProvider(),
-                decision.reason()
+        if (body == null || body.isBlank()) {
+            return List.of();
+        }
+
+        Instant now = Instant.now();
+        return body.lines()
+            .map(String::trim)
+            .filter(line -> !line.isBlank())
+            .filter(line -> prefix == null || prefix.isBlank() || line.startsWith(prefix))
+            .map(key -> new S3Object(
+                key,
+                bucketName,
+                0L,
+                now,
+                "application/octet-stream",
+                Map.of(),
+                ROUTED_PROVIDER,
+                ROUTED_REASON
             ))
             .toList();
     }
 
     public S3Object getObject(String jwtToken, String bucketName, String objectKey) {
-        ProviderRoutingDecision decision = resolveRouting(
-            tenantForBucket(bucketName),
-            bucketName,
-            RoutingCapability.OBJECT_READ
-        );
+        byte[] content = webClient.get()
+            .uri("/s3/object/{bucket}/{key}", bucketName, objectKey)
+            .header("Authorization", authorizationHeader(jwtToken))
+            .retrieve()
+            .bodyToMono(byte[].class)
+            .block();
 
-        return objects.stream()
-            .filter(object -> object.bucketName().equals(bucketName) && object.key().equals(objectKey))
-            .findFirst()
-            .map(object -> new S3Object(
-                object.key(),
-                object.bucketName(),
-                object.size(),
-                object.lastModified(),
-                object.contentType(),
-                object.metadata(),
-                decision.selectedProvider(),
-                decision.reason()
-            ))
-            .orElse(new S3Object(
-                objectKey,
-                bucketName,
-                0L,
-                Instant.now(),
-                "application/octet-stream",
-                Map.of(),
-                decision.selectedProvider(),
-                decision.reason()
-            ));
+        byte[] data = content == null ? new byte[0] : content;
+        return new S3Object(
+            objectKey,
+            bucketName,
+            data.length,
+            Instant.now(),
+            "application/octet-stream",
+            Map.of(),
+            ROUTED_PROVIDER,
+            ROUTED_REASON
+        );
     }
 
     public S3Object uploadObject(String jwtToken, String bucketName, String objectKey, long size, String contentType) {
-        S3Object object = new S3Object(objectKey, bucketName, size, Instant.now(), contentType, Map.of());
-        objects.removeIf(existing -> existing.bucketName().equals(bucketName) && existing.key().equals(objectKey));
-        objects.add(object);
+        int payloadSize = Math.max(0, (int) Math.min(size, 1_048_576L));
+        byte[] payload = new byte[payloadSize];
 
-        ProviderRoutingDecision decision = resolveRouting(
-            tenantForBucket(bucketName),
-            bucketName,
-            RoutingCapability.OBJECT_WRITE
-        );
+        webClient.post()
+            .uri("/s3/object/{bucket}/{key}", bucketName, objectKey)
+            .header("Authorization", authorizationHeader(jwtToken))
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(payload)
+            .retrieve()
+            .bodyToMono(String.class)
+            .block();
 
         return new S3Object(
-            object.key(),
-            object.bucketName(),
-            object.size(),
-            object.lastModified(),
-            object.contentType(),
-            object.metadata(),
-            decision.selectedProvider(),
-            decision.reason()
+            objectKey,
+            bucketName,
+            size,
+            Instant.now(),
+            contentType == null || contentType.isBlank() ? "application/octet-stream" : contentType,
+            Map.of(),
+            ROUTED_PROVIDER,
+            ROUTED_REASON
+        );
+    }
+
+    public S3Object uploadObject(String jwtToken, String bucketName, String objectKey, String content, String contentType) {
+        byte[] payload = content == null ? new byte[0] : content.getBytes(StandardCharsets.UTF_8);
+
+        webClient.post()
+            .uri("/s3/object/{bucket}/{key}", bucketName, objectKey)
+            .header("Authorization", authorizationHeader(jwtToken))
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .bodyValue(payload)
+            .retrieve()
+            .bodyToMono(String.class)
+            .block();
+
+        return new S3Object(
+            objectKey,
+            bucketName,
+            payload.length,
+            Instant.now(),
+            contentType == null || contentType.isBlank() ? "application/octet-stream" : contentType,
+            Map.of(),
+            ROUTED_PROVIDER,
+            ROUTED_REASON
         );
     }
 
     public boolean deleteObject(String jwtToken, String bucketName, String objectKey) {
-        return objects.removeIf(object -> object.bucketName().equals(bucketName) && object.key().equals(objectKey));
+        webClient.delete()
+            .uri("/s3/object/{bucket}/{key}", bucketName, objectKey)
+            .header("Authorization", authorizationHeader(jwtToken))
+            .retrieve()
+            .toBodilessEntity()
+            .block();
+        return true;
     }
 
     public String getPresignedUrl(String jwtToken, String bucketName, String objectKey, int expiresIn) {
-        return "https://s3.local/" + bucketName + "/" + objectKey + "?expires=" + expiresIn;
+        return gatewayBaseUrl + "/s3/object/" + encodePath(bucketName) + "/" + encodePath(objectKey)
+            + "?expires=" + expiresIn;
     }
 
     public void setTenantDefaultProvider(String tenantId, String provider) {
-        tenantDefaultProviders.put(tenantId, parseProvider(provider));
+        // Routing is enforced by Brazz-Nossel. This setter is kept for API compatibility.
     }
 
     public void setBucketOverrideProvider(String tenantId, String bucketName, String provider) {
-        bucketOverrideProviders.put(tenantId + "/" + bucketName, parseProvider(provider));
+        // Routing is enforced by Brazz-Nossel. This setter is kept for API compatibility.
     }
 
     public ProviderRoutingDecision getBucketRoutingDecision(
@@ -180,117 +222,124 @@ public class IronBucketS3Service {
         String bucketName,
         String requiredCapability
     ) {
-        return resolveRouting(tenantId, bucketName, parseCapability(requiredCapability));
-    }
-
-    private RoutingProvider parseProvider(String provider) {
-        return RoutingProvider.valueOf(provider.trim().toUpperCase(Locale.ROOT));
-    }
-
-    private RoutingCapability parseCapability(String capability) {
-        return RoutingCapability.valueOf(capability.trim().toUpperCase(Locale.ROOT));
-    }
-
-    private ProviderRoutingDecision resolveRouting(
-        String tenantId,
-        String bucketName,
-        RoutingCapability capability
-    ) {
-        List<String> attempted = new ArrayList<>();
-        String bucketKey = tenantId + "/" + bucketName;
-
-        RoutingProvider bucketOverride = bucketOverrideProviders.get(bucketKey);
-        if (bucketOverride != null) {
-            if (supports(bucketOverride, capability)) {
-                return new ProviderRoutingDecision(
-                    tenantId,
-                    bucketName,
-                    capability.name(),
-                    bucketOverride.name(),
-                    "bucket-override"
-                );
-            }
-            attempted.add("bucket-override-unsupported:" + bucketOverride.name());
-        }
-
-        RoutingProvider tenantDefault = tenantDefaultProviders.get(tenantId);
-        if (tenantDefault != null) {
-            if (supports(tenantDefault, capability)) {
-                return new ProviderRoutingDecision(
-                    tenantId,
-                    bucketName,
-                    capability.name(),
-                    tenantDefault.name(),
-                    "tenant-default"
-                );
-            }
-            attempted.add("tenant-default-unsupported:" + tenantDefault.name());
-        }
-
-        for (RoutingProvider fallback : RoutingProvider.values()) {
-            if ((bucketOverride != null && fallback == bucketOverride)
-                || (tenantDefault != null && fallback == tenantDefault)) {
-                continue;
-            }
-
-            if (supports(fallback, capability)) {
-                String reason = attempted.isEmpty()
-                    ? "fallback:default-order"
-                    : "fallback:default-order;previous=" + String.join(",", attempted);
-                return new ProviderRoutingDecision(
-                    tenantId,
-                    bucketName,
-                    capability.name(),
-                    fallback.name(),
-                    reason
-                );
-            }
-        }
-
-        throw new IllegalStateException(
-            "No provider available for capability " + capability + " on tenant " + tenantId + " bucket " + bucketName
+        return new ProviderRoutingDecision(
+            tenantId,
+            bucketName,
+            requiredCapability == null ? "OBJECT_READ" : requiredCapability.trim().toUpperCase(Locale.ROOT),
+            ROUTED_PROVIDER,
+            ROUTED_REASON
         );
     }
 
-    private boolean supports(RoutingProvider provider, RoutingCapability capability) {
-        return switch (provider) {
-            case AWS_S3 -> true;
-            case GCS -> true;
-            case AZURE_BLOB -> capability != RoutingCapability.VERSIONING;
-            case LOCAL_FILESYSTEM -> EnumSet.of(
-                RoutingCapability.OBJECT_READ,
-                RoutingCapability.OBJECT_WRITE,
-                RoutingCapability.OBJECT_DELETE
-            ).contains(capability);
-        };
-    }
-
     private String tenantForBucket(String bucketName) {
-        return buckets.stream()
-            .filter(bucket -> bucket.name().equals(bucketName))
-            .map(S3Bucket::ownerTenant)
+        if (bucketName == null || bucketName.isBlank()) {
+            return "default";
+        }
+        int separator = bucketName.indexOf('-');
+        if (separator > 0) {
+            return bucketName.substring(0, separator);
+        }
+        return "default";
+    }
+
+    private static String resolveGatewayBaseUrl() {
+        String fromEnv = System.getenv("S3_GATEWAY_BASE_URL");
+        if (fromEnv != null && !fromEnv.isBlank()) {
+            return fromEnv;
+        }
+
+        String sentinelEnv = System.getenv("SENTINEL_GEAR_URL");
+        if (sentinelEnv != null && !sentinelEnv.isBlank()) {
+            return sentinelEnv;
+        }
+
+        String legacyFromEnv = System.getenv("BRAZZ_NOSSEL_BASE_URL");
+        if (legacyFromEnv != null && !legacyFromEnv.isBlank()) {
+            return legacyFromEnv;
+        }
+
+        return "http://steel-hammer-sentinel-gear:8080";
+    }
+
+    private static String normalizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return "http://steel-hammer-sentinel-gear:8080";
+        }
+        if (baseUrl.endsWith("/")) {
+            return baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        return baseUrl;
+    }
+
+    private String authorizationHeader(String jwtToken) {
+        if (jwtToken == null || jwtToken.isBlank()) {
+            throw new IronBucketServiceException("jwtToken is required for gateway calls");
+        }
+
+        String token = jwtToken.trim();
+        if (token.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            return token;
+        }
+        return "Bearer " + token;
+    }
+
+    private String encodePath(String pathSegment) {
+        return UriUtils.encodePathSegment(pathSegment, StandardCharsets.UTF_8);
+    }
+
+    private List<S3Bucket> parseBuckets(String responseBody) {
+        if (responseBody.isBlank()) {
+            return List.of();
+        }
+
+        List<String> lines = responseBody.lines().map(String::trim).toList();
+        String responseTenant = lines.stream()
+            .filter(line -> line.toLowerCase(Locale.ROOT).startsWith("buckets for tenant "))
             .findFirst()
-            .orElseGet(() -> {
-                int separator = bucketName.indexOf('-');
-                if (separator > 0) {
-                    return bucketName.substring(0, separator);
-                }
-                return "default";
-            });
+            .map(this::extractTenantFromHeading)
+            .orElse(null);
+
+        return lines.stream()
+            .filter(line -> line.startsWith("-"))
+            .map(line -> line.substring(1).trim())
+            .map(line -> toBucket(line, responseTenant))
+            .toList();
     }
 
-    private enum RoutingProvider {
-        AWS_S3,
-        GCS,
-        AZURE_BLOB,
-        LOCAL_FILESYSTEM
+    private String extractTenantFromHeading(String heading) {
+        String prefix = "Buckets for tenant ";
+        if (!heading.startsWith(prefix)) {
+            return "default";
+        }
+
+        String tenant = heading.substring(prefix.length()).trim();
+        if (tenant.endsWith(":")) {
+            tenant = tenant.substring(0, tenant.length() - 1);
+        }
+        return tenant.isBlank() ? "default" : tenant;
     }
 
-    private enum RoutingCapability {
-        OBJECT_READ,
-        OBJECT_WRITE,
-        OBJECT_DELETE,
-        MULTIPART_UPLOAD,
-        VERSIONING
+    private S3Bucket toBucket(String rawBucketLine, String responseTenant) {
+        Matcher createdMatcher = CREATED_PATTERN.matcher(rawBucketLine);
+        Instant creationDate = Instant.now();
+        String bucketName = rawBucketLine;
+
+        if (createdMatcher.find()) {
+            String timestamp = createdMatcher.group(1);
+            try {
+                creationDate = Instant.parse(timestamp);
+            } catch (RuntimeException ignored) {
+                creationDate = Instant.now();
+            }
+            bucketName = rawBucketLine.substring(0, createdMatcher.start()).trim();
+        }
+
+        return new S3Bucket(
+            bucketName,
+            creationDate,
+            responseTenant == null || responseTenant.isBlank() ? tenantForBucket(bucketName) : responseTenant,
+            ROUTED_PROVIDER,
+            ROUTED_REASON
+        );
     }
 }

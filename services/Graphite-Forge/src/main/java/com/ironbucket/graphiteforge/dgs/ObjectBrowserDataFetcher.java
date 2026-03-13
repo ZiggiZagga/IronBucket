@@ -1,5 +1,6 @@
 package com.ironbucket.graphiteforge.dgs;
 
+import com.ironbucket.graphiteforge.model.ProviderRoutingDecision;
 import com.ironbucket.graphiteforge.model.S3Bucket;
 import com.ironbucket.graphiteforge.model.S3Object;
 import com.ironbucket.graphiteforge.service.IronBucketS3Service;
@@ -20,7 +21,6 @@ import java.util.Map;
 @DgsComponent
 public class ObjectBrowserDataFetcher {
 
-    private static final String INTERNAL_JWT = "internal";
     private static final Logger LOG = LoggerFactory.getLogger(ObjectBrowserDataFetcher.class);
 
     private final IronBucketS3Service s3Service;
@@ -35,8 +35,7 @@ public class ObjectBrowserDataFetcher {
 
     @PostConstruct
     void ensureBaselineBuckets() {
-        ensureBucketExists("default-alice-files", "alice");
-        ensureBucketExists("default-bob-files", "bob");
+        LOG.info("Skipping local baseline bucket bootstrap; S3 operations are routed via Sentinel-Gear to Claimspindel");
     }
 
     @DgsQuery(field = "listBuckets")
@@ -44,6 +43,17 @@ public class ObjectBrowserDataFetcher {
         return fromBlocking(() -> {
             LOG.info("graphql listBuckets invoked");
             return s3Service.listBuckets(resolveJwt(jwtToken));
+        });
+    }
+
+    @DgsQuery(field = "getBucket")
+    public Mono<S3Bucket> getBucket(
+        @InputArgument String jwtToken,
+        @InputArgument String bucketName
+    ) {
+        return fromBlocking(() -> {
+            LOG.info("graphql getBucket invoked bucketName={}", bucketName);
+            return s3Service.getBucket(resolveJwt(jwtToken), bucketName);
         });
     }
 
@@ -72,6 +82,59 @@ public class ObjectBrowserDataFetcher {
         });
     }
 
+    @DgsQuery(field = "getObject")
+    public Mono<S3Object> getObject(
+        @InputArgument String jwtToken,
+        @InputArgument String bucketName,
+        @InputArgument String objectKey
+    ) {
+        return fromBlocking(() -> {
+            LOG.info("graphql getObject invoked bucketName={} objectKey={}", bucketName, objectKey);
+            return s3Service.getObject(resolveJwt(jwtToken), bucketName, objectKey);
+        });
+    }
+
+    @DgsQuery(field = "getBucketRoutingDecision")
+    public Mono<ProviderRoutingDecision> getBucketRoutingDecision(
+        @InputArgument String jwtToken,
+        @InputArgument String tenantId,
+        @InputArgument String bucketName,
+        @InputArgument String requiredCapability
+    ) {
+        return fromBlocking(() -> {
+            LOG.info(
+                "graphql getBucketRoutingDecision invoked tenantId={} bucketName={} requiredCapability={}",
+                tenantId,
+                bucketName,
+                requiredCapability
+            );
+            return s3Service.getBucketRoutingDecision(resolveJwt(jwtToken), tenantId, bucketName, requiredCapability);
+        });
+    }
+
+    @DgsMutation(field = "createBucket")
+    public Mono<S3Bucket> createBucket(
+        @InputArgument String jwtToken,
+        @InputArgument String bucketName,
+        @InputArgument String ownerTenant
+    ) {
+        return fromBlocking(() -> {
+            LOG.info("graphql createBucket invoked bucketName={} ownerTenant={}", bucketName, ownerTenant);
+            return s3Service.createBucket(resolveJwt(jwtToken), bucketName, ownerTenant);
+        });
+    }
+
+    @DgsMutation(field = "deleteBucket")
+    public Mono<Boolean> deleteBucket(
+        @InputArgument String jwtToken,
+        @InputArgument String bucketName
+    ) {
+        return fromBlocking(() -> {
+            LOG.info("graphql deleteBucket invoked bucketName={}", bucketName);
+            return s3Service.deleteBucket(resolveJwt(jwtToken), bucketName);
+        });
+    }
+
     @DgsMutation(field = "uploadObject")
     public Mono<Map<String, Object>> uploadObject(
         @InputArgument String jwtToken,
@@ -82,13 +145,14 @@ public class ObjectBrowserDataFetcher {
     ) {
         return fromBlocking(() -> {
             LOG.info("graphql uploadObject invoked bucket={} key={} contentType={}", bucket, key, contentType);
-            ensureBucketExists(bucket, tenantFromBucket(bucket));
+            String jwt = resolveJwt(jwtToken);
+            ensureBucketExists(jwt, bucket, tenantFromBucket(bucket));
 
             S3Object uploaded = s3Service.uploadObject(
-                resolveJwt(jwtToken),
+                jwt,
                 bucket,
                 key,
-                content == null ? 0L : content.length(),
+                content,
                 contentType == null || contentType.isBlank() ? "text/plain" : contentType
             );
 
@@ -131,15 +195,15 @@ public class ObjectBrowserDataFetcher {
 
     private String resolveJwt(String jwtToken) {
         if (jwtToken == null || jwtToken.isBlank()) {
-            return INTERNAL_JWT;
+            throw new IllegalArgumentException("jwtToken is required");
         }
         return jwtToken;
     }
 
-    private void ensureBucketExists(String bucketName, String tenant) {
-        boolean exists = s3Service.listBuckets(INTERNAL_JWT).stream().anyMatch(bucket -> bucket.name().equals(bucketName));
+    private void ensureBucketExists(String jwtToken, String bucketName, String tenant) {
+        boolean exists = s3Service.listBuckets(jwtToken).stream().anyMatch(bucket -> bucket.name().equals(bucketName));
         if (!exists) {
-            s3Service.createBucket(INTERNAL_JWT, bucketName, tenant);
+            s3Service.createBucket(jwtToken, bucketName, tenant);
         }
     }
 

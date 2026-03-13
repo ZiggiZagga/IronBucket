@@ -14,6 +14,14 @@ log() {
 }
 
 run_java_modules() {
+  log "Bootstrapping local Java artifacts for cross-module dependencies"
+  if (cd "$ROOT_DIR/tools/Vault-Smith" && mvn -B install -DskipTests) >>"$LOG_FILE" 2>&1; then
+    log "PASS: bootstrap tools/Vault-Smith install -DskipTests"
+  else
+    log "FAIL: bootstrap tools/Vault-Smith install -DskipTests"
+    JAVA_FAILED_MODULES+="tools/Vault-Smith (bootstrap install)\n"
+  fi
+
   local -a modules=(
     "services/Pactum-Scroll"
     "services/Sentinel-Gear"
@@ -62,20 +70,23 @@ run_ui_projects() {
         fi
 
         log "Starting backend stack for live UI e2e: $project"
-        if ! (cd "$ROOT_DIR/steel-hammer" && $dc -f docker-compose-steel-hammer.yml up -d steel-hammer-postgres steel-hammer-keycloak steel-hammer-buzzle-vane steel-hammer-graphite-forge steel-hammer-sentinel-gear) >>"$LOG_FILE" 2>&1; then
+        if ! (cd "$ROOT_DIR/steel-hammer" && $dc -f docker-compose-steel-hammer.yml up -d steel-hammer-postgres steel-hammer-keycloak steel-hammer-buzzle-vane steel-hammer-graphite-forge steel-hammer-minio steel-hammer-claimspindel steel-hammer-brazz-nossel steel-hammer-sentinel-gear) >>"$LOG_FILE" 2>&1; then
           log "FAIL: $project backend stack startup"
           UI_FAILED_PROJECTS+="$project (backend stack startup)\n"
           continue
         fi
 
-        log "Waiting for Sentinel-Gear and Keycloak readiness: $project"
+        log "Waiting for backend readiness (Keycloak, Sentinel, Graphite, Claimspindel, Brazz-Nossel, MinIO): $project"
         if ! (
           for _ in {1..75}; do
             keycloak_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-keycloak 2>/dev/null || echo missing)"
             sentinel_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-sentinel-gear 2>/dev/null || echo missing)"
             graphite_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-graphite-forge 2>/dev/null || echo missing)"
+            claimspindel_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-claimspindel 2>/dev/null || echo missing)"
+            brazz_nossel_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-brazz-nossel 2>/dev/null || echo missing)"
+            minio_health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' steel-hammer-minio 2>/dev/null || echo missing)"
 
-            if [[ "$keycloak_health" == "healthy" && "$sentinel_health" == "healthy" && "$graphite_health" == "healthy" ]]; then
+            if [[ "$keycloak_health" == "healthy" && "$sentinel_health" == "healthy" && "$graphite_health" == "healthy" && "$claimspindel_health" == "healthy" && "$brazz_nossel_health" == "healthy" && "$minio_health" == "healthy" ]]; then
               exit 0
             fi
 
