@@ -19,6 +19,8 @@ type MetricsState = {
 const SERVICE_NAME = process.env.OTEL_SERVICE_NAME ?? 'ironbucket-app';
 const GLOBAL_METRICS_KEY = '__ironbucketAppMetrics';
 const GLOBAL_OTEL_KEY = '__ironbucketAppOtelStarted';
+const REQUEST_ID_HEADER = 'x-request-id';
+const CORRELATION_ID_HEADER = 'x-correlation-id';
 
 function log(level: 'info' | 'warn' | 'error', message: string, context: Record<string, unknown> = {}) {
   const payload = {
@@ -139,8 +141,9 @@ const metrics = initMetrics();
 
 export function requestObservabilityMiddleware(req: Request, res: Response, next: NextFunction) {
   const started = process.hrtime.bigint();
-  const requestId = req.header('x-request-id') ?? randomUUID();
-  res.setHeader('x-request-id', requestId);
+  const correlationId = req.header(CORRELATION_ID_HEADER) ?? req.header(REQUEST_ID_HEADER) ?? randomUUID();
+  res.setHeader(REQUEST_ID_HEADER, correlationId);
+  res.setHeader(CORRELATION_ID_HEADER, correlationId);
 
   res.on('finish', () => {
     const durationMs = Number(process.hrtime.bigint() - started) / 1_000_000;
@@ -159,7 +162,8 @@ export function requestObservabilityMiddleware(req: Request, res: Response, next
       route,
       status: res.statusCode,
       durationMs,
-      requestId,
+      requestId: correlationId,
+      correlationId,
       traceId: req.header('x-b3-traceid') ?? undefined
     });
   });
@@ -173,4 +177,15 @@ export async function metricsSnapshot(): Promise<string> {
 
 export function metricsContentType(): string {
   return metrics.registry.contentType;
+}
+
+export function logUnhandledError(err: unknown, req: Request) {
+  const correlationId = req.header(CORRELATION_ID_HEADER) ?? req.header(REQUEST_ID_HEADER) ?? randomUUID();
+  log('error', 'Unhandled request error.', {
+    method: req.method,
+    route: req.path,
+    correlationId,
+    traceId: req.header('x-b3-traceid') ?? undefined,
+    error: err instanceof Error ? err.message : String(err)
+  });
 }

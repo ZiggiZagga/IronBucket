@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGatewayGraphql, fetchActorAccessToken } from '@/lib/e2e/gateway-client';
 import { resolveActor } from '@/lib/e2e/runtime';
+import { resolveCorrelationId, withCorrelationHeaders } from '@/lib/observability/correlation';
 import { logger } from '@/lib/observability/logger';
 import { observeApiRequest } from '@/lib/observability/metrics';
 
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
   const started = performance.now();
   const route = '/api/e2e/live-upload';
   const traceparent = req.headers.get('traceparent') ?? undefined;
+  const correlationId = resolveCorrelationId(req.headers);
   const requestBody = (await req.json()) as UploadRequest;
   const actor = resolveActor(requestBody.actor);
   const key = requestBody.key ?? '';
@@ -24,12 +26,15 @@ export async function POST(req: NextRequest) {
   if (!actor) {
     const durationMs = performance.now() - started;
     observeApiRequest(route, 'POST', 400, durationMs);
-    return NextResponse.json({ error: `Unsupported actor '${requestBody.actor ?? ''}'` }, { status: 400 });
+    return withCorrelationHeaders(
+      NextResponse.json({ error: `Unsupported actor '${requestBody.actor ?? ''}'` }, { status: 400 }),
+      correlationId
+    );
   }
   if (!key) {
     const durationMs = performance.now() - started;
     observeApiRequest(route, 'POST', 400, durationMs);
-    return NextResponse.json({ error: 'Missing object key' }, { status: 400 });
+    return withCorrelationHeaders(NextResponse.json({ error: 'Missing object key' }, { status: 400 }), correlationId);
   }
 
   const bucket = `default-${actor}-files`;
@@ -54,17 +59,17 @@ export async function POST(req: NextRequest) {
         content,
         contentType
       }
-    });
+    }, { traceparent, actor, correlationId });
 
     const uploaded = uploadGraphqlResponse?.data?.uploadObject;
     if (!uploaded || uploaded.key !== key) {
-      return NextResponse.json(
+      return withCorrelationHeaders(NextResponse.json(
         {
           error: 'GraphQL upload did not return expected object metadata',
           details: JSON.stringify(uploadGraphqlResponse)
         },
         { status: 502 }
-      );
+      ), correlationId);
     }
 
     const listedGraphqlResponse = await callGatewayGraphql(token, {
@@ -81,7 +86,7 @@ export async function POST(req: NextRequest) {
         bucket,
         query: key
       }
-    });
+    }, { traceparent, actor, correlationId });
 
     const listed = listedGraphqlResponse?.data?.listObjects ?? [];
     const found = Array.isArray(listed) && listed.some((item: { key?: string }) => item?.key === key);
@@ -93,17 +98,18 @@ export async function POST(req: NextRequest) {
       status: 200,
       actor,
       traceparent,
+      correlationId,
       durationMs
     });
 
-    return NextResponse.json({
+    return withCorrelationHeaders(NextResponse.json({
       actor,
       bucket,
       key,
       verified: found,
       roundtripSize: content.length,
       timestamp: new Date().toISOString()
-    });
+    }), correlationId);
   } catch (error) {
     const durationMs = performance.now() - started;
     observeApiRequest(route, 'POST', 500, durationMs);
@@ -112,15 +118,16 @@ export async function POST(req: NextRequest) {
       status: 500,
       actor,
       traceparent,
+      correlationId,
       durationMs,
       error: error instanceof Error ? error.message : String(error)
     });
-    return NextResponse.json(
+    return withCorrelationHeaders(NextResponse.json(
       {
         error: 'Live upload flow failed on gateway GraphQL path',
         details: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }
-    );
+    ), correlationId);
   }
 }

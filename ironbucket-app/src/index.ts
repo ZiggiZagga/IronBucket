@@ -1,5 +1,6 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import {
+  logUnhandledError,
   metricsContentType,
   metricsSnapshot,
   requestObservabilityMiddleware,
@@ -23,9 +24,13 @@ async function authenticate(username: string, password: string) {
 }
 
 async function authHandler(req: Request, res: Response) {
+  const correlationId = String(res.getHeader('x-correlation-id') ?? res.getHeader('x-request-id') ?? '');
   const { username, password } = req.body ?? {};
   if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
+    return res.status(400).json({
+      error: 'Username and password required',
+      correlationId
+    });
   }
 
   try {
@@ -37,11 +42,13 @@ async function authHandler(req: Request, res: Response) {
       token: idToken || accessToken,
       accessToken,
       idToken,
+      correlationId,
     });
   } catch (err: any) {
     return res.status(401).json({
       error: 'Authentication failed',
       details: err?.message || 'Unknown authentication error',
+      correlationId,
     });
   }
 }
@@ -53,6 +60,16 @@ app.get('/metrics', async (_req: Request, res: Response) => {
   const metrics = await metricsSnapshot();
   res.setHeader('Content-Type', metricsContentType());
   res.status(200).send(metrics);
+});
+
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  logUnhandledError(err, req);
+  const correlationId = String(res.getHeader('x-correlation-id') ?? res.getHeader('x-request-id') ?? '');
+  res.status(500).json({
+    error: 'Internal server error',
+    details: err instanceof Error ? err.message : 'Unexpected server error',
+    correlationId
+  });
 });
 
 const PORT = process.env.PORT || 3000;

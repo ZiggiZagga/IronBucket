@@ -10,6 +10,7 @@ type GraphqlPayload = {
 type GraphqlCallOptions = {
   actor?: SupportedActor;
   traceparent?: string;
+  correlationId?: string;
 };
 
 export async function fetchActorAccessToken(actor: SupportedActor): Promise<string> {
@@ -61,6 +62,11 @@ export async function callGatewayGraphql(
     headers.traceparent = options.traceparent;
   }
 
+  if (options.correlationId) {
+    headers['x-correlation-id'] = options.correlationId;
+    headers['x-request-id'] = options.correlationId;
+  }
+
   if (options.actor) {
     headers['x-ironbucket-actor'] = options.actor;
   }
@@ -82,7 +88,8 @@ export async function callGatewayGraphql(
       status: response.status,
       durationMs,
       actor: options.actor,
-      traceparent: options.traceparent
+      traceparent: options.traceparent,
+      correlationId: options.correlationId
     });
     throw new Error(`GraphQL HTTP ${response.status}: ${JSON.stringify(body)}`);
   }
@@ -93,7 +100,8 @@ export async function callGatewayGraphql(
       status: response.status,
       durationMs,
       actor: options.actor,
-      traceparent: options.traceparent
+      traceparent: options.traceparent,
+      correlationId: options.correlationId
     });
     throw new Error(`GraphQL errors: ${JSON.stringify(body.errors)}`);
   }
@@ -103,7 +111,8 @@ export async function callGatewayGraphql(
     status: response.status,
     durationMs,
     actor: options.actor,
-    traceparent: options.traceparent
+    traceparent: options.traceparent,
+    correlationId: options.correlationId
   });
 
   return body;

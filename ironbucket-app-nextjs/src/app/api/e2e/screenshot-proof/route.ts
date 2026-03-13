@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGatewayGraphql, fetchActorAccessToken } from '@/lib/e2e/gateway-client';
 import { resolveActor } from '@/lib/e2e/runtime';
+import { resolveCorrelationId, withCorrelationHeaders } from '@/lib/observability/correlation';
 import { logger } from '@/lib/observability/logger';
 import { observeApiRequest } from '@/lib/observability/metrics';
 
@@ -14,6 +15,7 @@ export async function POST(req: NextRequest) {
   const started = performance.now();
   const route = '/api/e2e/screenshot-proof';
   const traceparent = req.headers.get('traceparent') ?? undefined;
+  const correlationId = resolveCorrelationId(req.headers);
   const requestBody = (await req.json()) as ScreenshotProofRequest;
   const actor = resolveActor(requestBody.actor);
   const screenshotBase64 = requestBody.screenshotBase64 ?? '';
@@ -22,13 +24,19 @@ export async function POST(req: NextRequest) {
   if (!actor) {
     const durationMs = performance.now() - started;
     observeApiRequest(route, 'POST', 400, durationMs);
-    return NextResponse.json({ error: `Unsupported actor '${requestBody.actor ?? ''}'` }, { status: 400 });
+    return withCorrelationHeaders(
+      NextResponse.json({ error: `Unsupported actor '${requestBody.actor ?? ''}'` }, { status: 400 }),
+      correlationId
+    );
   }
 
   if (!screenshotBase64) {
     const durationMs = performance.now() - started;
     observeApiRequest(route, 'POST', 400, durationMs);
-    return NextResponse.json({ error: 'Missing screenshotBase64' }, { status: 400 });
+    return withCorrelationHeaders(
+      NextResponse.json({ error: 'Missing screenshotBase64' }, { status: 400 }),
+      correlationId
+    );
   }
 
   const bucket = `default-${actor}-proofs`;
@@ -36,6 +44,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const token = await fetchActorAccessToken(actor);
+    const gatewayOptions = { actor, traceparent, correlationId };
 
     await callGatewayGraphql(token, {
       query: `
@@ -50,7 +59,7 @@ export async function POST(req: NextRequest) {
         bucketName: bucket,
         ownerTenant: actor
       }
-    });
+    }, gatewayOptions);
 
     await callGatewayGraphql(token, {
       query: `
@@ -68,7 +77,7 @@ export async function POST(req: NextRequest) {
         content: screenshotBase64,
         contentType: 'text/plain'
       }
-    });
+    }, gatewayOptions);
 
     const listResponse = await callGatewayGraphql(token, {
       query: `
@@ -83,7 +92,7 @@ export async function POST(req: NextRequest) {
         bucket,
         query: key
       }
-    });
+    }, gatewayOptions);
 
     const listed = listResponse?.data?.listObjects ?? [];
     const found = Array.isArray(listed) && listed.some((item: { key?: string }) => item?.key === key);
@@ -101,7 +110,7 @@ export async function POST(req: NextRequest) {
         bucket,
         key
       }
-    });
+    }, gatewayOptions);
 
     const downloadUrl = String(downloadResponse?.data?.downloadObject?.url ?? '');
     if (!downloadUrl) {
@@ -118,10 +127,11 @@ export async function POST(req: NextRequest) {
       status: 200,
       actor,
       traceparent,
+      correlationId,
       durationMs
     });
 
-    return NextResponse.json({
+    return withCorrelationHeaders(NextResponse.json({
       actor,
       bucket,
       key,
@@ -129,7 +139,7 @@ export async function POST(req: NextRequest) {
       downloadUrl,
       previewDataUrl,
       timestamp: new Date().toISOString()
-    });
+    }), correlationId);
   } catch (error) {
     const durationMs = performance.now() - started;
     observeApiRequest(route, 'POST', 500, durationMs);
@@ -138,16 +148,17 @@ export async function POST(req: NextRequest) {
       status: 500,
       actor,
       traceparent,
+      correlationId,
       durationMs,
       error: error instanceof Error ? error.message : String(error)
     });
-    return NextResponse.json(
+    return withCorrelationHeaders(NextResponse.json(
       {
         error: 'Screenshot proof upload/download flow failed',
         details: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }
-    );
+    ), correlationId);
   }
 }
 

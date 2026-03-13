@@ -37,8 +37,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const observability_1 = require("./observability");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use(observability_1.requestObservabilityMiddleware);
+void (0, observability_1.startObservability)();
 async function authenticate(username, password) {
     const { discovery, ClientSecretPost, genericGrantRequest } = await Promise.resolve().then(() => __importStar(require('openid-client')));
     const issuerUrl = process.env.KEYCLOAK_ISSUER_URL || 'https://localhost:7082/realms/ironbucket-lab';
@@ -48,9 +51,13 @@ async function authenticate(username, password) {
     return genericGrantRequest(config, 'password', { username, password, scope: 'openid' });
 }
 async function authHandler(req, res) {
+    const correlationId = String(res.getHeader('x-correlation-id') ?? res.getHeader('x-request-id') ?? '');
     const { username, password } = req.body ?? {};
     if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password required' });
+        return res.status(400).json({
+            error: 'Username and password required',
+            correlationId
+        });
     }
     try {
         const tokenSet = await authenticate(username, password);
@@ -60,17 +67,33 @@ async function authHandler(req, res) {
             token: idToken || accessToken,
             accessToken,
             idToken,
+            correlationId,
         });
     }
     catch (err) {
         return res.status(401).json({
             error: 'Authentication failed',
             details: err?.message || 'Unknown authentication error',
+            correlationId,
         });
     }
 }
 app.post('/auth', authHandler);
 app.post('/api/auth', authHandler);
+app.get('/metrics', async (_req, res) => {
+    const metrics = await (0, observability_1.metricsSnapshot)();
+    res.setHeader('Content-Type', (0, observability_1.metricsContentType)());
+    res.status(200).send(metrics);
+});
+app.use((err, req, res, _next) => {
+    (0, observability_1.logUnhandledError)(err, req);
+    const correlationId = String(res.getHeader('x-correlation-id') ?? res.getHeader('x-request-id') ?? '');
+    res.status(500).json({
+        error: 'Internal server error',
+        details: err instanceof Error ? err.message : 'Unexpected server error',
+        correlationId
+    });
+});
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
