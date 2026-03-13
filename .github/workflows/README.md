@@ -12,11 +12,11 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 - Pull requests to `main` or `develop`
 
 **What it does:**
-- Runs dedicated jclouds MinIO CRUD integration gate (`mvn verify -Pminio-it` in `jclouds-adapter-core`)
-- Runs dedicated Sentinel roadmap gate (`mvn test -Proadmap`)
-- Runs dedicated Sentinel behavioral integration gate (`mvn test -Pintegration`)
-- Builds Pactum-Scroll (shared contracts)
-- Compiles and tests all microservices
+- Runs dedicated jclouds MinIO CRUD integration gate via containerized Maven runner
+- Runs dedicated Sentinel roadmap gate via containerized Maven runner
+- Runs dedicated Sentinel behavioral integration gate via containerized Maven runner
+- Runs core module test suite in containers (`scripts/ci/run-core-module-tests-container.sh`)
+- Enforces workflow-level containerized test policy (`scripts/ci/verify-containerized-tests-only.sh`)
 - Runs 231 unit tests
 - Uploads test results and artifacts
 
@@ -28,6 +28,7 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 - Behavioral gate: blocking on all configured refs
 
 **Required checks for main branch protection:**
+- `Build and Test All Modules`
 - `jclouds MinIO CRUD Gate`
 - `Sentinel Roadmap Gate`
 - `Sentinel Behavioral Gate`
@@ -120,7 +121,7 @@ This directory contains the CI/CD pipeline workflows for IronBucket.
 - Manual dispatch with version
 
 **Release process:**
-1. ✅ Validate version and tests
+1. ✅ Validate version, branch-protection policy, and containerized tests
 2. ✅ Build release artifacts
 3. ✅ Generate SLSA provenance
 4. ✅ Create GitHub Release
@@ -169,7 +170,8 @@ Add these to your README:
 ## 🔧 Configuration
 
 ### Required Secrets
-**None!** All workflows use `GITHUB_TOKEN` (auto-provided).
+- `GITHUB_TOKEN` (auto-provided)
+- `BRANCH_PROTECTION_TOKEN` for release validation of required checks on `main`
 
 ### Permissions
 Workflows use least-privilege permissions:

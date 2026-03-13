@@ -13,12 +13,14 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 - Pull requests to `main` or `develop`
 
 **Actions:**
-- ✅ Builds all Maven modules (Pactum-Scroll, Sentinel-Gear, Claimspindel, Brazz-Nossel, Buzzle-Vane)
+- ✅ Runs core Maven module tests in Docker containers via `scripts/ci/run-core-module-tests-container.sh`
+- ✅ Uses shared containerized Maven runner `scripts/ci/run-maven-in-container.sh`
 - ✅ Runs full test suite (231 tests)
 - ✅ Verifies roadmap E2E docs/workflow sync via `scripts/ci/verify-e2e-doc-sync.sh`
+- ✅ Enforces containerized test execution policy via `scripts/ci/verify-containerized-tests-only.sh`
 - ✅ Uses deterministic roadmap E2E proof command: `scripts/e2e/prove-phase1-4-complete.sh`
-- ✅ Enforces Sentinel roadmap gate via `mvn test -Proadmap` (blocking CI check)
-- ✅ Runs separate Sentinel behavioral integration gate via `mvn test -Pintegration`
+- ✅ Enforces Sentinel roadmap gate via `scripts/ci/run-sentinel-roadmap-gate.sh` (blocking CI check, containerized)
+- ✅ Runs separate Sentinel behavioral integration gate via `scripts/ci/run-sentinel-behavioral-gate.sh` (containerized)
   - strict blocking mode on all configured refs
 - ✅ Caches Maven dependencies for faster builds
 - ✅ Uploads test results and build artifacts
@@ -43,6 +45,7 @@ This is the canonical first-user experience verification workflow and now trigge
 - Observability infrastructure gate via `scripts/ci/run-observability-infra-gate.sh`
 - Deterministic observability proof command: `scripts/e2e/prove-phase2-observability.sh`
 - Observability asset validation via `scripts/ci/validate-observability-assets.sh` (dashboards + alert rules)
+- Steel-hammer container-runtime suite available for parity diagnostics: `sh steel-hammer/test-scripts/e2e-complete-suite.sh`
 
 Use this workflow as the primary end-to-end release confidence gate.
 
@@ -180,7 +183,8 @@ Use this workflow as the primary end-to-end release confidence gate.
 - ✅ Checks for clean working tree
 - ✅ Verifies repository state
 - ✅ Verifies roadmap E2E docs/workflow sync (`scripts/ci/verify-e2e-doc-sync.sh`)
-- ✅ Verifies `main` branch protection required checks policy (`scripts/ci/verify-main-branch-protection.sh`)
+- ✅ Verifies workflow test commands remain containerized (`scripts/ci/verify-containerized-tests-only.sh`)
+- ✅ Verifies `main` branch-protection required checks (`scripts/ci/verify-main-branch-protection.sh`)
 - ✅ Blocks release if required checks are not green on the release commit (`scripts/ci/verify-required-check-runs.sh`)
 
 To run branch protection verification in strict mode locally:
@@ -197,6 +201,7 @@ If the token lacks admin permission to read branch protection, strict mode fails
 #### Phase 2: Testing
 - ✅ Runs complete test suite (231 tests)
 - ✅ Fails release if any test fails
+- ✅ Runs core module suites in Docker containers only (`scripts/ci/run-core-module-tests-container.sh`)
 - ✅ Validates test result XML files
 
 #### Phase 3: Build
@@ -379,6 +384,9 @@ git push origin v1.0.0
 # Java baseline + Sentinel roadmap + Sentinel integration
 bash scripts/ci/release-preflight.sh
 
+# Include main-branch protection policy verification
+VERIFY_BRANCH_PROTECTION=true GITHUB_REPOSITORY=ZiggiZagga/IronBucket bash scripts/ci/release-preflight.sh
+
 # Include full orchestrator if required by release policy
 RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
 ```
@@ -405,7 +413,8 @@ gh workflow run release.yml -f version=v1.0.0
 
 ### Secrets Required
 
-None! All workflows use `GITHUB_TOKEN` (automatically provided).
+- `GITHUB_TOKEN` is used by default for standard workflow operations.
+- `BRANCH_PROTECTION_TOKEN` is used by release validation for `scripts/ci/verify-main-branch-protection.sh` and should have repository administration read permission.
 
 ### Permissions
 

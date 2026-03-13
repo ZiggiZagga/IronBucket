@@ -34,6 +34,9 @@ jobs:
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
 
+      - name: Enforce containerized test policy
+        run: bash scripts/ci/verify-containerized-tests-only.sh
+
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -71,9 +74,10 @@ jobs:
           IRONBUCKET_MINIO_ACCESS_KEY: minioadmin
           IRONBUCKET_MINIO_SECRET_KEY: minioadmin
           IRONBUCKET_MINIO_REGION: us-east-1
+          MAVEN_CONTAINER_NETWORK: host
+          MAVEN_DOCKER_ENV_VARS: IRONBUCKET_MINIO_ENDPOINT,IRONBUCKET_MINIO_ACCESS_KEY,IRONBUCKET_MINIO_SECRET_KEY,IRONBUCKET_MINIO_REGION
         run: |
-          cd services/jclouds-adapter-core
-          mvn -B -V verify -Pminio-it
+          bash scripts/ci/run-maven-in-container.sh services/jclouds-adapter-core -B -V verify -Pminio-it
 
       - name: Upload jclouds MinIO integration reports
         if: always()
@@ -110,6 +114,9 @@ jobs:
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
 
+      - name: Enforce containerized test policy
+        run: bash scripts/ci/verify-containerized-tests-only.sh
+
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -119,9 +126,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build Pactum-Scroll (shared contracts)
-        run: |
-          cd services/Pactum-Scroll
-          mvn clean install -B -V || echo "Pactum-Scroll build skipped"
+        run: bash scripts/ci/run-maven-in-container.sh services/Pactum-Scroll clean install -DskipTests -B -V
 
       - name: Enforce Sentinel roadmap profile gate
         env:
@@ -155,6 +160,9 @@ jobs:
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
 
+      - name: Enforce containerized test policy
+        run: bash scripts/ci/verify-containerized-tests-only.sh
+
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -164,9 +172,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build Pactum-Scroll (shared contracts)
-        run: |
-          cd services/Pactum-Scroll
-          mvn clean install -B -V || echo "Pactum-Scroll build skipped"
+        run: bash scripts/ci/run-maven-in-container.sh services/Pactum-Scroll clean install -DskipTests -B -V
 
       - name: Enforce Sentinel behavioral integration gate
         env:
@@ -220,6 +226,9 @@ jobs:
 
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
+
+      - name: Enforce containerized test policy
+        run: bash scripts/ci/verify-containerized-tests-only.sh
       
       - name: Cache Maven dependencies
         uses: actions/cache@v4
@@ -229,50 +238,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       
-      - name: Build Pactum-Scroll (shared contracts)
-        run: |
-          cd services/Pactum-Scroll
-          mvn clean install -B -V || echo "Pactum-Scroll build skipped"
-      
-      - name: Build Vault-Smith
-        run: |
-          cd tools/Vault-Smith
-          mvn clean install -DskipTests -B
-      
-      - name: Build Sentinel-Gear (JWT Validator)
+      - name: Run core module tests (containers only)
         env:
+          MAVEN_CONTAINER_NETWORK: host
           S3_TESTS_ENABLED: true
-        run: |
-          cd services/Sentinel-Gear
-          mvn clean test -B -V
-      
-      - name: Build Claimspindel (Policy Router)
-        env:
-          S3_TESTS_ENABLED: true
-        run: |
-          cd services/Claimspindel
-          mvn clean test -B -V
-      
-      - name: Build Brazz-Nossel (S3 Proxy)
-        env:
-          S3_TESTS_ENABLED: true
-        run: |
-          cd services/Brazz-Nossel
-          mvn clean test -B -V
-      
-      - name: Build Buzzle-Vane (Service Discovery)
-        env:
-          S3_TESTS_ENABLED: true
-        run: |
-          cd services/Buzzle-Vane
-          mvn clean test -B -V
-      
-      - name: Build Storage-Conductor
-        env:
-          S3_TESTS_ENABLED: true
-        run: |
-          cd tools/Storage-Conductor
-          mvn clean test -B -V
+        run: bash scripts/ci/run-core-module-tests-container.sh
       
       - name: Generate test report summary
         if: always()

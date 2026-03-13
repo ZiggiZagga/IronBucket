@@ -4,13 +4,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 ROADMAP_MIN_TESTS="${ROADMAP_MIN_TESTS:-50}"
+MODULE_PATH="services/Sentinel-Gear"
 
-cd "${REPO_ROOT}/services/Sentinel-Gear"
+export MAVEN_DOCKER_ENV_VARS="${MAVEN_DOCKER_ENV_VARS:-ROADMAP_MIN_TESTS}"
+export REPO_ROOT MODULE_PATH
 
-echo "Running Sentinel-Gear roadmap profile tests..."
-mvn -B -V test -Proadmap
+echo "Running Sentinel-Gear roadmap profile tests in container..."
+bash "${SCRIPT_DIR}/run-maven-in-container.sh" "${MODULE_PATH}" -B -V test -Proadmap
 
-REPORT_DIR="target/surefire-reports"
+REPORT_DIR="${REPO_ROOT}/${MODULE_PATH}/target/surefire-reports"
 PATTERN="TEST-com.ironbucket.roadmap*.xml"
 
 if ! compgen -G "${REPORT_DIR}/${PATTERN}" > /dev/null; then
@@ -24,7 +26,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
-report_dir = "target/surefire-reports"
+report_dir = os.path.join(os.environ["REPO_ROOT"], os.environ["MODULE_PATH"], "target", "surefire-reports")
 pattern = os.path.join(report_dir, "TEST-com.ironbucket.roadmap*.xml")
 min_tests = int(os.environ.get("ROADMAP_MIN_TESTS", "50"))
 

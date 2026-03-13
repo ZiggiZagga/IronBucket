@@ -5,16 +5,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 BEHAVIORAL_MIN_TESTS="${BEHAVIORAL_MIN_TESTS:-20}"
 BEHAVIORAL_GATE_STRICT="${BEHAVIORAL_GATE_STRICT:-false}"
+MODULE_PATH="services/Sentinel-Gear"
 
-cd "${REPO_ROOT}/services/Sentinel-Gear"
+export MAVEN_DOCKER_ENV_VARS="${MAVEN_DOCKER_ENV_VARS:-BEHAVIORAL_MIN_TESTS,BEHAVIORAL_GATE_STRICT}"
+export REPO_ROOT MODULE_PATH
 
-echo "Running Sentinel-Gear integration profile tests..."
+echo "Running Sentinel-Gear integration profile tests in container..."
 set +e
-mvn -B -V test -Pintegration
+bash "${SCRIPT_DIR}/run-maven-in-container.sh" "${MODULE_PATH}" -B -V test -Pintegration
 MVN_EXIT=$?
 set -e
 
-REPORT_DIR="target/surefire-reports"
+REPORT_DIR="${REPO_ROOT}/${MODULE_PATH}/target/surefire-reports"
 PATTERN="TEST-com.ironbucket.sentinelgear.integration*.xml"
 
 if ! compgen -G "${REPORT_DIR}/${PATTERN}" > /dev/null; then
@@ -29,7 +31,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
-report_dir = "target/surefire-reports"
+report_dir = os.path.join(os.environ["REPO_ROOT"], os.environ["MODULE_PATH"], "target", "surefire-reports")
 pattern = os.path.join(report_dir, "TEST-com.ironbucket.sentinelgear.integration*.xml")
 min_tests = int(os.environ.get("BEHAVIORAL_MIN_TESTS", "20"))
 strict = os.environ.get("BEHAVIORAL_GATE_STRICT", "false").lower() == "true"

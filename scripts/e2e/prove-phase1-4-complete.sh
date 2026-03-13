@@ -9,6 +9,7 @@ REPORT_FILE="$OUT_DIR/PHASE1_2_3_4_PROOF_REPORT.md"
 
 PHASE4_MINIO_CONTAINER="jclouds-minio-phase4-proof"
 PHASE4_MINIO_PORT="${PHASE4_MINIO_PORT:-19000}"
+PHASE4_DOCKER_NETWORK="${PHASE4_DOCKER_NETWORK:-phase4-proof-net}"
 KEEP_STACK="${KEEP_STACK:-true}"
 
 mkdir -p "$EVIDENCE_DIR"
@@ -51,6 +52,12 @@ cleanup_phase4_container() {
   docker rm -f "$PHASE4_MINIO_CONTAINER" >/dev/null 2>&1 || true
 }
 
+ensure_phase4_network() {
+  if ! docker network inspect "$PHASE4_DOCKER_NETWORK" >/dev/null 2>&1; then
+    docker network create "$PHASE4_DOCKER_NETWORK" >/dev/null
+  fi
+}
+
 wait_minio_ready() {
   local max_attempts="${1:-40}"
 
@@ -85,8 +92,10 @@ PHASE4_CRUD_OK=false
 
 log "Running Phase 4 MinIO CRUD integration gate"
 cleanup_phase4_container
+ensure_phase4_network
 docker run -d \
   --name "$PHASE4_MINIO_CONTAINER" \
+  --network "$PHASE4_DOCKER_NETWORK" \
   -p "${PHASE4_MINIO_PORT}:9000" \
   -e MINIO_ROOT_USER=minioadmin \
   -e MINIO_ROOT_PASSWORD=minioadmin \
@@ -104,12 +113,13 @@ fi
 if [[ "$PHASE4_MINIO_READY" == "true" ]]; then
   set +e
   (
-    cd "$ROOT_DIR/services/jclouds-adapter-core"
-    IRONBUCKET_MINIO_ENDPOINT="http://127.0.0.1:${PHASE4_MINIO_PORT}" \
-    IRONBUCKET_MINIO_ACCESS_KEY=minioadmin \
-    IRONBUCKET_MINIO_SECRET_KEY=minioadmin \
-    IRONBUCKET_MINIO_REGION=us-east-1 \
-    mvn -B -V verify -Pminio-it
+    export IRONBUCKET_MINIO_ENDPOINT="http://${PHASE4_MINIO_CONTAINER}:9000"
+    export IRONBUCKET_MINIO_ACCESS_KEY=minioadmin
+    export IRONBUCKET_MINIO_SECRET_KEY=minioadmin
+    export IRONBUCKET_MINIO_REGION=us-east-1
+    export MAVEN_CONTAINER_NETWORK="$PHASE4_DOCKER_NETWORK"
+    export MAVEN_DOCKER_ENV_VARS="IRONBUCKET_MINIO_ENDPOINT,IRONBUCKET_MINIO_ACCESS_KEY,IRONBUCKET_MINIO_SECRET_KEY,IRONBUCKET_MINIO_REGION"
+    bash "$ROOT_DIR/scripts/ci/run-maven-in-container.sh" "services/jclouds-adapter-core" -B -V verify -Pminio-it
   ) | tee "$EVIDENCE_DIR/phase4-minio-it.log"
   PHASE4_IT_EXIT=${PIPESTATUS[0]}
   set -e

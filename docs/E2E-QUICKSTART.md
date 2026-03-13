@@ -22,44 +22,26 @@ Artifacts are written to:
 test-results/phase1-4-proof/
 ```
 
-## All Java/UI Projects Gate
+## Observability Proof Gate (Phase 2)
 
-Run the cross-project gate used by the canonical E2E workflow:
+Run the same observability proof gate that the e2e workflow executes:
 
 ```bash
-bash scripts/ci/run-all-projects-e2e-gate.sh
+bash scripts/e2e/prove-phase2-observability.sh
 ```
 
 Artifacts are written to:
 
 ```bash
-test-results/all-projects-e2e-gate/
+test-results/phase2-observability/
 ```
 
-The Next.js UI gate now enforces the live persistence baseline scenario:
+## Steel-Hammer Complete Suite (Container Runtime)
+
+For container-runtime parity checks and deep diagnostics, run the steel-hammer suite directly:
 
 ```bash
-cd steel-hammer
-docker compose -f docker-compose-steel-hammer.yml up -d \
-  steel-hammer-postgres \
-  steel-hammer-keycloak \
-  steel-hammer-buzzle-vane \
-  steel-hammer-graphite-forge \
-  steel-hammer-sentinel-gear
-docker compose -f docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e
-```
-
-Included scenario:
-- `tests/ui-live-upload-persistence.spec.ts`
-
-Notes:
-- The UI test executes inside the `steel-hammer-ui-e2e` container to avoid host-specific browser/runtime drift.
-- The scenario verifies the live route: UI -> Sentinel-Gear `/graphql` -> Graphite-Forge (DGS/WebFlux) -> object persistence check.
-
-UI trace artifacts are written to:
-
-```bash
-test-results/ui-e2e-traces/
+sh steel-hammer/test-scripts/e2e-complete-suite.sh
 ```
 
 ## What It Does

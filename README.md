@@ -163,12 +163,17 @@ cat test-results/reports/LATEST-SUMMARY.md
 ```bash
 bash scripts/ci/release-preflight.sh
 
+# Optional: verify main-branch protection required checks
+VERIFY_BRANCH_PROTECTION=true GITHUB_REPOSITORY=ZiggiZagga/IronBucket bash scripts/ci/release-preflight.sh
+
 # Optional: include full orchestrator validation
 RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
 
 # Optional: enforce strict branch-protection verification (requires admin token)
 GITHUB_TOKEN=<admin_token> BRANCH_PROTECTION_STRICT=true bash scripts/ci/release-preflight.sh
 ```
+
+All preflight test suites run in Docker containers only.
 
 See [TESTING-QUICK-START.md](docs/testing/TESTING-QUICK-START.md) for details.
 

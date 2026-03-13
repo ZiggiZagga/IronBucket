@@ -42,12 +42,8 @@ jobs:
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
 
-      - name: Verify main branch protection policy
-        env:
-          BRANCH_PROTECTION_STRICT: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: bash scripts/ci/verify-main-branch-protection.sh
+      - name: Enforce containerized test policy
+        run: bash scripts/ci/verify-containerized-tests-only.sh
 
       - name: Resolve release commit SHA
         id: release_sha
@@ -59,6 +55,15 @@ jobs:
           fi
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "Release commit SHA: $SHA"
+
+      - name: Verify main branch protection required checks
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TARGET_BRANCH: main
+          REQUIRED_STATUS_CHECKS: Build and Test All Modules,jclouds MinIO CRUD Gate,Sentinel Roadmap Gate,Sentinel Behavioral Gate,e2e-complete-suite
+          BRANCH_PROTECTION_TOKEN: ${{ secrets.BRANCH_PROTECTION_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/ci/verify-main-branch-protection.sh
 
       - name: Verify required checks are green on release commit
         env:
@@ -108,35 +113,26 @@ jobs:
         run: bash scripts/ci/setup-java-25.sh 25
 
       - name: Sentinel Roadmap Gate (release blocking)
+        env:
+          MAVEN_CONTAINER_NETWORK: host
         run: bash scripts/ci/run-sentinel-roadmap-gate.sh
 
       - name: Sentinel Behavioral Gate (release blocking)
         env:
           BEHAVIORAL_GATE_STRICT: true
+          MAVEN_CONTAINER_NETWORK: host
         run: bash scripts/ci/run-sentinel-behavioral-gate.sh
 
       - name: Sentinel Presigned Security Smoke Gate (release blocking)
-        run: bash scripts/ci/run-presigned-security-smoke.sh
-      
-      - name: Build Vault-Smith
-        run: |
-          cd tools/Vault-Smith
-          mvn clean install -DskipTests -B
-      
-      - name: Run all tests
         env:
+          MAVEN_CONTAINER_NETWORK: host
+        run: bash scripts/ci/run-presigned-security-smoke.sh
+
+      - name: Run core module tests (containers only)
+        env:
+          MAVEN_CONTAINER_NETWORK: host
           S3_TESTS_ENABLED: true
-        run: |
-          for module in Sentinel-Gear Claimspindel Brazz-Nossel Buzzle-Vane Storage-Conductor; do
-            echo "Testing $module..."
-            if [[ "$module" == "Storage-Conductor" ]]; then
-              cd tools/$module
-            else
-              cd services/$module
-            fi
-            mvn clean test -B
-            cd ../..
-          done
+        run: bash scripts/ci/run-core-module-tests-container.sh
       
       - name: Verify test results
         run: |

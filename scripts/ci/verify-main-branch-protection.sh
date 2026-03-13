@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Verifies GitHub branch protection on a target branch, focusing on required status checks.
-# This is intended to operationalize Phase E gate-hardening policy.
+# Verifies GitHub branch protection required checks on a target branch.
+# BRANCH_PROTECTION_STRICT controls behavior when branch protection cannot be queried.
 
 BRANCH_PROTECTION_STRICT="${BRANCH_PROTECTION_STRICT:-false}"
 TARGET_BRANCH="${TARGET_BRANCH:-main}"
-REQUIRED_CHECK_RUNS="${REQUIRED_CHECK_RUNS:-Build and Test All Modules,Sentinel Roadmap Gate,Sentinel Behavioral Gate,jclouds MinIO CRUD Gate,e2e-complete-suite}"
+DEFAULT_REQUIRED_CHECKS="Build and Test All Modules,Sentinel Roadmap Gate,Sentinel Behavioral Gate,jclouds MinIO CRUD Gate,e2e-complete-suite"
+REQUIRED_CHECK_RUNS="${REQUIRED_CHECK_RUNS:-}"
+REQUIRED_STATUS_CHECKS="${REQUIRED_STATUS_CHECKS:-}"
 GITHUB_API_URL="${GITHUB_API_URL:-https://api.github.com}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
-GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+TOKEN="${BRANCH_PROTECTION_TOKEN:-${GITHUB_TOKEN:-}}"
+
+if [[ -n "$REQUIRED_STATUS_CHECKS" ]]; then
+  REQUIRED_CHECKS="$REQUIRED_STATUS_CHECKS"
+elif [[ -n "$REQUIRED_CHECK_RUNS" ]]; then
+  REQUIRED_CHECKS="$REQUIRED_CHECK_RUNS"
+else
+  REQUIRED_CHECKS="$DEFAULT_REQUIRED_CHECKS"
+fi
 
 fail_or_warn() {
   local message="$1"
@@ -18,7 +28,6 @@ fail_or_warn() {
     exit 1
   fi
   echo "WARN: $message"
-  return 0
 }
 
 if [[ -z "$GITHUB_REPOSITORY" ]]; then
@@ -33,101 +42,131 @@ if [[ -z "$GITHUB_REPOSITORY" ]]; then
   exit 0
 fi
 
-if [[ -z "$GITHUB_TOKEN" ]]; then
-  fail_or_warn "GITHUB_TOKEN is not set; cannot query branch protection API for ${GITHUB_REPOSITORY}/${TARGET_BRANCH}."
+if [[ -z "$TOKEN" ]]; then
+  fail_or_warn "BRANCH_PROTECTION_TOKEN or GITHUB_TOKEN must be set to query branch protection for ${GITHUB_REPOSITORY}/${TARGET_BRANCH}."
   exit 0
 fi
 
 echo "[branch-protection] repository=${GITHUB_REPOSITORY} branch=${TARGET_BRANCH} strict=${BRANCH_PROTECTION_STRICT}"
 
+api_endpoint="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/branches/${TARGET_BRANCH}/protection"
+response_file="$(mktemp)"
+stderr_file="$(mktemp)"
+trap 'rm -f "$response_file" "$stderr_file"' EXIT
+
 set +e
-response_with_code="$({
+http_code="$({
   curl -sS \
-    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+    -o "$response_file" \
+    -w "%{http_code}" \
+    -H "Authorization: Bearer ${TOKEN}" \
     -H 'Accept: application/vnd.github+json' \
-    -w "\n%{http_code}" \
-    "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/branches/${TARGET_BRANCH}/protection"
-})"
+    "$api_endpoint"
+} 2>"$stderr_file")"
 curl_exit=$?
 set -e
 
 if [[ $curl_exit -ne 0 ]]; then
+  if [[ -s "$stderr_file" ]]; then
+    cat "$stderr_file" >&2
+  fi
   fail_or_warn "Failed to call GitHub API for branch protection."
   exit 0
 fi
 
-http_code="$(printf '%s' "$response_with_code" | tail -n1)"
-response_body="$(printf '%s' "$response_with_code" | sed '$d')"
+if [[ "$http_code" != "200" ]]; then
+  if [[ "$BRANCH_PROTECTION_STRICT" == "true" ]]; then
+    echo "ERROR: Failed to read branch protection for ${GITHUB_REPOSITORY}:${TARGET_BRANCH} (HTTP ${http_code})" >&2
+    if [[ -s "$stderr_file" ]]; then
+      cat "$stderr_file" >&2
+    fi
+    if [[ -s "$response_file" ]]; then
+      cat "$response_file" >&2
+    fi
+    echo "Hint: Provide BRANCH_PROTECTION_TOKEN with repository administration read permission." >&2
+    exit 1
+  fi
 
-case "$http_code" in
-  200) ;;
-  401|403)
-    fail_or_warn "Token does not have permission to read branch protection (${http_code})."
-    exit 0
-    ;;
-  404)
-    fail_or_warn "Branch protection not found on ${TARGET_BRANCH} (${http_code})."
-    exit 0
-    ;;
-  *)
-    fail_or_warn "Unexpected HTTP status ${http_code} from branch protection API."
-    exit 0
-    ;;
-esac
+  warn_message="Failed to read branch protection for ${GITHUB_REPOSITORY}:${TARGET_BRANCH} (HTTP ${http_code})"
+  if [[ -s "$response_file" ]]; then
+    response_text="$(cat "$response_file")"
+    warn_message+=". Response: ${response_text}"
+  fi
+  fail_or_warn "$warn_message"
+  exit 0
+fi
 
-export BP_JSON="$response_body"
-export REQUIRED_CHECK_RUNS
-export TARGET_BRANCH
+export BRANCH_PROTECTION_JSON="$(cat "$response_file")"
+export REQUIRED_CHECKS TARGET_BRANCH
 python3 - <<'PY'
 import json
 import os
 import sys
 
-required = [s.strip() for s in os.environ.get("REQUIRED_CHECK_RUNS", "").split(",") if s.strip()]
-branch = os.environ.get("TARGET_BRANCH", "main")
-raw = os.environ.get("BP_JSON", "")
+raw = os.environ.get("BRANCH_PROTECTION_JSON", "")
+required = [item.strip() for item in os.environ.get("REQUIRED_CHECKS", "").split(",") if item.strip()]
+target_branch = os.environ.get("TARGET_BRANCH", "main")
 
 try:
     payload = json.loads(raw)
 except json.JSONDecodeError as exc:
-    print(f"ERROR: Failed to parse branch protection payload: {exc}", file=sys.stderr)
+    print(f"ERROR: Failed to parse branch-protection payload: {exc}", file=sys.stderr)
     sys.exit(1)
 
 required_status_checks = payload.get("required_status_checks")
-if not required_status_checks:
-    print(f"ERROR: required_status_checks is not configured for branch '{branch}'.", file=sys.stderr)
+if not isinstance(required_status_checks, dict):
+    print(f"ERROR: required_status_checks is not configured for branch '{target_branch}'.", file=sys.stderr)
     sys.exit(1)
 
-contexts = required_status_checks.get("contexts") or []
-checks = required_status_checks.get("checks") or []
-check_names = []
-for item in checks:
-    if isinstance(item, dict):
-        name = (item.get("context") or "").strip()
-        if name:
-            check_names.append(name)
+configured = set()
+for context in required_status_checks.get("contexts") or []:
+    if isinstance(context, str) and context.strip():
+        configured.add(context.strip())
 
-configured = {c.strip() for c in contexts if isinstance(c, str) and c.strip()}
-configured.update(check_names)
+for check in required_status_checks.get("checks") or []:
+    if not isinstance(check, dict):
+        continue
+    context = check.get("context")
+    if isinstance(context, str) and context.strip():
+        configured.add(context.strip())
+
 missing = [name for name in required if name not in configured]
+strict_enabled = bool(required_status_checks.get("strict", False))
 
-strict_mode = bool(required_status_checks.get("strict", False))
-if not strict_mode:
-    print("ERROR: required_status_checks.strict is false (must be true).", file=sys.stderr)
-    sys.exit(1)
+print(f"Branch protection verification for branch '{target_branch}':")
+print(f"- Expected required checks: {len(required)}")
+print(f"- Configured required checks: {len(configured)}")
+print(f"- Missing required checks: {len(missing)}")
+print(f"- Require up to date before merge (strict): {strict_enabled}")
+
+if configured:
+    print("Configured checks:")
+    for item in sorted(configured):
+        print(f"- {item}")
+
+step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+if step_summary:
+    with open(step_summary, "a", encoding="utf-8") as handle:
+        handle.write(f"## Branch Protection Verification ({target_branch})\n\n")
+        handle.write("| Check | Result |\n")
+        handle.write("|---|---|\n")
+        for name in required:
+            result = "ok" if name in configured else "missing"
+            handle.write(f"| {name} | {result} |\n")
+        handle.write(f"\nStrict mode enabled on branch: {'yes' if strict_enabled else 'no'}\n")
+
+errors = []
+if not strict_enabled:
+    errors.append("required_status_checks.strict is false (must be true)")
 
 if missing:
-    print("ERROR: Missing required status checks on protected branch:", file=sys.stderr)
-    for name in missing:
-        print(f"- {name}", file=sys.stderr)
-    print("Configured checks:", file=sys.stderr)
-    for name in sorted(configured):
-        print(f"- {name}", file=sys.stderr)
-    sys.exit(1)
+    errors.append("Missing required branch-protection checks:")
+    errors.extend([f"- {item}" for item in missing])
 
-print(f"Branch protection verification passed for '{branch}'.")
-print(f"Required checks verified: {len(required)}")
-print(f"Configured checks discovered: {len(configured)}")
+if errors:
+    for line in errors:
+        print(f"ERROR: {line}", file=sys.stderr)
+    sys.exit(1)
 PY
 
 echo "[branch-protection] verification succeeded"

@@ -157,9 +157,14 @@ docker ps
 ```bash
 bash scripts/ci/release-preflight.sh
 
+# Optional: verify main-branch protection required checks
+VERIFY_BRANCH_PROTECTION=true GITHUB_REPOSITORY=ZiggiZagga/IronBucket bash scripts/ci/release-preflight.sh
+
 # Optional: include full orchestrator pathway
 RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
 ```
+
+All preflight test suites run in Docker containers only.
 
 #### MinIO (S3 Storage)
 - **URL**: http://localhost:9000

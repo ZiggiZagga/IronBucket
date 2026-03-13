@@ -3,13 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+MODULE_PATH="services/Sentinel-Gear"
+export REPO_ROOT MODULE_PATH
 
-cd "${REPO_ROOT}/services/Sentinel-Gear"
+echo "Running presigned security smoke test in container..."
+bash "${SCRIPT_DIR}/run-maven-in-container.sh" "${MODULE_PATH}" -B -V -Dtest=com.ironbucket.sentinelgear.filter.PresignedRequestSecurityFilterTest test
 
-echo "Running presigned security smoke test..."
-mvn -B -V -Dtest=com.ironbucket.sentinelgear.filter.PresignedRequestSecurityFilterTest test
-
-REPORT_FILE="target/surefire-reports/TEST-com.ironbucket.sentinelgear.filter.PresignedRequestSecurityFilterTest.xml"
+REPORT_FILE="${REPO_ROOT}/${MODULE_PATH}/target/surefire-reports/TEST-com.ironbucket.sentinelgear.filter.PresignedRequestSecurityFilterTest.xml"
 if [[ ! -f "${REPORT_FILE}" ]]; then
   echo "ERROR: Missing smoke report: ${REPORT_FILE}" >&2
   exit 1
@@ -20,7 +20,13 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
-report_file = "target/surefire-reports/TEST-com.ironbucket.sentinelgear.filter.PresignedRequestSecurityFilterTest.xml"
+report_file = os.path.join(
+    os.environ["REPO_ROOT"],
+    os.environ["MODULE_PATH"],
+    "target",
+    "surefire-reports",
+    "TEST-com.ironbucket.sentinelgear.filter.PresignedRequestSecurityFilterTest.xml",
+)
 root = ET.parse(report_file).getroot()
 
 tests = int(root.attrib.get("tests", "0"))
