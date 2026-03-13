@@ -29,15 +29,18 @@ require_file "$SECURITY_DASH"
 require_file "$PERF_DASH"
 require_file "$AUDIT_DASH"
 
+export ROOT_DIR
 python3 - <<'PY'
 import json
+import os
 import pathlib
 import sys
 
+root_dir = pathlib.Path(os.environ["ROOT_DIR"])
 files = [
-    pathlib.Path("/workspaces/IronBucket/steel-hammer/grafana/dashboards/security-dashboard.json"),
-    pathlib.Path("/workspaces/IronBucket/steel-hammer/grafana/dashboards/performance-dashboard.json"),
-    pathlib.Path("/workspaces/IronBucket/steel-hammer/grafana/dashboards/audit-dashboard.json"),
+  root_dir / "steel-hammer" / "grafana" / "dashboards" / "security-dashboard.json",
+  root_dir / "steel-hammer" / "grafana" / "dashboards" / "performance-dashboard.json",
+  root_dir / "steel-hammer" / "grafana" / "dashboards" / "audit-dashboard.json",
 ]
 
 for file_path in files:
