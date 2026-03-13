@@ -194,6 +194,10 @@ Latest UI evidence artifacts:
 - `test-results/ui-e2e-traces/ui-s3-methods-e2e.json`
 - `test-results/ui-e2e-traces/ui-s3-methods-proof.png`
 
+Screenshot proof (live UI E2E):
+
+![UI S3 Methods Proof](docs/assets/e2e/ui-s3-methods-proof.png)
+
 ## Components
 
 **Brazz-Nossel** - S3 Proxy Gateway (Port 8082)
