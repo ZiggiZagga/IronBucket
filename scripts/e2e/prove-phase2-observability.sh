@@ -157,11 +157,15 @@ with open(out, 'w', encoding='utf-8') as f:
   json.dump(payload, f)
 PY
 
+OTLP_POST_RAW="$EVIDENCE_DIR/otlp-trace-post-raw.txt"
 docker run --rm --network "$NETWORK_NAME" -v "$EVIDENCE_DIR:/evidence:rw" curlimages/curl:8.12.1 \
-  -sS -o /evidence/otlp-trace-post-response.txt -w "%{http_code}" \
+  -sS -w "\n%{http_code}" \
   -X POST "http://steel-hammer-otel-collector:4318/v1/traces" \
   -H "Content-Type: application/json" \
-  --data @/evidence/synthetic-trace.json > "$EVIDENCE_DIR/otlp-trace-post-status.txt"
+  --data @/evidence/synthetic-trace.json > "$OTLP_POST_RAW"
+
+tail -n1 "$OTLP_POST_RAW" > "$EVIDENCE_DIR/otlp-trace-post-status.txt"
+sed '$d' "$OTLP_POST_RAW" > "$EVIDENCE_DIR/otlp-trace-post-response.txt"
 
 sleep 8
 
