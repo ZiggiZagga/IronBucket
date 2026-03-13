@@ -1,9 +1,16 @@
 @import "tailwindcss";
 
+:root {
+  --surface-bg: #f8fafc;
+  --surface-fg: #0f172a;
+}
+
 html, body, #__next {
   height: 100%;
 }
 
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply text-slate-900;
+  background-color: var(--surface-bg);
+  color: var(--surface-fg);
 }
