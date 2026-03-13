@@ -57,6 +57,7 @@ jobs:
         env:
           TARGET_SHA: ${{ steps.release_sha.outputs.sha }}
           REQUIRED_CHECK_RUNS: Build and Test All Modules,Sentinel Roadmap Gate,Sentinel Behavioral Gate,jclouds MinIO CRUD Gate,e2e-complete-suite
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/ci/verify-required-check-runs.sh
       
       - name: Check for clean working tree
