@@ -4,6 +4,12 @@
 
 IronBucket includes a complete **LGTM observability stack** (Loki, Grafana, Tempo, Mimir) that can be integrated with E2E tests to provide comprehensive insights, traces, metrics, and logs in test reports.
 
+The canonical deterministic Phase 2 observability proof command is:
+
+```bash
+bash scripts/e2e/prove-phase2-observability.sh
+```
+
 ## Under-The-Hood Observations (2026-03-12)
 
 - Keycloak cold-start is the dominant readiness factor in proof runs (commonly 2-4 minutes before OIDC and `/metrics` are stable).

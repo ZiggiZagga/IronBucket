@@ -165,6 +165,9 @@ bash scripts/ci/release-preflight.sh
 
 # Optional: include full orchestrator validation
 RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
+
+# Optional: enforce strict branch-protection verification (requires admin token)
+GITHUB_TOKEN=<admin_token> BRANCH_PROTECTION_STRICT=true bash scripts/ci/release-preflight.sh
 ```
 
 See [TESTING-QUICK-START.md](docs/testing/TESTING-QUICK-START.md) for details.

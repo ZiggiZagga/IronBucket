@@ -40,6 +40,7 @@ This is the canonical first-user experience verification workflow and now trigge
 
 - First-user experience gate via `scripts/ci/run-first-user-experience-gate.sh` (Phase 1-4 proof)
 - Observability infrastructure gate via `scripts/ci/run-observability-infra-gate.sh`
+- Deterministic observability proof command: `scripts/e2e/prove-phase2-observability.sh`
 - Observability asset validation via `scripts/ci/validate-observability-assets.sh` (dashboards + alert rules)
 
 Use this workflow as the primary end-to-end release confidence gate.
@@ -55,6 +56,7 @@ Use this workflow as the primary end-to-end release confidence gate.
 **Actions:**
 - ✅ Runs Phase 1-4 roadmap E2E proof gate
 - ✅ Runs Phase 2 observability infrastructure gate (`scripts/ci/run-observability-infra-gate.sh`)
+- ✅ Uses deterministic Phase 2 proof command (`scripts/e2e/prove-phase2-observability.sh`)
 - ✅ Enforces Mimir ingestion thresholds for `steel-hammer-keycloak`, `steel-hammer-minio`, and `steel-hammer-postgres-exporter`
 - ✅ Uploads phase proof artifacts for debugging and trend analysis
 
@@ -172,7 +174,19 @@ Use this workflow as the primary end-to-end release confidence gate.
 - ✅ Checks for clean working tree
 - ✅ Verifies repository state
 - ✅ Verifies roadmap E2E docs/workflow sync (`scripts/ci/verify-e2e-doc-sync.sh`)
+- ✅ Verifies `main` branch protection required checks policy (`scripts/ci/verify-main-branch-protection.sh`)
 - ✅ Blocks release if required checks are not green on the release commit (`scripts/ci/verify-required-check-runs.sh`)
+
+To run branch protection verification in strict mode locally:
+
+```bash
+GITHUB_TOKEN=<admin_token> \
+GITHUB_REPOSITORY=ZiggiZagga/IronBucket \
+BRANCH_PROTECTION_STRICT=true \
+bash scripts/ci/verify-main-branch-protection.sh
+```
+
+If the token lacks admin permission to read branch protection, strict mode fails by design.
 
 #### Phase 2: Testing
 - ✅ Runs complete test suite (231 tests)
