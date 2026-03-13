@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest --passWithNoTests",
-    "test:e2e:ui": "playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts",
+    "test:e2e:ui": "playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts tests/ui-s3-methods-performance.spec.ts",
     "test:e2e:ui:live": "playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts",
     "test:e2e:ui:s3-methods": "playwright test --config playwright.config.ts tests/ui-s3-methods-e2e.spec.ts",
-    "test:e2e:ui:all": "playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts tests/ui-s3-methods-e2e.spec.ts"
+    "test:e2e:ui:performance": "playwright test --config playwright.config.ts tests/ui-s3-methods-performance.spec.ts",
+    "test:e2e:ui:all": "playwright test --config playwright.config.ts tests/ui-live-upload-persistence.spec.ts tests/ui-s3-methods-e2e.spec.ts tests/ui-s3-methods-performance.spec.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.8.0",

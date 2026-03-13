@@ -10,6 +10,18 @@ The canonical deterministic Phase 2 observability proof command is:
 bash scripts/e2e/prove-phase2-observability.sh
 ```
 
+Performance proof command:
+
+```bash
+bash scripts/e2e/prove-phase2-performance.sh
+```
+
+Combined observability + performance gate command:
+
+```bash
+bash scripts/ci/run-observability-infra-gate.sh
+```
+
 ## Under-The-Hood Observations (2026-03-12)
 
 - Keycloak cold-start is the dominant readiness factor in proof runs (commonly 2-4 minutes before OIDC and `/metrics` are stable).
@@ -20,21 +32,14 @@ bash scripts/e2e/prove-phase2-observability.sh
 ## Current Runtime Status (2026-03-13)
 
 - Loki: operational (logs queryable by `service_name`).
-- Mimir: operational (Prometheus query API returns `up` vectors for core services).
-- Tempo: degraded in current compose runtime (restart loop).
+- Mimir: operational (Prometheus query API returns `up` vectors for core and infra services).
+- Tempo: operational (synthetic OTLP trace accepted and ingestion counters verified).
+- Error handling + correlation propagation: operational (Graphite-Forge 404 + GraphQL parse-error checks with `X-Correlation-ID` response propagation).
+- Performance baseline: operational (latency/throughput proof integrated into observability gate).
 
-Observed Tempo runtime error:
-
-```text
-failed to init module services: error initialising module: distributor: failed to create distributor: the Kafka topic has not been configured
-```
-
-Practical implication:
-
-- Logs + metrics proofs are currently reliable and should remain blocking checks.
-- Trace proof should be treated as warning-path until Tempo distributor configuration is corrected in local runtime.
-
-For the canonical runtime matrix and remediation plan, see [OBSERVABILITY-FEATURESET-STATUS.md](OBSERVABILITY-FEATURESET-STATUS.md).
+For canonical status, gap matrix, and actions:
+- [OBSERVABILITY-FEATURESET-STATUS.md](OBSERVABILITY-FEATURESET-STATUS.md)
+- [OBSERVABILITY-PERFORMANCE-TRACKING.md](OBSERVABILITY-PERFORMANCE-TRACKING.md)
 
 ## UI Screenshot Proof Artifacts
 

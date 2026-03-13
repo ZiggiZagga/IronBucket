@@ -1,12 +1,12 @@
 # IronBucket Roadmap: Journey to Graphite Forge
 
-**Last Updated:** March 12, 2026  
+**Last Updated:** March 13, 2026  
 **Current Phase:** Phase E - Gate Hardening, Release Policy & Phase 4 Kickoff  
 **Overall Status:** 🟢 **Roadmap Gates Met for Current Sentinel Profile** | 🟡 **Production Hardening In Progress**
 
-**Verified Test Snapshot (2026-03-12):**
+**Verified Test Snapshot (2026-03-13):**
 - Backend modules: 8/8 passing via `scripts/comprehensive-test-reporter.sh --all`
-- Full orchestrator: 157/157 passing via `scripts/run-all-tests-complete.sh`
+- Full orchestrator: 187/187 passing via `scripts/run-all-tests-complete.sh`
 - E2E smoke: passing in container-network mode with transient 5xx retry hardening
 - Security validation (reporter): 4/4 passing
 - Sentinel roadmap profile: 105 tests run, 0 failing (`mvn test -Proadmap` in `services/Sentinel-Gear`)
@@ -222,6 +222,33 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - Added Next.js object-browser baseline scenario route (`/e2e-object-browser`) with bucket/object browse, search, sort, upload, download, and delete interactions.
 - Added live Playwright scenario `tests/ui-live-upload-persistence.spec.ts` that validates UI upload through Sentinel-Gear with real backend read-back verification.
 - `scripts/ci/run-all-projects-e2e-gate.sh` now executes the non-mocked UI baseline through `npm run test:e2e:ui`.
+
+**Observability verification matrix update (2026-03-13):**
+
+Verified completed:
+- ✅ Stack readiness for Loki/Tempo/Mimir + core services in Phase-2 proof.
+- ✅ Logs pipeline verified (Loki query over service streams).
+- ✅ Metrics pipeline verified (Prometheus endpoints + Mimir query status + infra `up` checks).
+- ✅ Tracing pipeline verified (synthetic OTLP trace accepted, Tempo/Collector ingest counters > 0).
+- ✅ Runtime OTEL env wiring verified for Sentinel-Gear, Claimspindel, Brazz-Nossel, Buzzle-Vane.
+- ✅ Error handling + correlation propagation gate added for Graphite-Forge:
+  - 404 response contract and JSON error payload evidence.
+  - GraphQL parse-error evidence (`InvalidSyntax`) and `X-Correlation-ID` response propagation.
+- ✅ Phase-2 performance gate added and integrated into observability infra gate:
+  - Throughput and latency proof (`scripts/e2e/prove-phase2-performance.sh`)
+  - Latest baseline: 106.37 req/s, p95 latency 57.77 ms, success rate 100.00%
+  - Continuous history tracking in `test-results/phase2-performance/performance-history.csv`
+
+Verified not completed:
+- ⚠️ No mandatory gate assertion yet for correlation-id semantic search in Loki across multiple services (stream presence is verified, semantic correlation join is not).
+- ⚠️ No authenticated negative-path gate yet for JWT-protected service APIs (error handling is currently verified on Graphite-Forge endpoints).
+- ⚠️ No mandatory UI trace-id to Tempo trace lookup assertion yet.
+
+Missing cases queued for future implementation:
+- Add an authenticated service error-path scenario (Bearer token) to verify global error handlers under protected endpoints.
+- Add a correlation-id log semantic assertion in Loki (`correlationId`/`traceId` fields) as a blocking check.
+- Add UI trace-id roundtrip assertion (artifact trace id -> Tempo query success) as a release-gate check.
+- Add dashboard-level SLO checks (p95/p99 latency and error-rate thresholds) to Phase-6 advanced observability gates.
 
 ### 3) Kick Off Phase 4 (Next Sprint)
 - ✅ Created `jclouds-adapter-core` skeleton and capability matrix baseline document.
@@ -574,7 +601,7 @@ Core vs roadmap test modes:
 
 ---
 
-**Last Updated:** January 19, 2026  
+**Last Updated:** March 13, 2026  
 **Maintained By:** IronBucket Development Team  
 **Test Status:** Run `bash scripts/run-all-tests-complete.sh` for latest results  
 **Questions?** See [test-results/reports/LATEST-REPORT.md](test-results/reports/LATEST-REPORT.md)

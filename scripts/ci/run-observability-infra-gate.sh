@@ -11,6 +11,7 @@ export INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD="${INFRA_POSTGRES_EXPORTER_UP_SU
 echo "[observability-gate] running phase2 observability proof"
 echo "[observability-gate] thresholds: keycloak=${INFRA_KEYCLOAK_UP_SUM_THRESHOLD}, minio=${INFRA_MINIO_UP_SUM_THRESHOLD}, postgres_exporter=${INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD}"
 
-bash "$ROOT_DIR/scripts/e2e/prove-phase2-observability.sh"
+KEEP_STACK=true bash "$ROOT_DIR/scripts/e2e/prove-phase2-observability.sh"
+PERF_REUSE_STACK=true KEEP_STACK=false bash "$ROOT_DIR/scripts/e2e/prove-phase2-performance.sh"
 
 echo "[observability-gate] passed"

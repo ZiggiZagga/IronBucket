@@ -11,6 +11,13 @@ type MethodsRequest = {
   content?: string;
 };
 
+type MinioPerformanceSummary = {
+  minioOperationCount: number;
+  minioTotalOperationTimeMs: number;
+  minioOperationsPerSecond: number;
+  operationLatenciesMs: Record<string, number>;
+};
+
 export async function POST(req: NextRequest) {
   const started = performance.now();
   const route = '/api/e2e/s3-methods';
@@ -39,136 +46,158 @@ export async function POST(req: NextRequest) {
 
   try {
     const token = await fetchActorAccessToken(actor);
+    const operationLatenciesMs: Record<string, number> = {};
 
-    const createBucketResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          mutation CreateBucket($jwtToken: String!, $bucketName: String!, $ownerTenant: String!) {
-            createBucket(jwtToken: $jwtToken, bucketName: $bucketName, ownerTenant: $ownerTenant) {
-              name
+    const timedOperation = async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
+      const operationStarted = performance.now();
+      try {
+        return await fn();
+      } finally {
+        operationLatenciesMs[name] = Number((performance.now() - operationStarted).toFixed(2));
+      }
+    };
+
+    const createBucketResponse = await timedOperation('createBucket', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            mutation CreateBucket($jwtToken: String!, $bucketName: String!, $ownerTenant: String!) {
+              createBucket(jwtToken: $jwtToken, bucketName: $bucketName, ownerTenant: $ownerTenant) {
+                name
+              }
             }
+          `,
+          variables: {
+            jwtToken: token,
+            bucketName: bucket,
+            ownerTenant
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucketName: bucket,
-          ownerTenant
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const createBucketWorked = createBucketResponse?.data?.createBucket?.name === bucket;
 
-    const beforeBucketsResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          query ListBuckets($jwtToken: String!) {
-            listBuckets(jwtToken: $jwtToken) {
-              name
+    const beforeBucketsResponse = await timedOperation('listBuckets', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            query ListBuckets($jwtToken: String!) {
+              listBuckets(jwtToken: $jwtToken) {
+                name
+              }
             }
+          `,
+          variables: {
+            jwtToken: token
           }
-        `,
-        variables: {
-          jwtToken: token
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const beforeBuckets = beforeBucketsResponse?.data?.listBuckets ?? [];
     const listBucketsWorked = Array.isArray(beforeBuckets) && beforeBuckets.some((item: { name?: string }) => item?.name === bucket);
 
-    const getBucketResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          query GetBucket($jwtToken: String!, $bucketName: String!) {
-            getBucket(jwtToken: $jwtToken, bucketName: $bucketName) {
-              name
-              ownerTenant
+    const getBucketResponse = await timedOperation('getBucket', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            query GetBucket($jwtToken: String!, $bucketName: String!) {
+              getBucket(jwtToken: $jwtToken, bucketName: $bucketName) {
+                name
+                ownerTenant
+              }
             }
+          `,
+          variables: {
+            jwtToken: token,
+            bucketName: bucket
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucketName: bucket
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const getBucketWorked = getBucketResponse?.data?.getBucket?.name === bucket;
 
-    const uploadResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          mutation UploadObject($jwtToken: String!, $bucket: String!, $key: String!, $content: String!, $contentType: String) {
-            uploadObject(jwtToken: $jwtToken, bucket: $bucket, key: $key, content: $content, contentType: $contentType) {
-              key
-              bucket
-              size
+    const uploadResponse = await timedOperation('uploadObject', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            mutation UploadObject($jwtToken: String!, $bucket: String!, $key: String!, $content: String!, $contentType: String) {
+              uploadObject(jwtToken: $jwtToken, bucket: $bucket, key: $key, content: $content, contentType: $contentType) {
+                key
+                bucket
+                size
+              }
             }
+          `,
+          variables: {
+            jwtToken: token,
+            bucket,
+            key,
+            content,
+            contentType: 'text/plain'
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucket,
-          key,
-          content,
-          contentType: 'text/plain'
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const uploaded = uploadResponse?.data?.uploadObject;
     const uploadWorked = Boolean(uploaded && uploaded.key === key && uploaded.bucket === bucket);
 
-    const listAfterUploadResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          query ListObjects($jwtToken: String!, $bucket: String!, $query: String) {
-            listObjects(jwtToken: $jwtToken, bucket: $bucket, query: $query) {
-              key
-              size
+    const listAfterUploadResponse = await timedOperation('listObjects', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            query ListObjects($jwtToken: String!, $bucket: String!, $query: String) {
+              listObjects(jwtToken: $jwtToken, bucket: $bucket, query: $query) {
+                key
+                size
+              }
             }
+          `,
+          variables: {
+            jwtToken: token,
+            bucket,
+            query: key
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucket,
-          query: key
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const listAfterUpload = listAfterUploadResponse?.data?.listObjects ?? [];
     const listObjectsWorked = Array.isArray(listAfterUpload) && listAfterUpload.some((item: { key?: string }) => item?.key === key);
 
-    const getObjectResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          query GetObject($jwtToken: String!, $bucketName: String!, $objectKey: String!) {
-            getObject(jwtToken: $jwtToken, bucketName: $bucketName, objectKey: $objectKey) {
-              key
-              size
+    const getObjectResponse = await timedOperation('getObject', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            query GetObject($jwtToken: String!, $bucketName: String!, $objectKey: String!) {
+              getObject(jwtToken: $jwtToken, bucketName: $bucketName, objectKey: $objectKey) {
+                key
+                size
+              }
             }
+          `,
+          variables: {
+            jwtToken: token,
+            bucketName: bucket,
+            objectKey: key
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucketName: bucket,
-          objectKey: key
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const getObjectWorked = getObjectResponse?.data?.getObject?.key === key;
@@ -208,103 +237,113 @@ export async function POST(req: NextRequest) {
       typeof routingDecisionResponse?.data?.getBucketRoutingDecision?.selectedProvider === 'string'
       && routingDecisionResponse.data.getBucketRoutingDecision.selectedProvider.length > 0;
 
-    const downloadResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          mutation DownloadObject($jwtToken: String!, $bucket: String!, $key: String!) {
-            downloadObject(jwtToken: $jwtToken, bucket: $bucket, key: $key) {
-              url
+    const downloadResponse = await timedOperation('downloadObject', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            mutation DownloadObject($jwtToken: String!, $bucket: String!, $key: String!) {
+              downloadObject(jwtToken: $jwtToken, bucket: $bucket, key: $key) {
+                url
+              }
             }
+          `,
+          variables: {
+            jwtToken: token,
+            bucket,
+            key
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucket,
-          key
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const downloadUrl = downloadResponse?.data?.downloadObject?.url ?? '';
     const downloadWorked = typeof downloadUrl === 'string' && downloadUrl.length > 0;
 
-    const deleteResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          mutation DeleteObject($jwtToken: String!, $bucket: String!, $key: String!) {
-            deleteObject(jwtToken: $jwtToken, bucket: $bucket, key: $key)
+    const deleteResponse = await timedOperation('deleteObject', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            mutation DeleteObject($jwtToken: String!, $bucket: String!, $key: String!) {
+              deleteObject(jwtToken: $jwtToken, bucket: $bucket, key: $key)
+            }
+          `,
+          variables: {
+            jwtToken: token,
+            bucket,
+            key
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucket,
-          key
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const deleteWorked = Boolean(deleteResponse?.data?.deleteObject === true);
 
-    const listAfterDeleteResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          query ListObjects($jwtToken: String!, $bucket: String!, $query: String) {
-            listObjects(jwtToken: $jwtToken, bucket: $bucket, query: $query) {
-              key
+    const listAfterDeleteResponse = await timedOperation('listObjectsAfterDelete', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            query ListObjects($jwtToken: String!, $bucket: String!, $query: String) {
+              listObjects(jwtToken: $jwtToken, bucket: $bucket, query: $query) {
+                key
+              }
             }
+          `,
+          variables: {
+            jwtToken: token,
+            bucket,
+            query: key
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucket,
-          query: key
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const listAfterDelete = listAfterDeleteResponse?.data?.listObjects ?? [];
     const deleteVerifiedByList = Array.isArray(listAfterDelete) && !listAfterDelete.some((item: { key?: string }) => item?.key === key);
 
-    const deleteBucketResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          mutation DeleteBucket($jwtToken: String!, $bucketName: String!) {
-            deleteBucket(jwtToken: $jwtToken, bucketName: $bucketName)
+    const deleteBucketResponse = await timedOperation('deleteBucket', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            mutation DeleteBucket($jwtToken: String!, $bucketName: String!) {
+              deleteBucket(jwtToken: $jwtToken, bucketName: $bucketName)
+            }
+          `,
+          variables: {
+            jwtToken: token,
+            bucketName: bucket
           }
-        `,
-        variables: {
-          jwtToken: token,
-          bucketName: bucket
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const deleteBucketValue = deleteBucketResponse?.data?.deleteBucket;
     const deleteBucketWorked = typeof deleteBucketValue === 'boolean';
 
-    const bucketsAfterDeleteResponse = await callGatewayGraphql(
-      token,
-      {
-        query: `
-          query ListBuckets($jwtToken: String!) {
-            listBuckets(jwtToken: $jwtToken) {
-              name
+    const bucketsAfterDeleteResponse = await timedOperation('listBucketsAfterDelete', () =>
+      callGatewayGraphql(
+        token,
+        {
+          query: `
+            query ListBuckets($jwtToken: String!) {
+              listBuckets(jwtToken: $jwtToken) {
+                name
+              }
             }
+          `,
+          variables: {
+            jwtToken: token
           }
-        `,
-        variables: {
-          jwtToken: token
-        }
-      },
-      gatewayOptions
+        },
+        gatewayOptions
+      )
     );
 
     const bucketsAfterDelete = bucketsAfterDeleteResponse?.data?.listBuckets ?? [];
@@ -326,6 +365,42 @@ export async function POST(req: NextRequest) {
 
     const allMethodsVerified = Object.values(checks).every(Boolean);
 
+    const minioOperationNames = [
+      'createBucket',
+      'listBuckets',
+      'getBucket',
+      'uploadObject',
+      'listObjects',
+      'getObject',
+      'downloadObject',
+      'deleteObject',
+      'listObjectsAfterDelete',
+      'deleteBucket',
+      'listBucketsAfterDelete'
+    ] as const;
+
+    const minioLatencies: Record<string, number> = {};
+    for (const operationName of minioOperationNames) {
+      minioLatencies[operationName] = operationLatenciesMs[operationName] ?? 0;
+    }
+
+    const minioTotalOperationTimeMs = Number(
+      Object.values(minioLatencies)
+        .reduce((sum, value) => sum + value, 0)
+        .toFixed(2)
+    );
+    const minioOperationCount = minioOperationNames.length;
+    const minioOperationsPerSecond = Number(
+      (minioOperationCount / Math.max(minioTotalOperationTimeMs / 1000, 0.001)).toFixed(2)
+    );
+
+    const performance: MinioPerformanceSummary = {
+      minioOperationCount,
+      minioTotalOperationTimeMs,
+      minioOperationsPerSecond,
+      operationLatenciesMs: minioLatencies
+    };
+
     const durationMs = performance.now() - started;
     observeApiRequest(route, 'POST', 200, durationMs);
     logger.info('S3 methods E2E flow completed.', {
@@ -346,6 +421,7 @@ export async function POST(req: NextRequest) {
       traceId,
       traceparent,
       checks,
+      performance,
       allMethodsVerified,
       expectedServices: [
         'steel-hammer-sentinel-gear',

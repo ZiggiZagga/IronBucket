@@ -24,6 +24,12 @@ type ScenarioResult = {
   traceId: string;
   traceparent: string;
   checks: MethodChecks;
+  performance: {
+    minioOperationCount: number;
+    minioTotalOperationTimeMs: number;
+    minioOperationsPerSecond: number;
+    operationLatenciesMs: Record<string, number>;
+  };
   allMethodsVerified: boolean;
   expectedServices: string[];
   timestamp: string;
@@ -220,6 +226,9 @@ export default function E2eS3MethodsPage() {
           <p>traceId: {scenario.result.traceId}</p>
           <p>traceparent: {scenario.result.traceparent}</p>
           <p>allMethodsVerified: {String(scenario.result.allMethodsVerified)}</p>
+          <p>minioOperationCount: {scenario.result.performance.minioOperationCount}</p>
+          <p>minioTotalOperationTimeMs: {scenario.result.performance.minioTotalOperationTimeMs.toFixed(2)}</p>
+          <p>minioOperationsPerSecond: {scenario.result.performance.minioOperationsPerSecond.toFixed(2)}</p>
           <p>createBucket: {String(scenario.result.checks.createBucket)}</p>
           <p>listBuckets: {String(scenario.result.checks.listBuckets)}</p>
           <p>getBucket: {String(scenario.result.checks.getBucket)}</p>
@@ -230,6 +239,9 @@ export default function E2eS3MethodsPage() {
           <p>downloadObject: {String(scenario.result.checks.downloadObject)}</p>
           <p>deleteObject: {String(scenario.result.checks.deleteObject)}</p>
           <p>deleteBucket: {String(scenario.result.checks.deleteBucket)}</p>
+          {Object.entries(scenario.result.performance.operationLatenciesMs).map(([operation, value]) => (
+            <p key={operation}>operation.{operation}.ms: {value.toFixed(2)}</p>
+          ))}
           <p>expectedServices: {scenario.result.expectedServices.join(', ')}</p>
           <p>timestamp: {scenario.result.timestamp}</p>
         </div>
