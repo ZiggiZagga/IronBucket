@@ -134,3 +134,4 @@ tasks: |
   - Observe logs and reports before summarizing.
   - Please always respond in English. According to the roadmap, what are the next steps and phase? Please implement the actual requirements from the roadmap into working code. Make sure e2e tests are always kept up to date and in sync with docs. It is crucial to identify and implement the missing tests  and ensure they are passing before summarizing.
   - Make sure to check whever last pipelines failed and fix them before pushing
+  - Never forget, all tests run in containers, so make sure to check the logs of the test containers to understand the root cause of any failure. Do not summarize until you have fully understood the root cause and implemented a fix that addresses it.
