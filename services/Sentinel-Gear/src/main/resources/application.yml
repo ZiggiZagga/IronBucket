@@ -91,10 +91,12 @@ spring:
             - TokenRelay
           routes: 
             - id: route-graphite-forge-graphql
+              order: -100
               uri: ${GRAPHITE_FORGE_URI:http://steel-hammer-graphite-forge:8084}
               predicates:
                 - Path=/graphql,/graphql/**
             - id: route-hub
+              order: 100
               uri: lb://CLAIMSPINDEL
               predicates:
                 - Path=/**

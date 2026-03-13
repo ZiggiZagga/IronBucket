@@ -57,6 +57,8 @@ Use this workflow as the primary end-to-end release confidence gate.
 **Actions:**
 - ✅ Runs all Java + UI projects gate (`scripts/ci/run-all-projects-e2e-gate.sh`)
 - ✅ Enforces Next.js live UI persistence scenario (`ui-live-upload-persistence.spec.ts`) with real backend round-trip verification
+- ✅ Executes UI Playwright E2E in dedicated compose runner container (`steel-hammer-ui-e2e`) with explicit service dependencies
+- ✅ Validates gateway `/graphql` path through Sentinel-Gear to Graphite-Forge runtime service
 - ✅ Runs Phase 1-4 roadmap E2E proof gate
 - ✅ Runs Phase 2 observability infrastructure gate (`scripts/ci/run-observability-infra-gate.sh`)
 - ✅ Uses deterministic Phase 2 proof command (`scripts/e2e/prove-phase2-observability.sh`)
@@ -65,6 +67,7 @@ Use this workflow as the primary end-to-end release confidence gate.
 
 **Expected Results:**
 - First-user E2E flow remains green
+- Containerized UI E2E gate remains deterministic across local and CI environments
 - Infrastructure metrics targets are scrapeable and queryable
 - Infra `up` sums in Mimir remain above configured thresholds
 
