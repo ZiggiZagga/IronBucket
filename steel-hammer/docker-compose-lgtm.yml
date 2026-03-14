@@ -171,7 +171,7 @@ services:
     build:
       context: .
       dockerfile: keycloak/DockerfileKeycloak
-    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start", "--import-realm", "--http-enabled=false", "--https-port=7081", "--https-certificate-file=/certs/services/infrastructure/keycloak/tls.crt", "--https-certificate-key-file=/certs/services/infrastructure/keycloak/tls.key", "--https-required-mtls=true", "--https-client-ca-file=/certs/ca/ca.crt", "--hostname=https://steel-hammer-keycloak:7081", "--hostname-strict=false" ]
+    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start", "--import-realm", "--http-enabled=false", "--https-port=7081", "--https-certificate-file=/certs/services/infrastructure/keycloak/tls.crt", "--https-certificate-key-file=/certs/services/infrastructure/keycloak/tls.key", "--hostname=https://steel-hammer-keycloak:7081", "--hostname-strict=false" ]
     volumes:
       - ./keycloak/dev-realm.json:/opt/keycloak/keycloak/data/import/dev-realm.json
       - ../certs:/certs:ro
