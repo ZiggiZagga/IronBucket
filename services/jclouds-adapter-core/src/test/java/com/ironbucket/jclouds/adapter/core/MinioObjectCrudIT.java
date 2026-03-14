@@ -11,6 +11,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MinioObjectCrudIT {
 
@@ -46,9 +47,7 @@ class MinioObjectCrudIT {
         ObjectKey objectKey = new ObjectKey(testBucket, "tenant-a/path/example.txt");
         byte[] payload = "phase4-minio-it".getBytes(StandardCharsets.UTF_8);
 
-        try (BlobStoreContext context = contextProvider.openContext(config)) {
-            context.getBlobStore().createContainerInLocation(null, testBucket);
-        }
+        createBucket(testBucket);
 
         adapter.putObject(
             config,
@@ -63,6 +62,49 @@ class MinioObjectCrudIT {
 
         try (BlobStoreContext context = contextProvider.openContext(config)) {
             assertFalse(context.getBlobStore().blobExists(testBucket, objectKey.key()));
+        }
+    }
+
+    @Test
+    void putObjectOverwriteKeepsLatestPayloadAndMetadata() {
+        testBucket = "ib-minio-it-" + UUID.randomUUID().toString().replace("-", "");
+        ObjectKey objectKey = new ObjectKey(testBucket, "tenant-a/path/overwrite.txt");
+        createBucket(testBucket);
+
+        adapter.putObject(
+            config,
+            new PutObjectCommand(objectKey, "v1".getBytes(StandardCharsets.UTF_8), "text/plain", Map.of("version", "1"))
+        );
+
+        adapter.putObject(
+            config,
+            new PutObjectCommand(objectKey, "v2".getBytes(StandardCharsets.UTF_8), "text/plain", Map.of("version", "2"))
+        );
+
+        StoredObject fetchedObject = adapter.getObject(config, objectKey);
+        assertArrayEquals("v2".getBytes(StandardCharsets.UTF_8), fetchedObject.payload());
+        assertEquals("2", fetchedObject.metadata().get("version"));
+    }
+
+    @Test
+    void getAfterDeleteThrowsObjectNotFound() {
+        testBucket = "ib-minio-it-" + UUID.randomUUID().toString().replace("-", "");
+        ObjectKey objectKey = new ObjectKey(testBucket, "tenant-a/path/deleted.txt");
+        createBucket(testBucket);
+
+        adapter.putObject(
+            config,
+            new PutObjectCommand(objectKey, "payload".getBytes(StandardCharsets.UTF_8), "text/plain", Map.of())
+        );
+
+        adapter.deleteObject(config, objectKey);
+
+        assertThrows(ObjectNotFoundException.class, () -> adapter.getObject(config, objectKey));
+    }
+
+    private void createBucket(String bucketName) {
+        try (BlobStoreContext context = contextProvider.openContext(config)) {
+            context.getBlobStore().createContainerInLocation(null, bucketName);
         }
     }
 

@@ -16,12 +16,31 @@ IronBucket implements **production-grade CI/CD pipelines** with comprehensive au
 - ✅ Runs core Maven module tests in Docker containers via `scripts/ci/run-core-module-tests-container.sh`
 - ✅ Uses shared containerized Maven runner `scripts/ci/run-maven-in-container.sh`
 - ✅ Runs full test suite (231 tests)
+- ✅ Exports machine-readable gate-policy evidence via `scripts/ci/export-gate-policy-summary.sh`
+- ✅ Uploads gate-policy artifact (`gate-policy-summary`) for audit traceability
 - ✅ Verifies roadmap E2E docs/workflow sync via `scripts/ci/verify-e2e-doc-sync.sh`
 - ✅ Enforces containerized test execution policy via `scripts/ci/verify-containerized-tests-only.sh`
 - ✅ Uses deterministic roadmap E2E proof command: `scripts/e2e/prove-phase1-4-complete.sh`
 - ✅ Enforces Sentinel roadmap gate via `scripts/ci/run-sentinel-roadmap-gate.sh` (blocking CI check, containerized)
 - ✅ Runs separate Sentinel behavioral integration gate via `scripts/ci/run-sentinel-behavioral-gate.sh` (containerized)
   - strict blocking mode on all configured refs
+- ✅ Runs dedicated governance roadmap gate via `scripts/ci/run-governance-roadmap-gate.sh`
+  - executes `GovernanceIntegrityResilienceTest` as a blocking contract check
+  - exports machine-readable governance evidence summary via `scripts/ci/export-governance-evidence-summary.sh`
+- ✅ Runs deterministic governance drift gate via `scripts/ci/run-governance-drift-gate.sh`
+  - validates drift/reconciliation fixture outputs and exports evidence summaries
+- ✅ Runs credential-backed jclouds provider integration probe gate via `scripts/ci/run-jclouds-provider-integration-probe-gate.sh`
+  - selective AWS/GCS/Azure capability integration probes based on available CI secrets
+- ✅ Runs credential-backed jclouds provider integration parity gate via `scripts/ci/run-jclouds-provider-integration-parity-gate.sh`
+  - selective AWS/GCS/Azure CRUD parity integration checks based on available CI secrets
+- ✅ Runs Phase-4 versioning/multipart parity gate via `scripts/ci/run-phase4-versioning-multipart-gate.sh`
+  - validates deterministic versioning/delete-marker fixture and provider-neutral multipart/versioning parity contracts
+- ✅ Runs governance incident playbook gate via `scripts/ci/run-governance-incident-playbook-gate.sh`
+  - validates deterministic policy-bypass, crash-recovery, isolation, and error-matrix fixtures
+- ✅ Runs advanced resilience gate via `scripts/ci/run-advanced-resilience-gate.sh`
+  - validates deterministic disk-pressure, HA failover, streaming-latency, and partition-reconciliation fixtures
+- ✅ Runs adapter upgrade safety gate via `scripts/ci/run-adapter-upgrade-safety-gate.sh`
+  - executes `AdapterSchemaUpgradeTest` as a blocking schema/backward-compatibility contract
 - ✅ Caches Maven dependencies for faster builds
 - ✅ Uploads test results and build artifacts
 - ✅ Generates test summary in GitHub UI
@@ -109,6 +128,31 @@ Use this workflow as the primary end-to-end release confidence gate.
 - Security scan summary in GitHub UI
 - Detailed reports as workflow artifacts
 - SARIF files for GitHub Security tab
+
+---
+
+### 2b. Governance + Resilience Periodic (`governance-resilience-periodic.yml`)
+
+**Triggers:**
+- Weekly schedule (Mondays at 02:17 UTC)
+- Manual workflow dispatch
+
+**Actions:**
+- ✅ Runs governance roadmap gate (`scripts/ci/run-governance-roadmap-gate.sh`)
+- ✅ Runs governance drift gate (`scripts/ci/run-governance-drift-gate.sh`)
+- ✅ Runs governance incident playbook gate (`scripts/ci/run-governance-incident-playbook-gate.sh`)
+- ✅ Runs Phase-4 versioning/multipart parity gate (`scripts/ci/run-phase4-versioning-multipart-gate.sh`)
+- ✅ Runs advanced resilience gate (`scripts/ci/run-advanced-resilience-gate.sh`)
+- ✅ Runs adapter upgrade safety gate (`scripts/ci/run-adapter-upgrade-safety-gate.sh`)
+- ✅ Uploads governance/resilience evidence summaries as periodic artifacts
+
+**Expected Results:**
+- Governance contract suite remains green in periodic execution
+- Drift/reconciliation fixtures remain deterministic
+- Incident playbook fixture checks remain deterministic
+- Advanced resilience fixture checks remain deterministic
+- Partition-reconciliation fixture checks remain deterministic
+- Adapter schema upgrade safety contract remains deterministic
 
 ---
 
@@ -544,5 +588,5 @@ mvn clean install -U
 ---
 
 **Status:** ✅ Production-Ready CI/CD Pipeline  
-**Last Updated:** January 17, 2026  
+**Last Updated:** March 13, 2026  
 **Maintained By:** IronBucket Team

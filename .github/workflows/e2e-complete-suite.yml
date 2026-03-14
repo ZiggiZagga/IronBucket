@@ -57,6 +57,10 @@ jobs:
           INFRA_KEYCLOAK_UP_SUM_THRESHOLD: "0.0"
           INFRA_MINIO_UP_SUM_THRESHOLD: "1.0"
           INFRA_POSTGRES_EXPORTER_UP_SUM_THRESHOLD: "1.0"
+          PERF_P95_MS_THRESHOLD: "350"
+          PERF_P99_MS_THRESHOLD: "650"
+          PERF_RPS_THRESHOLD: "20"
+          PERF_ERROR_RATE_THRESHOLD: "1.0"
         run: |
           chmod +x scripts/ci/run-observability-infra-gate.sh
           bash scripts/ci/run-observability-infra-gate.sh
@@ -75,4 +79,5 @@ jobs:
             test-results/phase1-3-proof/
             test-results/phase1-4-proof/
             test-results/phase2-observability/
+            test-results/phase2-performance/
           retention-days: 30

@@ -54,15 +54,25 @@ start_fixture_server() {
   SERVER_PID="$!"
 
   # Wait until server responds.
-  for _ in $(seq 1 20); do
+  for _ in $(seq 1 40); do
     if curl -fsS "http://127.0.0.1:${port}/" >/dev/null 2>&1; then
       return 0
     fi
-    sleep 0.2
+    sleep 0.25
   done
 
   echo "Fixture HTTP server did not become ready"
   return 1
+}
+
+find_free_port() {
+  python3 - <<'PY'
+import socket
+
+with socket.socket() as sock:
+    sock.bind(("127.0.0.1", 0))
+    print(sock.getsockname()[1])
+PY
 }
 
 run_positive_case() {
@@ -104,7 +114,8 @@ main() {
   FIXTURE_ROOT="$(mktemp -d)"
   trap cleanup EXIT
 
-  local port=18081
+  local port
+  port="$(find_free_port)"
   create_payload "$FIXTURE_ROOT" true true
   start_fixture_server "$FIXTURE_ROOT" "$port"
 

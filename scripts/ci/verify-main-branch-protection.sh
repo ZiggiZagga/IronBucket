@@ -6,7 +6,7 @@ set -euo pipefail
 
 BRANCH_PROTECTION_STRICT="${BRANCH_PROTECTION_STRICT:-false}"
 TARGET_BRANCH="${TARGET_BRANCH:-main}"
-DEFAULT_REQUIRED_CHECKS="Build and Test All Modules,Sentinel Roadmap Gate,Sentinel Behavioral Gate,jclouds MinIO CRUD Gate,e2e-complete-suite"
+DEFAULT_REQUIRED_CHECKS="Build and Test All Modules,jclouds MinIO CRUD Gate,Sentinel Roadmap Gate,Sentinel Behavioral Gate,e2e-complete-suite"
 REQUIRED_CHECK_RUNS="${REQUIRED_CHECK_RUNS:-}"
 REQUIRED_STATUS_CHECKS="${REQUIRED_STATUS_CHECKS:-}"
 GITHUB_API_URL="${GITHUB_API_URL:-https://api.github.com}"

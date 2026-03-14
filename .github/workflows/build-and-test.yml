@@ -11,6 +11,155 @@ permissions:
   pull-requests: write
 
 jobs:
+  gate-policy-evidence:
+    name: Gate Policy Evidence
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Export gate policy summary
+        env:
+          REQUIRED_CHECKS: Build and Test All Modules,jclouds MinIO CRUD Gate,Sentinel Roadmap Gate,Sentinel Behavioral Gate,e2e-complete-suite
+        run: bash scripts/ci/export-gate-policy-summary.sh
+
+      - name: Upload gate policy summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-policy-summary
+          path: |
+            test-results/ci-gates/LATEST-gate-policy-summary.json
+            test-results/ci-gates/LATEST-gate-policy-summary.md
+          retention-days: 30
+
+  jclouds-provider-probe-gate:
+    name: jclouds Provider Probe Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run governance drift gate
+        run: bash scripts/ci/run-governance-drift-gate.sh
+
+      - name: Run jclouds provider probe gate
+        run: bash scripts/ci/run-jclouds-provider-probe-gate.sh
+
+  jclouds-provider-integration-probe-gate:
+    name: jclouds Provider Integration Probe Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run jclouds provider integration probe gate
+        env:
+          IRONBUCKET_AWS_S3_INTEGRATION: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_ENDPOINT: ${{ secrets.AWS_S3_ENDPOINT }}
+          IRONBUCKET_GCS_INTEGRATION: ${{ secrets.IRONBUCKET_GCS_IDENTITY != '' && secrets.IRONBUCKET_GCS_CREDENTIAL != '' }}
+          IRONBUCKET_GCS_IDENTITY: ${{ secrets.IRONBUCKET_GCS_IDENTITY }}
+          IRONBUCKET_GCS_CREDENTIAL: ${{ secrets.IRONBUCKET_GCS_CREDENTIAL }}
+          IRONBUCKET_GCS_PROJECT: ${{ secrets.IRONBUCKET_GCS_PROJECT }}
+          IRONBUCKET_GCS_ENDPOINT: ${{ secrets.IRONBUCKET_GCS_ENDPOINT }}
+          IRONBUCKET_AZURE_BLOB_INTEGRATION: ${{ secrets.AZURE_STORAGE_ACCOUNT != '' && secrets.AZURE_STORAGE_KEY != '' }}
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
+          IRONBUCKET_AZURE_BLOB_ENDPOINT: ${{ secrets.IRONBUCKET_AZURE_BLOB_ENDPOINT }}
+        run: bash scripts/ci/run-jclouds-provider-integration-probe-gate.sh
+
+      - name: Upload jclouds provider integration probe reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jclouds-provider-integration-probe-reports
+          path: services/jclouds-adapter-core/target/surefire-reports/TEST-com.ironbucket.jclouds.adapter.core.*IntegrationTest*.xml
+          retention-days: 30
+
+  jclouds-provider-integration-parity-gate:
+    name: jclouds Provider Integration Parity Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run jclouds provider integration parity gate
+        env:
+          IRONBUCKET_AWS_S3_INTEGRATION: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_ENDPOINT: ${{ secrets.AWS_S3_ENDPOINT }}
+          IRONBUCKET_GCS_INTEGRATION: ${{ secrets.IRONBUCKET_GCS_IDENTITY != '' && secrets.IRONBUCKET_GCS_CREDENTIAL != '' }}
+          IRONBUCKET_GCS_IDENTITY: ${{ secrets.IRONBUCKET_GCS_IDENTITY }}
+          IRONBUCKET_GCS_CREDENTIAL: ${{ secrets.IRONBUCKET_GCS_CREDENTIAL }}
+          IRONBUCKET_GCS_PROJECT: ${{ secrets.IRONBUCKET_GCS_PROJECT }}
+          IRONBUCKET_GCS_ENDPOINT: ${{ secrets.IRONBUCKET_GCS_ENDPOINT }}
+          IRONBUCKET_AZURE_BLOB_INTEGRATION: ${{ secrets.AZURE_STORAGE_ACCOUNT != '' && secrets.AZURE_STORAGE_KEY != '' }}
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
+          IRONBUCKET_AZURE_BLOB_ENDPOINT: ${{ secrets.IRONBUCKET_AZURE_BLOB_ENDPOINT }}
+        run: bash scripts/ci/run-jclouds-provider-integration-parity-gate.sh
+
+      - name: Upload jclouds provider integration parity reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jclouds-provider-integration-parity-reports
+          path: services/jclouds-adapter-core/target/surefire-reports/TEST-com.ironbucket.jclouds.adapter.core.ProviderCrudParityIntegrationTest*.xml
+          retention-days: 30
+
+  phase4-versioning-multipart-gate:
+    name: Phase 4 Versioning Multipart Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run phase 4 versioning/multipart gate
+        run: bash scripts/ci/run-phase4-versioning-multipart-gate.sh
+
+      - name: Upload phase 4 versioning/multipart artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase4-versioning-multipart-reports
+          path: |
+            test-results/phase4-gates/LATEST-phase4-versioning-multipart-gate-summary.json
+            test-results/phase4-gates/LATEST-phase4-versioning-multipart-gate-summary.md
+          retention-days: 30
+
   jclouds-minio-crud-gate:
     name: jclouds MinIO CRUD Gate
     runs-on: ubuntu-latest
@@ -30,6 +179,9 @@ jobs:
 
       - name: Test branch protection guardrail script
         run: bash scripts/testing/test-verify-main-branch-protection.sh
+
+      - name: Test gate policy consistency script
+        run: bash scripts/testing/test-gate-policy-consistency.sh
 
       - name: Verify roadmap E2E docs/workflow sync
         run: bash scripts/ci/verify-e2e-doc-sync.sh
@@ -186,6 +338,113 @@ jobs:
         with:
           name: sentinel-integration-reports
           path: services/Sentinel-Gear/target/surefire-reports/TEST-com.ironbucket.sentinelgear.integration*.xml
+          retention-days: 30
+
+  governance-roadmap-gate:
+    name: Governance Roadmap Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run governance roadmap gate
+        run: bash scripts/ci/run-governance-roadmap-gate.sh
+
+      - name: Upload governance roadmap reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-roadmap-reports
+          path: |
+            services/Sentinel-Gear/target/surefire-reports/TEST-com.ironbucket.roadmap.GovernanceIntegrityResilienceTest*.xml
+            test-results/governance-gates/LATEST-governance-evidence-summary.json
+            test-results/governance-gates/LATEST-governance-evidence-summary.md
+            test-results/governance-gates/LATEST-governance-drift-gate-summary.json
+            test-results/governance-gates/LATEST-governance-drift-gate-summary.md
+          retention-days: 30
+
+  governance-incident-playbook-gate:
+    name: Governance Incident Playbook Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run governance incident playbook gate
+        run: bash scripts/ci/run-governance-incident-playbook-gate.sh
+
+      - name: Upload governance incident playbook artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-incident-playbook-reports
+          path: |
+            test-results/governance-gates/LATEST-governance-incident-playbook-summary.json
+            test-results/governance-gates/LATEST-governance-incident-playbook-summary.md
+          retention-days: 30
+
+  advanced-resilience-gate:
+    name: Advanced Resilience Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run advanced resilience gate
+        run: bash scripts/ci/run-advanced-resilience-gate.sh
+
+      - name: Upload advanced resilience artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advanced-resilience-reports
+          path: |
+            test-results/resilience-gates/LATEST-advanced-resilience-gate-summary.json
+            test-results/resilience-gates/LATEST-advanced-resilience-gate-summary.md
+          retention-days: 30
+
+  adapter-upgrade-safety-gate:
+    name: Adapter Upgrade Safety Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        run: bash scripts/ci/setup-java-25.sh 25
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run adapter upgrade safety gate
+        run: bash scripts/ci/run-adapter-upgrade-safety-gate.sh
+
+      - name: Upload adapter upgrade safety artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adapter-upgrade-safety-reports
+          path: |
+            test-results/resilience-gates/LATEST-adapter-upgrade-safety-summary.json
+            test-results/resilience-gates/LATEST-adapter-upgrade-safety-summary.md
           retention-days: 30
 
   build:

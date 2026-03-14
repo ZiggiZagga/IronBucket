@@ -1,0 +1,60 @@
+name: governance-resilience-periodic
+
+on:
+  schedule:
+    - cron: '17 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  governance-and-resilience-periodic:
+    name: governance-and-resilience-periodic
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run governance roadmap gate
+        run: bash scripts/ci/run-governance-roadmap-gate.sh
+
+      - name: Run governance drift gate
+        run: bash scripts/ci/run-governance-drift-gate.sh
+
+      - name: Run governance incident playbook gate
+        run: bash scripts/ci/run-governance-incident-playbook-gate.sh
+
+      - name: Run phase 4 versioning/multipart gate
+        run: bash scripts/ci/run-phase4-versioning-multipart-gate.sh
+
+      - name: Run advanced resilience gate
+        run: bash scripts/ci/run-advanced-resilience-gate.sh
+
+      - name: Run adapter upgrade safety gate
+        run: bash scripts/ci/run-adapter-upgrade-safety-gate.sh
+
+      - name: Upload periodic governance/resilience artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-resilience-periodic-artifacts
+          path: |
+            services/Sentinel-Gear/target/surefire-reports/TEST-com.ironbucket.roadmap.GovernanceIntegrityResilienceTest*.xml
+            test-results/governance-gates/LATEST-governance-evidence-summary.json
+            test-results/governance-gates/LATEST-governance-evidence-summary.md
+            test-results/governance-gates/LATEST-governance-drift-gate-summary.json
+            test-results/governance-gates/LATEST-governance-drift-gate-summary.md
+            test-results/governance-gates/LATEST-governance-incident-playbook-summary.json
+            test-results/governance-gates/LATEST-governance-incident-playbook-summary.md
+            test-results/phase4-gates/LATEST-phase4-versioning-multipart-gate-summary.json
+            test-results/phase4-gates/LATEST-phase4-versioning-multipart-gate-summary.md
+            test-results/resilience-gates/LATEST-advanced-resilience-gate-summary.json
+            test-results/resilience-gates/LATEST-advanced-resilience-gate-summary.md
+            test-results/resilience-gates/LATEST-adapter-upgrade-safety-summary.json
+            test-results/resilience-gates/LATEST-adapter-upgrade-safety-summary.md
+          retention-days: 30

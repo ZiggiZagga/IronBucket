@@ -10,7 +10,7 @@ if [[ -z "$TARGET_SHA" ]]; then
   exit 1
 fi
 
-REQUIRED_CHECK_RUNS="${REQUIRED_CHECK_RUNS:-Build and Test All Modules,Sentinel Roadmap Gate,Sentinel Behavioral Gate,jclouds MinIO CRUD Gate,e2e-complete-suite}"
+REQUIRED_CHECK_RUNS="${REQUIRED_CHECK_RUNS:-Build and Test All Modules,jclouds MinIO CRUD Gate,Sentinel Roadmap Gate,Sentinel Behavioral Gate,e2e-complete-suite}"
 GITHUB_API_URL="${GITHUB_API_URL:-https://api.github.com}"
 
 CHECK_RUNS_JSON="$(curl -fsSL \
@@ -18,15 +18,30 @@ CHECK_RUNS_JSON="$(curl -fsSL \
   -H 'Accept: application/vnd.github+json' \
   "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/commits/${TARGET_SHA}/check-runs?per_page=100")"
 
-export CHECK_RUNS_JSON REQUIRED_CHECK_RUNS TARGET_SHA
+CHECK_RUNS_JSON_FILE="$(mktemp)"
+trap 'rm -f "$CHECK_RUNS_JSON_FILE"' EXIT
+printf '%s' "$CHECK_RUNS_JSON" > "$CHECK_RUNS_JSON_FILE"
+
+export CHECK_RUNS_JSON_FILE REQUIRED_CHECK_RUNS TARGET_SHA
 python3 - <<'PY'
 import json
 import os
 import sys
 
-raw = os.environ.get("CHECK_RUNS_JSON", "")
+json_path = os.environ.get("CHECK_RUNS_JSON_FILE", "")
 required = [item.strip() for item in os.environ.get("REQUIRED_CHECK_RUNS", "").split(",") if item.strip()]
 target_sha = os.environ.get("TARGET_SHA", "")
+
+if not json_path:
+    print("ERROR: CHECK_RUNS_JSON_FILE is not set", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    with open(json_path, "r", encoding="utf-8") as handle:
+        raw = handle.read()
+except OSError as exc:
+    print(f"ERROR: Failed to read check-runs payload file: {exc}", file=sys.stderr)
+    sys.exit(1)
 
 try:
     payload = json.loads(raw)

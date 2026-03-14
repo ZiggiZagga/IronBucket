@@ -12,6 +12,7 @@ create_fixture() {
   mkdir -p "$fixture_root/docs"
   mkdir -p "$fixture_root/scripts/e2e"
   mkdir -p "$fixture_root/scripts/ci"
+  mkdir -p "$fixture_root/steel-hammer/test-scripts"
 
   cat >"$fixture_root/.github/workflows/e2e-complete-suite.yml" <<'EOF'
 name: e2e-complete-suite
@@ -20,7 +21,6 @@ jobs:
     steps:
       - run: bash scripts/ci/run-first-user-experience-gate.sh
       - run: bash scripts/ci/run-observability-infra-gate.sh
-      - run: bash scripts/ci/run-all-projects-e2e-gate.sh
       - run: upload test-results/phase1-4-proof/
       - run: upload test-results/phase2-observability/
       - run: upload test-results/ui-e2e-traces/
@@ -29,11 +29,13 @@ EOF
   cat >"$fixture_root/docs/CI-CD-PIPELINE.md" <<'EOF'
 # CI/CD
 Uses e2e-complete-suite with scripts/e2e/prove-phase1-4-complete.sh and scripts/e2e/prove-phase2-observability.sh.
-Also runs scripts/ci/run-all-projects-e2e-gate.sh.
+Runs scripts/ci/run-first-user-experience-gate.sh and scripts/ci/run-observability-infra-gate.sh.
 EOF
 
   cat >"$fixture_root/docs/E2E-QUICKSTART.md" <<'EOF'
 Run: scripts/e2e/prove-phase1-4-complete.sh
+Run: scripts/e2e/prove-phase2-observability.sh
+Suite: steel-hammer/test-scripts/e2e-complete-suite.sh
 UI traces: test-results/ui-e2e-traces/
 Baseline UI test: tests/ui-live-upload-persistence.spec.ts
 EOF
@@ -44,6 +46,10 @@ EOF
 
   cat >"$fixture_root/README.md" <<'EOF'
 See E2E-QUICKSTART.md and E2E-OBSERVABILITY-GUIDE.md
+EOF
+
+  cat >"$fixture_root/ROADMAP.md" <<'EOF'
+Roadmap evidence references steel-hammer/test-scripts/e2e-complete-suite.sh
 EOF
 
   cat >"$fixture_root/scripts/e2e/prove-phase1-4-complete.sh" <<'EOF'
@@ -60,6 +66,21 @@ EOF
 #!/usr/bin/env bash
 exit 0
 EOF
+
+  cat >"$fixture_root/scripts/ci/run-first-user-experience-gate.sh" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+
+  cat >"$fixture_root/scripts/ci/run-observability-infra-gate.sh" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+
+  cat >"$fixture_root/steel-hammer/test-scripts/e2e-complete-suite.sh" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
 }
 
 run_positive_case() {
@@ -69,9 +90,12 @@ run_positive_case() {
 
 run_negative_case_missing_phase2_doc_reference() {
   local fixture_root="$1"
-  # Remove required Phase 2 proof reference to assert failure mode.
-  cat >"$fixture_root/docs/E2E-OBSERVABILITY-GUIDE.md" <<'EOF'
-# Missing required proof command on purpose
+  # Remove required Phase 2 proof reference from quickstart to assert failure mode.
+  cat >"$fixture_root/docs/E2E-QUICKSTART.md" <<'EOF'
+Run: scripts/e2e/prove-phase1-4-complete.sh
+Suite: steel-hammer/test-scripts/e2e-complete-suite.sh
+UI traces: test-results/ui-e2e-traces/
+Baseline UI test: tests/ui-live-upload-persistence.spec.ts
 EOF
 
   if IRONBUCKET_ROOT_DIR="$fixture_root" bash "$SCRIPT_UNDER_TEST" >/dev/null 2>&1; then

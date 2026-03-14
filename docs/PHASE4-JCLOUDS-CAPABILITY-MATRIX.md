@@ -32,7 +32,7 @@ This matrix defines the provider-neutral baseline used by IronBucket for initial
 - jclouds CRUD adapter: `JcloudsObjectStorageAdapter`
 - Policy/capability enforcement: `CapabilityEnforcingObjectStorageAdapter`, `PolicyEnforcer`
 - Provider probes: `AwsS3CapabilityProbe`, `GcsCapabilityProbe`, `AzureBlobCapabilityProbe`
-- Contract tests: `ProviderCapabilityRegistryTest`
+- Contract tests: `ProviderCapabilityRegistryTest`, `ProviderNeutralParityContractTest`
 
 ## AWS Baseline Probe Tests
 
@@ -89,9 +89,85 @@ mvn -B -V verify -Pminio-it
 
 CI executes this gate in `build-and-test.yml` as job `jclouds MinIO CRUD Gate`.
 
+## Provider Probe CI Gate
+
+CI also executes deterministic provider capability probe tests in
+`build-and-test.yml` as job `jclouds Provider Probe Gate` via:
+
+```bash
+bash scripts/ci/run-jclouds-provider-probe-gate.sh
+```
+
+Current probe-gate test set:
+- `AwsS3CapabilityProbeTest`
+- `GcsCapabilityProbeTest`
+- `AzureBlobCapabilityProbeTest`
+
+## Provider Integration Probe Gate (Credential-Backed)
+
+CI also includes a credential-backed integration probe gate via:
+
+```bash
+bash scripts/ci/run-jclouds-provider-integration-probe-gate.sh
+```
+
+Integration probe test set (enabled per provider via environment toggles):
+- `AwsS3CapabilityProbeIntegrationTest`
+- `GcsCapabilityProbeIntegrationTest`
+- `AzureBlobCapabilityProbeIntegrationTest`
+
+Provider toggles:
+- `IRONBUCKET_AWS_S3_INTEGRATION=true`
+- `IRONBUCKET_GCS_INTEGRATION=true`
+- `IRONBUCKET_AZURE_BLOB_INTEGRATION=true`
+
+If no provider toggle is enabled, the integration probe gate exits successfully in skip mode.
+
+## Provider Integration Parity Gate (Credential-Backed CRUD)
+
+CI now includes a credential-backed CRUD parity integration gate via:
+
+```bash
+bash scripts/ci/run-jclouds-provider-integration-parity-gate.sh
+```
+
+Current parity integration test set:
+- `ProviderCrudParityIntegrationTest`
+
+This test suite executes provider-specific CRUD roundtrip checks for AWS S3, GCS,
+and Azure Blob when corresponding integration toggles and credentials are enabled.
+
+## Provider-Neutral Parity Contract Suite
+
+Phase-4 now includes explicit provider-neutral parity contract tests for:
+
+- CRUD contract consistency across all provider profiles.
+- Multipart capability parity matrix.
+- Versioning capability parity matrix.
+- Multipart + versioning intersection contract.
+
+Run locally:
+
+```bash
+cd services/jclouds-adapter-core
+mvn -B -Dtest=ProviderNeutralParityContractTest test
+```
+
+## Phase-4 Versioning/Multipart Gate
+
+CI now includes a dedicated Phase-4 versioning/multipart gate via:
+
+```bash
+bash scripts/ci/run-phase4-versioning-multipart-gate.sh
+```
+
+Gate checks:
+- deterministic versioning/delete-marker fixture marker validation
+- `ProviderNeutralParityContractTest`
+- `ProviderCapabilityRegistryTest`
+
 ## Next Steps (Phase 4)
 
-1. Add non-skipped integration tests for provider-neutral CRUD against controlled S3-compatible runtime.
-2. Add gated integration probes for GCS and Azure using provider credentials in CI secrets.
-3. Surface capability matrix and routing/capability failures via admin/management API contracts.
-4. Wire `PolicyEnforcer` to Claimspindel policy decisions (deny-overrides-allow parity).
+1. Expand credential-backed parity coverage from CRUD to explicit provider runtime multipart/versioning operations where credentials and backend semantics permit safe CI execution.
+2. Continue surfacing capability matrix and routing/capability failures via admin/management API contracts.
+3. Wire `PolicyEnforcer` to Claimspindel policy decisions (deny-overrides-allow parity).

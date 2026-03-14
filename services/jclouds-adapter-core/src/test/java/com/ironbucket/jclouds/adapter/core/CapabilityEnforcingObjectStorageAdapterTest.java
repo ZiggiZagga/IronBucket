@@ -48,6 +48,28 @@ class CapabilityEnforcingObjectStorageAdapterTest {
     }
 
     @Test
+    void putAndDeleteAreBlockedWhenPolicyRejectsRequest() {
+        InMemoryObjectStorageAdapter delegate = new InMemoryObjectStorageAdapter();
+        CapabilityEnforcingObjectStorageAdapter adapter = new CapabilityEnforcingObjectStorageAdapter(
+            delegate,
+            new ProviderCapabilityRegistry(),
+            new CountingPolicyEnforcer(true)
+        );
+
+        ProviderConnectionConfig config = ProviderConnectionConfig.of(ProviderType.AWS_S3, null, null, null);
+        ObjectKey objectKey = new ObjectKey("bucket", "key");
+        PutObjectCommand command = new PutObjectCommand(objectKey, "hello".getBytes(), "text/plain", Map.of());
+
+        assertThrows(PolicyDeniedException.class, () -> adapter.putObject(config, command));
+
+        delegate.putObject(config, command);
+        assertThrows(PolicyDeniedException.class, () -> adapter.deleteObject(config, objectKey));
+
+        // The object remains present because the denied delete must not reach the delegate.
+        assertEquals("hello", new String(delegate.getObject(config, objectKey).payload()));
+    }
+
+    @Test
     void putObjectThrowsUnsupportedCapabilityWhenProviderTypeIsUnknown() {
         CapabilityEnforcingObjectStorageAdapter adapter = new CapabilityEnforcingObjectStorageAdapter(
             new InMemoryObjectStorageAdapter(),

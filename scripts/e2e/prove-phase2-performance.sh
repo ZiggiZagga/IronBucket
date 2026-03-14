@@ -19,7 +19,9 @@ PERF_CONCURRENCY="${PERF_CONCURRENCY:-12}"
 PERF_SERVICE_REQUESTS="${PERF_SERVICE_REQUESTS:-60}"
 PERF_SERVICE_CONCURRENCY="${PERF_SERVICE_CONCURRENCY:-6}"
 PERF_P95_MS_THRESHOLD="${PERF_P95_MS_THRESHOLD:-350}"
+PERF_P99_MS_THRESHOLD="${PERF_P99_MS_THRESHOLD:-650}"
 PERF_RPS_THRESHOLD="${PERF_RPS_THRESHOLD:-20}"
+PERF_ERROR_RATE_THRESHOLD="${PERF_ERROR_RATE_THRESHOLD:-1.0}"
 
 mkdir -p "$EVIDENCE_DIR"
 
@@ -111,20 +113,26 @@ if latencies_ms:
     latencies_ms.sort()
     p50 = statistics.median(latencies_ms)
     idx95 = min(len(latencies_ms) - 1, math.ceil(len(latencies_ms) * 0.95) - 1)
+    idx99 = min(len(latencies_ms) - 1, math.ceil(len(latencies_ms) * 0.99) - 1)
     p95 = latencies_ms[idx95]
+    p99 = latencies_ms[idx99]
     avg = sum(latencies_ms) / len(latencies_ms)
 else:
-    p50 = p95 = avg = 0.0
+    p50 = p95 = p99 = avg = 0.0
+
+error_rate = ((total - success) / total * 100.0) if total else 100.0
 
 with open(out_path, 'w', encoding='utf-8') as out:
   out.write(f"total={total}\n")
   out.write(f"success={success}\n")
   out.write(f"success_rate={success_rate:.2f}\n")
+  out.write(f"error_rate={error_rate:.2f}\n")
   out.write(f"duration_s={duration_s:.3f}\n")
   out.write(f"rps={rps:.2f}\n")
   out.write(f"latency_avg_ms={avg:.2f}\n")
   out.write(f"latency_p50_ms={p50:.2f}\n")
   out.write(f"latency_p95_ms={p95:.2f}\n")
+  out.write(f"latency_p99_ms={p99:.2f}\n")
 PY
 }
 
@@ -173,6 +181,15 @@ then
   LATENCY_OK=true
 fi
 
+LATENCY_P99_OK=false
+if python3 - <<PY
+import sys
+sys.exit(0 if float("${latency_p99_ms:-0}") <= float("${PERF_P99_MS_THRESHOLD}") else 1)
+PY
+then
+  LATENCY_P99_OK=true
+fi
+
 THROUGHPUT_OK=false
 if python3 - <<PY
 import sys
@@ -189,6 +206,15 @@ sys.exit(0 if float("${success_rate:-0}") >= 99.0 else 1)
 PY
 then
   SUCCESS_RATE_OK=true
+fi
+
+ERROR_RATE_OK=false
+if python3 - <<PY
+import sys
+sys.exit(0 if float("${error_rate:-100}") <= float("${PERF_ERROR_RATE_THRESHOLD}") else 1)
+PY
+then
+  ERROR_RATE_OK=true
 fi
 
 mkdir -p "$EVIDENCE_DIR/service-level"
@@ -241,16 +267,20 @@ for service in graphite-forge buzzle-vane claimspindel brazz-nossel minio keyclo
 
   service_total="$(awk -F= '/^total=/{print $2}' "$summary_file")"
   service_success_rate="$(awk -F= '/^success_rate=/{print $2}' "$summary_file")"
+  service_error_rate="$(awk -F= '/^error_rate=/{print $2}' "$summary_file")"
   service_rps="$(awk -F= '/^rps=/{print $2}' "$summary_file")"
   service_p95="$(awk -F= '/^latency_p95_ms=/{print $2}' "$summary_file")"
+  service_p99="$(awk -F= '/^latency_p99_ms=/{print $2}' "$summary_file")"
 
   service_ok="true"
   if ! python3 - <<PY
 import sys
 sys.exit(0 if (
   float("${service_success_rate:-0}") >= 99.0 and
+  float("${service_error_rate:-100}") <= float("${PERF_ERROR_RATE_THRESHOLD}") and
   float("${service_rps:-0}") >= float("${PERF_RPS_THRESHOLD}") and
-  float("${service_p95:-0}") <= float("${PERF_P95_MS_THRESHOLD}")
+  float("${service_p95:-0}") <= float("${PERF_P95_MS_THRESHOLD}") and
+  float("${service_p99:-0}") <= float("${PERF_P99_MS_THRESHOLD}")
 ) else 1)
 PY
   then
@@ -258,14 +288,14 @@ PY
     SERVICE_LEVEL_OK=false
   fi
 
-  SERVICE_STATS_ROWS+="| ${service} | ${service_total} | ${service_success_rate} | ${service_rps} | ${service_p95} | ${service_ok} |"$'\n'
+  SERVICE_STATS_ROWS+="| ${service} | ${service_total} | ${service_success_rate} | ${service_error_rate} | ${service_rps} | ${service_p95} | ${service_p99} | ${service_ok} |"$'\n'
 done
 
 mkdir -p "$(dirname "$HISTORY_CSV")"
 if [[ ! -f "$HISTORY_CSV" ]]; then
-  echo "timestamp,target,requests,concurrency,success_rate,rps,latency_avg_ms,latency_p50_ms,latency_p95_ms,latency_ok,throughput_ok,success_rate_ok" > "$HISTORY_CSV"
+  echo "timestamp,target,requests,concurrency,success_rate,error_rate,rps,latency_avg_ms,latency_p50_ms,latency_p95_ms,latency_p99_ms,latency_ok,latency_p99_ok,throughput_ok,success_rate_ok,error_rate_ok" > "$HISTORY_CSV"
 fi
-echo "$TIMESTAMP,$PERF_TARGET_URL,$PERF_REQUESTS,$PERF_CONCURRENCY,$success_rate,$rps,$latency_avg_ms,$latency_p50_ms,$latency_p95_ms,$LATENCY_OK,$THROUGHPUT_OK,$SUCCESS_RATE_OK" >> "$HISTORY_CSV"
+echo "$TIMESTAMP,$PERF_TARGET_URL,$PERF_REQUESTS,$PERF_CONCURRENCY,$success_rate,$error_rate,$rps,$latency_avg_ms,$latency_p50_ms,$latency_p95_ms,$latency_p99_ms,$LATENCY_OK,$LATENCY_P99_OK,$THROUGHPUT_OK,$SUCCESS_RATE_OK,$ERROR_RATE_OK" >> "$HISTORY_CSV"
 
 cat > "$REPORT_FILE" <<EOF
 # Phase 2 Performance Proof Report
@@ -282,25 +312,29 @@ cat > "$REPORT_FILE" <<EOF
 |---|---|---|
 | Stack readiness | $STACK_OK | true |
 | Success rate >= 99% | $SUCCESS_RATE_OK | 99.0% |
+| Error rate (%) | $ERROR_RATE_OK | <= $PERF_ERROR_RATE_THRESHOLD |
 | Throughput (requests/sec) | $THROUGHPUT_OK | >= $PERF_RPS_THRESHOLD |
 | P95 latency (ms) | $LATENCY_OK | <= $PERF_P95_MS_THRESHOLD |
-| Service-level stats checks | $SERVICE_LEVEL_OK | all services meet p95/rps/success thresholds |
+| P99 latency (ms) | $LATENCY_P99_OK | <= $PERF_P99_MS_THRESHOLD |
+| Service-level stats checks | $SERVICE_LEVEL_OK | all services meet p95/p99/rps/error thresholds |
 
 ## Measured Stats
 
 - total requests: $total
 - successful requests: $success
 - success rate (%): $success_rate
+- error rate (%): $error_rate
 - duration (s): $duration_s
 - throughput (req/s): $rps
 - latency avg (ms): $latency_avg_ms
 - latency p50 (ms): $latency_p50_ms
 - latency p95 (ms): $latency_p95_ms
+- latency p99 (ms): $latency_p99_ms
 
 ## Service-Level Stats
 
-| Service | Requests | Success Rate (%) | Throughput (req/s) | P95 Latency (ms) | Threshold Result |
-|---|---:|---:|---:|---:|---|
+| Service | Requests | Success Rate (%) | Error Rate (%) | Throughput (req/s) | P95 Latency (ms) | P99 Latency (ms) | Threshold Result |
+|---|---:|---:|---:|---:|---:|---:|---|
 $SERVICE_STATS_ROWS
 
 ## Continuous Tracking
@@ -312,7 +346,7 @@ $SERVICE_STATS_ROWS
 EOF
 
 OVERALL_OK=false
-if [[ "$STACK_OK" == "true" && "$SUCCESS_RATE_OK" == "true" && "$LATENCY_OK" == "true" && "$THROUGHPUT_OK" == "true" && "$SERVICE_LEVEL_OK" == "true" ]]; then
+if [[ "$STACK_OK" == "true" && "$SUCCESS_RATE_OK" == "true" && "$ERROR_RATE_OK" == "true" && "$LATENCY_OK" == "true" && "$LATENCY_P99_OK" == "true" && "$THROUGHPUT_OK" == "true" && "$SERVICE_LEVEL_OK" == "true" ]]; then
   echo "✅ Phase 2 performance proof passed." >> "$REPORT_FILE"
   OVERALL_OK=true
 else
