@@ -7,8 +7,8 @@
 
 ## Quick Start
 
-- **New Users:** Start with [GETTING_STARTED.md](GETTING_STARTED.md)
-- **Current Status:** See [../test-results/reports/LATEST-REPORT-EXPLAINED.md](../test-results/reports/LATEST-REPORT-EXPLAINED.md)
+- **New Users:** Start with [GETTING_STARTED_GUIDE.md](GETTING_STARTED_GUIDE.md)
+- **Current Status:** See [../test-results/reports/LATEST-REPORT.md](../test-results/reports/LATEST-REPORT.md)
 - **Roadmap:** See [../ROADMAP.md](../ROADMAP.md)
 - **Run Tests:** `bash scripts/run-all-tests-complete.sh` from project root
 
@@ -44,8 +44,8 @@
 ## Test Results
 
 **Latest Reports:**
-- [test-results/reports/LATEST-REPORT-EXPLAINED.md](../test-results/reports/LATEST-REPORT-EXPLAINED.md) - **Start here**
-- [test-results/reports/LATEST-REPORT.md](../test-results/reports/LATEST-REPORT.md) - Raw test output
+- [test-results/reports/LATEST-REPORT.md](../test-results/reports/LATEST-REPORT.md) - **Start here**
+- [test-results/reports/LATEST-SUMMARY.md](../test-results/reports/LATEST-SUMMARY.md) - Summary view
 
 **Test Coverage:**
 - Core Platform: 100% (7/7 tests passing)
@@ -88,7 +88,7 @@ docs/
 ├── ARCHITECTURE.md
 ├── DEPLOYMENT.md
 ├── E2E-OBSERVABILITY-GUIDE.md
-├── GETTING_STARTED.md
+├── GETTING_STARTED_GUIDE.md
 ├── TROUBLESHOOTING.md
 ├── API.md
 ├── identity-model.md

@@ -330,7 +330,7 @@ jobs:
           
           ## 📚 Documentation
           
-          - [Getting Started](https://github.com/${{ github.repository }}/blob/main/GETTING_STARTED_GUIDE.md)
+          - [Getting Started](https://github.com/${{ github.repository }}/blob/main/docs/GETTING_STARTED_GUIDE.md)
           - [Deployment Guide](https://github.com/${{ github.repository }}/blob/main/docs/DEPLOYMENT-GUIDE.md)
           - [Architecture](https://github.com/${{ github.repository }}/blob/main/docs/ARCHITECTURE.md)
           EOF

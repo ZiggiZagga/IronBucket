@@ -50,7 +50,7 @@ Advanced S3 operations implemented:
 1. Full orchestrator:
 - Command: bash scripts/run-all-tests-complete.sh
 - Result: 190 passed, 0 failed, 0 skipped
-- Report: test-results/reports/COMPLETE-TEST-REPORT-2026-03-13 22:46:42.md
+- Report: test-results/reports/LATEST-REPORT.md
 
 2. S3 roadmap suite:
 - Command: bash scripts/ci/run-maven-in-container.sh services/Sentinel-Gear -B -Dtest=S3FeaturesTest test -Proadmap

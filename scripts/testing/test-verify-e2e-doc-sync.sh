@@ -50,6 +50,9 @@ EOF
 
   cat >"$fixture_root/ROADMAP.md" <<'EOF'
 Roadmap evidence references steel-hammer/test-scripts/e2e-complete-suite.sh
+Roadmap gate references scripts/ci/run-observability-infra-gate.sh
+Roadmap proof references scripts/e2e/prove-phase2-observability.sh
+LGTM stack components: Loki, Tempo, Mimir
 EOF
 
   cat >"$fixture_root/scripts/e2e/prove-phase1-4-complete.sh" <<'EOF'

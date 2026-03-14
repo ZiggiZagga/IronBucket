@@ -112,7 +112,7 @@ PostgreSQL (Metadata)
 
 | Document | Purpose |
 |----------|---------|
-| [GETTING_STARTED.md](docs/GETTING_STARTED.md) | Complete setup guide for users |
+| [GETTING_STARTED_GUIDE.md](docs/GETTING_STARTED_GUIDE.md) | Complete setup guide for users |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, service interaction |
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deployment guide |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues & solutions |
@@ -195,7 +195,7 @@ Latest verified proof: `test-results/phase2-observability/20260313T222356Z/PHASE
 Latest verified performance proof: `test-results/phase2-performance/20260313T222700Z/PHASE2_PERFORMANCE_REPORT.md`
 
 Latest complete system validation:
-- `test-results/reports/COMPLETE-TEST-REPORT-2026-03-13 22:22:00.md` (187/187 passing)
+- `test-results/reports/LATEST-REPORT.md`
 
 Verified completed:
 - ✅ Logs (Loki): service streams queryable (`service_name` fallback active)

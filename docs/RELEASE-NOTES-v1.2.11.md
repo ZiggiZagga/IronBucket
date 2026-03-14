@@ -22,7 +22,7 @@ Date: 2026-03-13
 - Observability proof: `test-results/phase2-observability/20260313T215355Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
 - Observability proof (latest): `test-results/phase2-observability/20260313T222356Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
 - Performance proof (latest): `test-results/phase2-performance/20260313T222700Z/PHASE2_PERFORMANCE_REPORT.md`
-- Full orchestrator report: `test-results/reports/COMPLETE-TEST-REPORT-2026-03-13 22:22:00.md`
+- Full orchestrator report: `test-results/reports/LATEST-REPORT.md`
 - Gate execution: `bash scripts/ci/run-observability-infra-gate.sh`
 
 ## Baseline Summary (Latest)

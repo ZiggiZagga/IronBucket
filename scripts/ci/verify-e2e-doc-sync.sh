@@ -15,6 +15,7 @@ FIRST_USER_GATE_SCRIPT="${FIRST_USER_GATE_SCRIPT:-scripts/ci/run-first-user-expe
 OBS_INFRA_GATE_SCRIPT="${OBS_INFRA_GATE_SCRIPT:-scripts/ci/run-observability-infra-gate.sh}"
 STEEL_HAMMER_E2E_SCRIPT="${STEEL_HAMMER_E2E_SCRIPT:-steel-hammer/test-scripts/e2e-complete-suite.sh}"
 LEGACY_E2E_GATE_SCRIPT="${LEGACY_E2E_GATE_SCRIPT:-scripts/ci/run-all-projects-e2e-gate.sh}"
+LEGACY_NON_LGTM_EVIDENCE_SCRIPT="${LEGACY_NON_LGTM_EVIDENCE_SCRIPT:-scripts/run-all-tests-complete.sh}"
 
 PHASE14_ARTIFACT="${PHASE14_ARTIFACT:-test-results/phase1-4-proof/}"
 PHASE2_ARTIFACT="${PHASE2_ARTIFACT:-test-results/phase2-observability/}"
@@ -77,5 +78,11 @@ assert_contains "$E2E_DOC_FILE" "$STEEL_HAMMER_E2E_SCRIPT"
 
 # Roadmap must continue to track steel-hammer complete suite evidence path.
 assert_contains "$ROADMAP_FILE" "$STEEL_HAMMER_E2E_SCRIPT"
+assert_contains "$ROADMAP_FILE" "$OBS_INFRA_GATE_SCRIPT"
+assert_contains "$ROADMAP_FILE" "$PHASE2_PROOF_SCRIPT"
+assert_contains "$ROADMAP_FILE" "Loki"
+assert_contains "$ROADMAP_FILE" "Tempo"
+assert_contains "$ROADMAP_FILE" "Mimir"
+assert_not_contains "$ROADMAP_FILE" "$LEGACY_NON_LGTM_EVIDENCE_SCRIPT"
 
 echo "[e2e-sync] workflow + docs are in sync with active Phase 1-4, Phase 2, and steel-hammer E2E references"

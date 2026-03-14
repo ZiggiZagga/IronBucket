@@ -43,7 +43,7 @@ Result:
 - Full orchestrator run:
   - Command: bash scripts/run-all-tests-complete.sh
   - Result: 190 passed, 0 failed
-  - Report: test-results/reports/COMPLETE-TEST-REPORT-2026-03-13 22:46:42.md
+  - Report: test-results/reports/LATEST-REPORT.md
 
 - S3 roadmap suite:
   - Command: bash scripts/ci/run-maven-in-container.sh services/Sentinel-Gear -B -Dtest=S3FeaturesTest test -Proadmap
