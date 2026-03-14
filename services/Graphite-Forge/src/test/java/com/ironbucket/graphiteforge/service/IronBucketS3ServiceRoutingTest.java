@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IronBucketS3ServiceRoutingTest {
@@ -130,6 +131,34 @@ class IronBucketS3ServiceRoutingTest {
         assertEquals(7, uploaded.size());
         assertEquals(7, uploadedLength.get());
         assertTrue(deleted);
+    }
+
+    @Test
+    void routingDecisionRejectsUnsupportedCapability() {
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> service.getBucketRoutingDecision("jwt", "tenant-a", "tenant-a-files", "UNSUPPORTED_CAPABILITY")
+        );
+
+        assertTrue(exception.getMessage().contains("Unsupported capability"));
+    }
+
+    @Test
+    void routingDecisionRejectsTenantBucketMismatch() {
+        IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class,
+            () -> service.getBucketRoutingDecision("jwt", "tenant-b", "tenant-a-files", "OBJECT_READ")
+        );
+
+        assertTrue(exception.getMessage().contains("does not own bucket"));
+    }
+
+    @Test
+    void routingDecisionNormalizesCapabilityAndReason() {
+        var decision = service.getBucketRoutingDecision("jwt", "tenant-a", "tenant-a-files", "object_read");
+
+        assertEquals("OBJECT_READ", decision.requiredCapability());
+        assertTrue(decision.reason().contains("capability-validated"));
     }
 
     private void assertAuth(HttpExchange exchange) {

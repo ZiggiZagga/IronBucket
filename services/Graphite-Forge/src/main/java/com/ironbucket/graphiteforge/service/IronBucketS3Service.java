@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +23,17 @@ public class IronBucketS3Service {
     private static final String ROUTED_PROVIDER = "CLAIMSPINDEL";
     private static final String ROUTED_REASON = "sentinel-gear-gateway;claimspindel-policy-route";
     private static final Pattern CREATED_PATTERN = Pattern.compile("\\(created:\\s*([^\\)]+)\\)");
+    private static final Set<String> SUPPORTED_CAPABILITIES = Set.of(
+        "OBJECT_READ",
+        "OBJECT_WRITE",
+        "OBJECT_DELETE",
+        "MULTIPART_UPLOAD",
+        "VERSIONING",
+        "OBJECT_TAGGING",
+        "OBJECT_ACL",
+        "LIFECYCLE_POLICY",
+        "PRESIGNED_URLS"
+    );
 
     private final WebClient webClient;
     private final String gatewayBaseUrl;
@@ -222,13 +234,47 @@ public class IronBucketS3Service {
         String bucketName,
         String requiredCapability
     ) {
+        authorizationHeader(jwtToken);
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalArgumentException("tenantId is required for provider routing decision");
+        }
+        if (bucketName == null || bucketName.isBlank()) {
+            throw new IllegalArgumentException("bucketName is required for provider routing decision");
+        }
+
+        String normalizedCapability = normalizeRequiredCapability(requiredCapability);
+        validateTenantBucketAlignment(tenantId, bucketName);
+
         return new ProviderRoutingDecision(
             tenantId,
             bucketName,
-            requiredCapability == null ? "OBJECT_READ" : requiredCapability.trim().toUpperCase(Locale.ROOT),
+            normalizedCapability,
             ROUTED_PROVIDER,
-            ROUTED_REASON
+            ROUTED_REASON + ";capability-validated"
         );
+    }
+
+    private String normalizeRequiredCapability(String requiredCapability) {
+        String normalized = requiredCapability == null || requiredCapability.isBlank()
+            ? "OBJECT_READ"
+            : requiredCapability.trim().toUpperCase(Locale.ROOT);
+
+        if (!SUPPORTED_CAPABILITIES.contains(normalized)) {
+            throw new IllegalArgumentException(
+                "Unsupported capability '" + normalized + "'. Supported capabilities: " + String.join(",", SUPPORTED_CAPABILITIES)
+            );
+        }
+        return normalized;
+    }
+
+    private void validateTenantBucketAlignment(String tenantId, String bucketName) {
+        String normalizedTenant = tenantId.trim();
+        String normalizedBucket = bucketName.trim();
+        if (!(normalizedBucket.equals(normalizedTenant) || normalizedBucket.startsWith(normalizedTenant + "-"))) {
+            throw new IllegalArgumentException(
+                "Routing denied: tenant '" + tenantId + "' does not own bucket '" + bucketName + "'"
+            );
+        }
     }
 
     private String tenantForBucket(String bucketName) {
