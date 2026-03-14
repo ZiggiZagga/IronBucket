@@ -19,7 +19,7 @@ NC='\033[0m'
 # ============================================================================
 
 GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
-KEYCLOAK_INTERNAL="http://steel-hammer-keycloak:7081"
+KEYCLOAK_INTERNAL="https://steel-hammer-keycloak:7081"
 MINIO_INTERNAL="http://steel-hammer-brazz-nossel:8082"
 LOKI_INTERNAL="http://steel-hammer-loki:3100"
 TEMPO_INTERNAL="http://steel-hammer-tempo:3200"
@@ -57,7 +57,7 @@ check_internal_service() {
     local URL=$2
     
     echo -n "Checking $SERVICE_NAME... "
-    if curl -sf "$URL" > /dev/null 2>&1; then
+    if curl -ksf "$URL" > /dev/null 2>&1; then
         echo -e "${GREEN}✅${NC}"
         return 0
     else
@@ -82,7 +82,7 @@ echo ""
 
 echo "Checking Sentinel-Gear (API Gateway) on $GATEWAY_URL..."
 for attempt in {1..10}; do
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/actuator/health" 2>/dev/null || echo "000")
+    HTTP_CODE=$(curl -ks -o /dev/null -w "%{http_code}" "$GATEWAY_URL/actuator/health" 2>/dev/null || echo "000")
     if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
         echo -e "${GREEN}✅ Gateway is healthy (HTTP $HTTP_CODE)${NC}"
         break
@@ -130,7 +130,7 @@ fi
 echo "Test 3: Auth Flow Simulation..."
 TRACE_ID=$(echo "trace-$RANDOM" 2>/dev/null || echo "trace-12345")
 AUTH_URL="$KEYCLOAK_INTERNAL/realms/dev/protocol/openid-connect/token"
-AUTH_RESPONSE=$(curl -s -X POST "$AUTH_URL" \
+AUTH_RESPONSE=$(curl -ks -X POST "$AUTH_URL" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=test-client&client_secret=test-secret&grant_type=password&username=alice&password=alice" 2>/dev/null || echo "{}")
 

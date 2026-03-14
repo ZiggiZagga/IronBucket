@@ -2,8 +2,10 @@ package com.ironbucket.sentinelgear.config;
 
 import com.ironbucket.sentinelgear.security.TamperReplayDetector;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -19,7 +21,7 @@ class PresignedSecurityConfigTest {
         properties.setSecret("strong-secret-value");
         properties.setNonceTtl(Duration.ofMinutes(5));
 
-        TamperReplayDetector detector = config.tamperReplayDetector(properties);
+        TamperReplayDetector detector = config.createDetector(properties, null);
 
         assertNotNull(detector);
     }
@@ -31,7 +33,7 @@ class PresignedSecurityConfigTest {
         properties.setSecret(" ");
         properties.setNonceTtl(Duration.ofMinutes(5));
 
-        assertThrows(IllegalStateException.class, () -> config.tamperReplayDetector(properties));
+        assertThrows(IllegalStateException.class, () -> config.createDetector(properties, null));
     }
 
     @Test
@@ -40,6 +42,21 @@ class PresignedSecurityConfigTest {
         properties.setEnabled(false);
         properties.setNonceTtl(Duration.ZERO);
 
-        assertThrows(IllegalStateException.class, () -> config.tamperReplayDetector(properties));
+        assertThrows(IllegalStateException.class, () -> config.createDetector(properties, null));
+    }
+
+    @Test
+    void createsDetectorWhenVaultResolverProvidesSecret() {
+        PresignedSecurityProperties properties = new PresignedSecurityProperties();
+        properties.setEnabled(true);
+        properties.setSecret(" ");
+        properties.setNonceTtl(Duration.ofMinutes(5));
+
+        VaultSecretResolver resolver = Mockito.mock(VaultSecretResolver.class);
+        Mockito.when(resolver.resolveSecret()).thenReturn(Optional.of("vault-secret-value"));
+
+        TamperReplayDetector detector = config.createDetector(properties, resolver);
+
+        assertNotNull(detector);
     }
 }

@@ -394,7 +394,7 @@ export async function POST(req: NextRequest) {
       (minioOperationCount / Math.max(minioTotalOperationTimeMs / 1000, 0.001)).toFixed(2)
     );
 
-    const performance: MinioPerformanceSummary = {
+    const performanceSummary: MinioPerformanceSummary = {
       minioOperationCount,
       minioTotalOperationTimeMs,
       minioOperationsPerSecond,
@@ -421,7 +421,7 @@ export async function POST(req: NextRequest) {
       traceId,
       traceparent,
       checks,
-      performance,
+      performance: performanceSummary,
       allMethodsVerified,
       expectedServices: [
         'steel-hammer-sentinel-gear',

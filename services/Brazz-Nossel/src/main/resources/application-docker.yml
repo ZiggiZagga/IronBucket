@@ -54,7 +54,7 @@ logging:
 # Service configuration
 app:
   s3:
-    endpoint: http://steel-hammer-minio:9000
+    endpoint: https://steel-hammer-minio:9000
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
     region: us-east-1

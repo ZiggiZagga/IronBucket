@@ -30,6 +30,12 @@ ALICE_PASSWORD="${ALICE_PASSWORD:-aliceP@ss}"
 BOB_USERNAME="${BOB_USERNAME:-bob}"
 BOB_PASSWORD="${BOB_PASSWORD:-bobP@ss}"
 
+CURL_TLS_ARGS=()
+if [[ "$KEYCLOAK_URL" == https://* ]]; then
+    # E2E test container does not always have the project CA imported.
+    CURL_TLS_ARGS=(--insecure)
+fi
+
 decode_jwt_claims() {
     local token="$1"
     local payload
@@ -108,7 +114,14 @@ echo ""
 
 # Check Keycloak
 echo "Checking Keycloak (OIDC Provider)..."
-KEYCLOAK_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$KEYCLOAK_URL/realms/dev/.well-known/openid-configuration")
+KEYCLOAK_STATUS="000"
+for i in $(seq 1 120); do
+    KEYCLOAK_STATUS=$(curl "${CURL_TLS_ARGS[@]}" -s -o /dev/null -w "%{http_code}" "$KEYCLOAK_URL/realms/dev/.well-known/openid-configuration")
+    if [ "$KEYCLOAK_STATUS" -eq 200 ]; then
+        break
+    fi
+    sleep 2
+done
 if [ "$KEYCLOAK_STATUS" -eq 200 ]; then
     echo -e "${GREEN}✅ Keycloak is running (HTTP $KEYCLOAK_STATUS)${NC}"
 else
@@ -119,7 +132,7 @@ fi
 
 echo ""
 echo "Checking MinIO (S3-compatible Storage)..."
-MINIO_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$MINIO_URL/minio/health/live")
+MINIO_STATUS=$(curl "${CURL_TLS_ARGS[@]}" -s -o /dev/null -w "%{http_code}" "$MINIO_URL/minio/health/live")
 if [ "$MINIO_STATUS" -eq 200 ]; then
     echo -e "${GREEN}✅ MinIO is running (HTTP $MINIO_STATUS)${NC}"
 else
@@ -149,7 +162,7 @@ echo ""
 
 echo "Step 2.1: Alice authenticates with Keycloak (OIDC)..."
 
-ALICE_RESPONSE=$(curl -s -X POST \
+ALICE_RESPONSE=$(curl "${CURL_TLS_ARGS[@]}" -s -X POST \
   "$KEYCLOAK_URL/realms/dev/protocol/openid-connect/token" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
     -d "client_id=${OIDC_CLIENT_ID}" \
@@ -249,7 +262,7 @@ echo ""
 
 echo "Step 3.1: Bob authenticates with Keycloak (OIDC)..."
 
-BOB_RESPONSE=$(curl -s -X POST \
+BOB_RESPONSE=$(curl "${CURL_TLS_ARGS[@]}" -s -X POST \
   "$KEYCLOAK_URL/realms/dev/protocol/openid-connect/token" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
     -d "client_id=${OIDC_CLIENT_ID}" \

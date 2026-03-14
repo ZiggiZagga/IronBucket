@@ -28,8 +28,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://steel-hammer-keycloak:7081/realms/dev
-          jwk-set-uri: http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs
+          issuer-uri: https://steel-hammer-keycloak:7081/realms/dev
+          jwk-set-uri: https://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs
 
 management:
   endpoints:
@@ -66,7 +66,7 @@ app:
     validation:
       clock-skew-seconds: 60
       issuer-whitelist:
-        - http://steel-hammer-keycloak:7081/realms/dev
+        - https://steel-hammer-keycloak:7081/realms/dev
         - https://keycloak:7081/realms/dev
   tenant:
     isolation-mode: MULTI

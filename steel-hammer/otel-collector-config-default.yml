@@ -26,10 +26,16 @@ receivers:
             - targets: [steel-hammer-buzzle-vane:8083]
         - job_name: steel-hammer-keycloak
           metrics_path: /metrics
+          scheme: https
+          tls_config:
+            insecure_skip_verify: true
           static_configs:
             - targets: [steel-hammer-keycloak:7081]
         - job_name: steel-hammer-minio
           metrics_path: /minio/v2/metrics/cluster
+          scheme: https
+          tls_config:
+            insecure_skip_verify: true
           static_configs:
             - targets: [steel-hammer-minio:9000]
         - job_name: steel-hammer-postgres-exporter

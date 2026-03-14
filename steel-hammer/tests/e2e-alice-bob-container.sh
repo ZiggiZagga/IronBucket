@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration for container-to-container communication
-KEYCLOAK_INTERNAL_URL="http://steel-hammer-keycloak:7081"
+KEYCLOAK_INTERNAL_URL="https://steel-hammer-keycloak:7081"
 MINIO_INTERNAL_URL="http://steel-hammer-brazz-nossel:8082"
 POSTGRES_HOST="steel-hammer-postgres"
 
@@ -45,7 +45,7 @@ echo ""
 # Check Keycloak
 echo "Checking Keycloak (OIDC Provider) via internal network..."
 for attempt in {1..10}; do
-    KEYCLOAK_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$KEYCLOAK_INTERNAL_URL/realms/dev/.well-known/openid-configuration")
+    KEYCLOAK_STATUS=$(curl -ks -o /dev/null -w "%{http_code}" "$KEYCLOAK_INTERNAL_URL/realms/dev/.well-known/openid-configuration")
     if [ "$KEYCLOAK_STATUS" -eq 200 ]; then
         echo -e "${GREEN}✅ Keycloak is running (HTTP $KEYCLOAK_STATUS)${NC}"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -84,7 +84,7 @@ echo ""
 
 echo "Step 2.1: Alice authenticates with Keycloak (OIDC)..."
 
-ALICE_RESPONSE=$(curl -s -X POST \
+ALICE_RESPONSE=$(curl -ks -X POST \
   "$KEYCLOAK_INTERNAL_URL/realms/dev/protocol/openid-connect/token" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'client_id=dev-client' \
@@ -165,7 +165,7 @@ echo ""
 
 echo "Step 3.1: Bob authenticates with Keycloak (OIDC)..."
 
-BOB_RESPONSE=$(curl -s -X POST \
+BOB_RESPONSE=$(curl -ks -X POST \
   "$KEYCLOAK_INTERNAL_URL/realms/dev/protocol/openid-connect/token" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'client_id=dev-client' \

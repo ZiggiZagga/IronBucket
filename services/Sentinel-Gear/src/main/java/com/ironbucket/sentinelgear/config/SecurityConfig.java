@@ -3,6 +3,8 @@ package com.ironbucket.sentinelgear.config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -15,9 +17,13 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+    private static final String KEYCLOAK_DEFAULT = "https://steel-hammer-keycloak:7081";
+
     @Bean
     @ConditionalOnMissingBean
-    public ReactiveClientRegistrationRepository clientRegistrationRepository() {
+    public ReactiveClientRegistrationRepository clientRegistrationRepository(Environment environment) {
+        String keycloakUrl = environment.getProperty("KEYCLOAK_URL", KEYCLOAK_DEFAULT);
+        String realmBase = keycloakUrl + "/realms/dev";
         // Create a client registration manually without trying to connect to Keycloak during bootstrap
         ClientRegistration keycloakClient = ClientRegistration.withRegistrationId("keycloak")
             .clientId("dev-client")
@@ -26,11 +32,11 @@ public class SecurityConfig {
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
             .scope("openid", "profile")
-            .authorizationUri("http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/auth")
-            .tokenUri("http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/token")
-            .userInfoUri("http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/userinfo")
-            .jwkSetUri("http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs")
-            .issuerUri("http://steel-hammer-keycloak:7081/realms/dev")
+            .authorizationUri(realmBase + "/protocol/openid-connect/auth")
+            .tokenUri(realmBase + "/protocol/openid-connect/token")
+            .userInfoUri(realmBase + "/protocol/openid-connect/userinfo")
+            .jwkSetUri(realmBase + "/protocol/openid-connect/certs")
+            .issuerUri(realmBase)
             .build();
         
         return new InMemoryReactiveClientRegistrationRepository(keycloakClient);
@@ -44,7 +50,7 @@ public class SecurityConfig {
                 .pathMatchers("/graphql", "/graphql/**").permitAll()
                 .anyExchange().authenticated())
             .csrf(csrf -> csrf.disable())
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwkSetUri("http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs")));
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         
         return http.build();
     }

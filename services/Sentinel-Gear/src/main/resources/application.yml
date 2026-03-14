@@ -78,6 +78,8 @@ eureka:
     health-check-url-path: ${management.endpoints.web.base-path}/health
 
 spring:
+  config:
+    import: optional:vault://
   application:
     name: sentinel-gear
   threads:
@@ -87,6 +89,14 @@ spring:
     timeout-per-shutdown-phase: 30s
 
   cloud:
+    vault:
+      enabled: ${SPRING_CLOUD_VAULT_ENABLED:false}
+      uri: ${SPRING_CLOUD_VAULT_URI:https://127.0.0.1:8200}
+      token: ${SPRING_CLOUD_VAULT_TOKEN:}
+      kv:
+        enabled: true
+        backend: ${SPRING_CLOUD_VAULT_KV_BACKEND:secret}
+        default-context: ${SPRING_CLOUD_VAULT_KV_CONTEXT:ironbucket/sentinel-gear}
     gateway:
       server:
         webflux:
@@ -113,7 +123,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OAUTH2_ISSUER_URI:http://steel-hammer-keycloak:7081/realms/dev}
+          issuer-uri: ${OAUTH2_ISSUER_URI:https://steel-hammer-keycloak:7081/realms/dev}
   docker:
     compose:
       enabled: false
@@ -124,3 +134,10 @@ ironbucket:
       enabled: ${IRONBUCKET_SECURITY_PRESIGNED_ENABLED:true}
       secret: ${IRONBUCKET_SECURITY_PRESIGNED_SECRET:}
       nonce-ttl: ${IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL:PT5M}
+    vault:
+      enabled: ${IRONBUCKET_SECURITY_VAULT_ENABLED:false}
+      uri: ${IRONBUCKET_SECURITY_VAULT_URI:${SPRING_CLOUD_VAULT_URI:https://127.0.0.1:8200}}
+      token: ${IRONBUCKET_SECURITY_VAULT_TOKEN:${SPRING_CLOUD_VAULT_TOKEN:}}
+      kv-path: ${IRONBUCKET_SECURITY_VAULT_KV_PATH:secret/data/ironbucket/sentinel-gear}
+      secret-key: ${IRONBUCKET_SECURITY_VAULT_SECRET_KEY:presignedSecret}
+      timeout: ${IRONBUCKET_SECURITY_VAULT_TIMEOUT:PT2S}

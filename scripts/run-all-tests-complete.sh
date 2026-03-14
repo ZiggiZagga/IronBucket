@@ -157,7 +157,7 @@ run_test_suite "Infrastructure_Tests" \
                     name=\"\$1\"; url=\"\$2\"; attempts=\"\${3:-60}\"; delay=\"\${4:-2}\";
                     i=1
                     while [ \$i -le \$attempts ]; do
-                        if curl -fsS \"\$url\" >/dev/null 2>&1; then
+                        if curl -kfsS \"\$url\" >/dev/null 2>&1; then
                             echo \"OK: \$name\"
                             return 0
                         fi
@@ -167,7 +167,7 @@ run_test_suite "Infrastructure_Tests" \
                     echo \"FAIL: \$name\"
                     return 1
                 }
-                check_with_retry keycloak http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration 90 2 &&
+                check_with_retry keycloak https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration 180 2 &&
                 check_with_retry gateway http://steel-hammer-sentinel-gear:8080/actuator/health 60 2 &&
                 check_with_retry claimspindel http://steel-hammer-claimspindel:8081/actuator/health 60 2 &&
                 check_with_retry brazz http://steel-hammer-brazz-nossel:8082/actuator/health 60 2 &&
@@ -188,8 +188,8 @@ run_test_suite "E2E_Alice_Bob_Scenario" \
     "docker run --rm --network $STACK_NETWORK \
         -v $PROJECT_ROOT:/workspace \
         -w /workspace/scripts/e2e \
-        -e KEYCLOAK_URL=http://steel-hammer-keycloak:7081 \
-        -e MINIO_URL=http://steel-hammer-minio:9000 \
+        -e KEYCLOAK_URL=https://steel-hammer-keycloak:7081 \
+        -e MINIO_URL=https://steel-hammer-minio:9000 \
         -e POSTGRES_HOST=steel-hammer-postgres \
         -e SENTINEL_GEAR_URL=http://steel-hammer-sentinel-gear:8080 \
         -e BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082 \

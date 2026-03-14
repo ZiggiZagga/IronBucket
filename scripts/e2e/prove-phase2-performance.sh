@@ -36,7 +36,7 @@ wait_internal_http() {
   local delay_seconds="${4:-2}"
 
   for ((attempt=1; attempt<=max_attempts; attempt++)); do
-    if docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -f "$url" > /dev/null 2>&1; then
+    if docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -f "$url" > /dev/null 2>&1; then
       log "READY: $name"
       return 0
     fi
@@ -61,7 +61,7 @@ run_load_samples() {
       -e REQUESTS="$requests" \
       -e CONCURRENCY="$concurrency" \
       curlimages/curl:8.12.1 sh -lc '
-        seq "$REQUESTS" | xargs -I{} -P "$CONCURRENCY" sh -c "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" \"$TARGET\" || true"
+        seq "$REQUESTS" | xargs -I{} -P "$CONCURRENCY" sh -c "curl -ks -o /dev/null -w \"%{http_code} %{time_total}\\n\" \"$TARGET\" || true"
       ' > "$out_file"
   else
     docker run --rm --network "$NETWORK_NAME" \
@@ -69,7 +69,7 @@ run_load_samples() {
       -e REQUESTS="$requests" \
       -e CONCURRENCY="$concurrency" \
       curlimages/curl:8.12.1 sh -lc '
-        seq "$REQUESTS" | xargs -I{} -P "$CONCURRENCY" sh -c "curl -s -o /dev/null -w \"%{http_code} %{time_total}\\n\" \"$TARGET\" || true"
+        seq "$REQUESTS" | xargs -I{} -P "$CONCURRENCY" sh -c "curl -ks -o /dev/null -w \"%{http_code} %{time_total}\\n\" \"$TARGET\" || true"
       ' > "$out_file"
   fi
 }
@@ -240,10 +240,10 @@ for service in graphite-forge buzzle-vane claimspindel brazz-nossel minio keyclo
       target="http://steel-hammer-brazz-nossel:8082/actuator/health"
       ;;
     minio)
-      target="http://steel-hammer-minio:9000/minio/health/live"
+      target="https://steel-hammer-minio:9000/minio/health/live"
       ;;
     keycloak)
-      target="http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration"
+      target="https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration"
       ;;
     sentinel-gear-mgmt)
       mode="container"

@@ -43,8 +43,8 @@ echo ""
 # Configuration
 KEYCLOAK_MAX_WAIT=${KEYCLOAK_MAX_WAIT:-180}  # Allow full Keycloak startup time
 SERVICE_CHECK_TIMEOUT=${SERVICE_CHECK_TIMEOUT:-120}
-KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:7081}"
-MINIO_URL="${MINIO_URL:-http://localhost:9000}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-https://localhost:7081}"
+MINIO_URL="${MINIO_URL:-https://localhost:9000}"
 SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-http://localhost:8080}"
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -66,7 +66,7 @@ check_service() {
     
     echo "Checking $SERVICE_NAME..."
     for attempt in $(seq 1 $MAX_ATTEMPTS); do
-        HTTP_CODE=$(curl --silent --fail --max-time 8 --retry 3 --retry-delay 2 -o /dev/null -w "%{http_code}" "$URL" 2>/dev/null || echo "000")
+        HTTP_CODE=$(curl --insecure --silent --fail --max-time 8 --retry 3 --retry-delay 2 -o /dev/null -w "%{http_code}" "$URL" 2>/dev/null || echo "000")
         
         # Accept 200, 401, 503 as indicators service is running (even if not fully ready)
         if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "503" ]; then

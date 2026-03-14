@@ -38,8 +38,8 @@ LOG_FILE="$LOG_DIR/test-execution-$(date +%Y%m%d-%H%M%S).log"
 mkdir -p "$TEMP_DIR" "$LOG_DIR"
 
 # Service configuration (container-aware via .env.defaults)
-KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:7081}"
-MINIO_URL="${MINIO_URL:-http://localhost:9000}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-https://localhost:7081}"
+MINIO_URL="${MINIO_URL:-https://localhost:9000}"
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 WAIT_TIMEOUT=${WAIT_TIMEOUT:-120}
 
@@ -94,7 +94,7 @@ wait_for_service() {
     local elapsed=0
 
     while [ $elapsed -lt $timeout ]; do
-        if curl --fail --silent --max-time 5 --retry 3 --retry-delay 2 "$url" > /dev/null 2>&1; then
+        if curl --insecure --fail --silent --max-time 5 --retry 3 --retry-delay 2 "$url" > /dev/null 2>&1; then
             print_success "$name is ready"
             return 0
         fi

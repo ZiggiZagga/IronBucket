@@ -21,8 +21,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://steel-hammer-keycloak:7081/realms/dev
-          jwk-set-uri: http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs
+          issuer-uri: https://steel-hammer-keycloak:7081/realms/dev
+          jwk-set-uri: https://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/certs
 
 management:
   endpoints:

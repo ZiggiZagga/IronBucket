@@ -34,7 +34,7 @@ mkdir -p "$REPORT_DIR" "$LOG_DIR" "$TRACE_DIR" "$METRIC_DIR" "$DATA_DIR"
 
 # Internal URLs
 GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
-KEYCLOAK_URL="http://steel-hammer-keycloak:7081"
+KEYCLOAK_URL="https://steel-hammer-keycloak:7081"
 EUREKA_URL="http://steel-hammer-buzzle-vane:8083"
 MINIO_URL="http://steel-hammer-brazz-nossel:8082"
 LOKI_URL="http://steel-hammer-loki:3100"
@@ -122,7 +122,7 @@ run_test "1.1" "Gateway Accessibility" \
     "Infrastructure"
 
 run_test "1.2" "Keycloak Accessibility" \
-    "curl -sf $KEYCLOAK_URL/realms/dev/.well-known/openid-configuration" \
+    "curl -ksf $KEYCLOAK_URL/realms/dev/.well-known/openid-configuration" \
     "Infrastructure"
 
 run_test "1.3" "Service Registry Accessibility" \

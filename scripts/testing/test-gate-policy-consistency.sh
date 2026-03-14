@@ -2,13 +2,15 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export ROOT_DIR
 
 python3 - <<'PY'
 import re
 import sys
+import os
 from pathlib import Path
 
-root = Path("/workspaces/IronBucket")
+root = Path(os.environ["ROOT_DIR"])
 
 files = {
     "release_workflow": root / ".github/workflows/release.yml",

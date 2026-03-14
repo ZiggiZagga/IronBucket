@@ -32,7 +32,7 @@ echo -e "${BLUE}=== IronBucket mTLS Certificate Generation ===${NC}\n"
 # Create directories
 mkdir -p "${CA_DIR}"
 mkdir -p "${SERVICES_DIR}"/{sentinel-gear,claimspindel,brazz-nossel,buzzle-vane}
-mkdir -p "${SERVICES_DIR}/infrastructure"/{postgres,minio,keycloak}
+mkdir -p "${SERVICES_DIR}/infrastructure"/{postgres,minio,keycloak,vault}
 
 ###############################################################################
 # Step 1: Generate Root CA
@@ -68,6 +68,7 @@ echo -e "${BLUE}Step 2: Generating service certificates...${NC}\n"
 generate_service_cert() {
   local service_name=$1
   local service_cn=$2
+  local service_dns=${3:-$(basename "${service_name}")}
   local service_dir="${SERVICES_DIR}/${service_name}"
   
   echo -e "${BLUE}Generating certificate for ${service_name}...${NC}"
@@ -83,7 +84,7 @@ generate_service_cert() {
   
   # Create certificate extension file for SAN (Subject Alternative Names)
   cat > "${service_dir}/cert-ext.cnf" <<EOF
-subjectAltName = DNS:${service_name},DNS:localhost,DNS:${service_cn},IP:127.0.0.1
+subjectAltName = DNS:${service_dns},DNS:localhost,DNS:${service_cn},IP:127.0.0.1
 extendedKeyUsage = serverAuth,clientAuth
 EOF
   
@@ -133,9 +134,10 @@ generate_service_cert "brazz-nossel" "brazz-nossel.ironbucket.local"
 generate_service_cert "buzzle-vane" "buzzle-vane.ironbucket.local"
 
 # Infrastructure services
-generate_service_cert "infrastructure/postgres" "postgres.ironbucket.local"
-generate_service_cert "infrastructure/minio" "minio.ironbucket.local"
-generate_service_cert "infrastructure/keycloak" "keycloak.ironbucket.local"
+generate_service_cert "infrastructure/postgres" "postgres.ironbucket.local" "postgres"
+generate_service_cert "infrastructure/minio" "minio.ironbucket.local" "minio"
+generate_service_cert "infrastructure/keycloak" "keycloak.ironbucket.local" "steel-hammer-keycloak"
+generate_service_cert "infrastructure/vault" "vault.ironbucket.local" "steel-hammer-vault"
 
 ###############################################################################
 # Step 3: Generate client certificate for testing
@@ -185,7 +187,7 @@ for service_dir in "${SERVICES_DIR}"/*; do
 done
 
 # Infrastructure services
-for infra_service in postgres minio keycloak; do
+for infra_service in postgres minio keycloak vault; do
   cat "${SERVICES_DIR}/infrastructure/${infra_service}/tls.crt" "${CA_DIR}/ca.crt" > "${SERVICES_DIR}/infrastructure/${infra_service}/fullchain.crt"
   echo -e "${GREEN}✓${NC} infrastructure/${infra_service}/fullchain.crt created"
 done
@@ -213,13 +215,39 @@ done
 echo ""
 
 ###############################################################################
-# Step 6: Set proper permissions
+# Step 6: Create shared CA truststore
 ###############################################################################
-echo -e "${BLUE}Step 6: Setting file permissions...${NC}"
+echo -e "${BLUE}Step 6: Creating shared CA truststore...${NC}"
+
+keytool -import -trustcacerts -noprompt \
+  -alias ironbucket-ca \
+  -file "${CA_DIR}/ca.crt" \
+  -keystore "${CA_DIR}/ca-truststore.p12" \
+  -storepass changeit \
+  -storetype PKCS12 2>/dev/null || true
+
+echo -e "${GREEN}✓${NC} Shared truststore created at ${CA_DIR}/ca-truststore.p12"
+
+echo ""
+
+###############################################################################
+# Step 7: Set proper permissions
+###############################################################################
+echo -e "${BLUE}Step 7: Setting file permissions...${NC}"
 
 # Private keys should be readable only by owner
 find "${CERTS_DIR}" -name "*.key" -exec chmod 600 {} \;
 find "${CERTS_DIR}" -name "*.p12" -exec chmod 600 {} \;
+
+# Infrastructure services run as non-root users in containers and must read mounted TLS keys.
+for key_file in \
+  "${SERVICES_DIR}/infrastructure/minio/tls.key" \
+  "${SERVICES_DIR}/infrastructure/keycloak/tls.key" \
+  "${SERVICES_DIR}/infrastructure/vault/tls.key"; do
+  if [ -f "${key_file}" ]; then
+    chmod 644 "${key_file}"
+  fi
+done
 
 # Certificates can be world-readable
 find "${CERTS_DIR}" -name "*.crt" -exec chmod 644 {} \;

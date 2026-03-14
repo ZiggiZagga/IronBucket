@@ -22,7 +22,7 @@ log() {
 run_internal_curl() {
   local url="$1"
   local output_file="$2"
-  docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS "$url" > "$output_file"
+  docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS "$url" > "$output_file"
 }
 
 json_distinct_service_names() {
@@ -49,7 +49,7 @@ run_container_local_curl() {
   local container_name="$1"
   local url="$2"
   local output_file="$3"
-  docker run --rm --network "container:$container_name" curlimages/curl:8.12.1 -sS "$url" > "$output_file"
+  docker run --rm --network "container:$container_name" curlimages/curl:8.12.1 -ksS "$url" > "$output_file"
 }
 
 has_required_otel_env() {
@@ -77,7 +77,7 @@ wait_internal_http() {
   local delay_seconds="${4:-3}"
 
   for ((attempt=1; attempt<=max_attempts; attempt++)); do
-    if docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -f "$url" > /dev/null 2>&1; then
+    if docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -f "$url" > /dev/null 2>&1; then
       log "READY: $name"
       return 0
     fi
@@ -96,7 +96,7 @@ wait_container_local_http() {
   local delay_seconds="${5:-3}"
 
   for ((attempt=1; attempt<=max_attempts; attempt++)); do
-    if docker run --rm --network "container:$container_name" curlimages/curl:8.12.1 -sS -f "$url" > /dev/null 2>&1; then
+    if docker run --rm --network "container:$container_name" curlimages/curl:8.12.1 -ksS -f "$url" > /dev/null 2>&1; then
       log "READY: $name"
       return 0
     fi
@@ -168,10 +168,10 @@ STACK_OK=true
 wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
 wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
 wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
-wait_internal_http "Keycloak" "http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" 90 3 || STACK_OK=false
+wait_internal_http "Keycloak" "https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" 90 3 || STACK_OK=false
 INFRA_ENDPOINTS_READY=true
-wait_internal_http "Keycloak metrics" "http://steel-hammer-keycloak:7081/metrics" 90 3 || INFRA_ENDPOINTS_READY=false
-wait_internal_http "MinIO metrics" "http://steel-hammer-minio:9000/minio/v2/metrics/cluster" || INFRA_ENDPOINTS_READY=false
+wait_internal_http "Keycloak metrics" "https://steel-hammer-keycloak:7081/metrics" 90 3 || INFRA_ENDPOINTS_READY=false
+wait_internal_http "MinIO metrics" "https://steel-hammer-minio:9000/minio/v2/metrics/cluster" || INFRA_ENDPOINTS_READY=false
 wait_internal_http "Postgres exporter metrics" "http://steel-hammer-postgres-exporter:9187/metrics" || INFRA_ENDPOINTS_READY=false
 wait_internal_http "Buzzle-Vane" "http://steel-hammer-buzzle-vane:8083/actuator/health" || STACK_OK=false
 wait_internal_http "Claimspindel" "http://steel-hammer-claimspindel:8081/actuator/health" || STACK_OK=false
@@ -183,8 +183,8 @@ run_internal_curl "http://steel-hammer-buzzle-vane:8083/actuator/prometheus" "$E
 run_internal_curl "http://steel-hammer-claimspindel:8081/actuator/prometheus" "$EVIDENCE_DIR/claimspindel-prometheus.txt" || true
 run_internal_curl "http://steel-hammer-brazz-nossel:8082/actuator/prometheus" "$EVIDENCE_DIR/brazz-prometheus.txt" || true
 run_container_local_curl "steel-hammer-sentinel-gear" "http://localhost:8081/actuator/prometheus" "$EVIDENCE_DIR/sentinel-prometheus.txt" || true
-run_internal_curl "http://steel-hammer-keycloak:7081/metrics" "$EVIDENCE_DIR/keycloak-metrics.txt" || true
-run_internal_curl "http://steel-hammer-minio:9000/minio/v2/metrics/cluster" "$EVIDENCE_DIR/minio-metrics.txt" || true
+run_internal_curl "https://steel-hammer-keycloak:7081/metrics" "$EVIDENCE_DIR/keycloak-metrics.txt" || true
+run_internal_curl "https://steel-hammer-minio:9000/minio/v2/metrics/cluster" "$EVIDENCE_DIR/minio-metrics.txt" || true
 run_internal_curl "http://steel-hammer-postgres-exporter:9187/metrics" "$EVIDENCE_DIR/postgres-exporter-metrics.txt" || true
 
 log "Generating synthetic OTLP trace"

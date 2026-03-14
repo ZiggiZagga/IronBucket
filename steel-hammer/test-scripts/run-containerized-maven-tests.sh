@@ -141,7 +141,7 @@ fi
 
 # Check Keycloak
 echo -n "Checking Keycloak... "
-if curl --silent --fail --max-time 8 --retry 3 --retry-delay 2 "http://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" > /dev/null 2>&1; then
+if curl --silent --fail --insecure --max-time 8 --retry 3 --retry-delay 2 "https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Keycloak is responding${NC}"
 else
     echo -e "${YELLOW}⚠️  Keycloak not available yet (still starting)${NC}"

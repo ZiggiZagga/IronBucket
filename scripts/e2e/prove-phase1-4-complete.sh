@@ -7,7 +7,7 @@ OUT_DIR="$ROOT_DIR/test-results/phase1-4-proof/$TIMESTAMP"
 EVIDENCE_DIR="$OUT_DIR/evidence"
 REPORT_FILE="$OUT_DIR/PHASE1_2_3_4_PROOF_REPORT.md"
 
-PHASE4_MINIO_CONTAINER="jclouds-minio-phase4-proof"
+PHASE4_MINIO_CONTAINER="minio"
 PHASE4_MINIO_PORT="${PHASE4_MINIO_PORT:-19000}"
 PHASE4_DOCKER_NETWORK="${PHASE4_DOCKER_NETWORK:-phase4-proof-net}"
 KEEP_STACK="${KEEP_STACK:-true}"
@@ -62,7 +62,7 @@ wait_minio_ready() {
   local max_attempts="${1:-40}"
 
   for ((attempt=1; attempt<=max_attempts; attempt++)); do
-    if curl -fsS "http://127.0.0.1:${PHASE4_MINIO_PORT}/minio/health/live" >/dev/null 2>&1; then
+    if curl -kfsS "https://127.0.0.1:${PHASE4_MINIO_PORT}/minio/health/live" >/dev/null 2>&1; then
       return 0
     fi
     sleep 2
@@ -97,9 +97,10 @@ docker run -d \
   --name "$PHASE4_MINIO_CONTAINER" \
   --network "$PHASE4_DOCKER_NETWORK" \
   -p "${PHASE4_MINIO_PORT}:9000" \
+  -v "$ROOT_DIR/certs:/certs:ro" \
   -e MINIO_ROOT_USER=minioadmin \
   -e MINIO_ROOT_PASSWORD=minioadmin \
-  minio/minio:latest server /data \
+  minio/minio:latest /bin/sh -c "mkdir -p /root/.minio/certs && if [ -f /certs/services/infrastructure/minio/tls.crt ] && [ -f /certs/services/infrastructure/minio/tls.key ]; then cp /certs/services/infrastructure/minio/tls.crt /root/.minio/certs/public.crt && cp /certs/services/infrastructure/minio/tls.key /root/.minio/certs/private.key; else openssl req -x509 -nodes -newkey rsa:2048 -keyout /root/.minio/certs/private.key -out /root/.minio/certs/public.crt -days 365 -subj '/CN=minio'; fi && exec minio server /data" \
   > "$EVIDENCE_DIR/phase4-minio-container-id.txt"
 
 if wait_minio_ready 40; then
@@ -113,7 +114,7 @@ fi
 if [[ "$PHASE4_MINIO_READY" == "true" ]]; then
   set +e
   (
-    export IRONBUCKET_MINIO_ENDPOINT="http://${PHASE4_MINIO_CONTAINER}:9000"
+    export IRONBUCKET_MINIO_ENDPOINT="https://${PHASE4_MINIO_CONTAINER}:9000"
     export IRONBUCKET_MINIO_ACCESS_KEY=minioadmin
     export IRONBUCKET_MINIO_SECRET_KEY=minioadmin
     export IRONBUCKET_MINIO_REGION=us-east-1

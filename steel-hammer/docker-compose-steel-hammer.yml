@@ -1,5 +1,38 @@
 services:
 
+  steel-hammer-vault:
+    networks:
+      - steel-hammer-network
+
+    image: hashicorp/vault:1.17
+    container_name: steel-hammer-vault
+    hostname: steel-hammer-vault
+
+    cap_add:
+      - IPC_LOCK
+
+    command: /bin/sh /vault/local/start-with-shared-ca.sh
+
+    ports:
+      - "8200:8200"
+
+    volumes:
+      - vault-storage:/vault/file
+      - ../certs:/certs:ro
+      - ./vault:/vault/local:ro
+
+    environment:
+      - "VAULT_ADDR=https://127.0.0.1:8200"
+      - "VAULT_CACERT=/certs/ca/ca.crt"
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-check-certificate", "-qO-", "https://127.0.0.1:8200/v1/sys/health?standbyok=true"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+    restart: always
+
   steel-hammer-postgres:
 
     networks:
@@ -39,12 +72,11 @@ services:
       context: . 
       dockerfile: ./keycloak/DockerfileKeycloak
     
-    #TODO security first
-    #entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start","--hostname", "steel-hammer-keycloak",  "--https-port=7082" ]
-    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start-dev", "--import-realm",  "--http-port=7081" ]
+    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start", "--import-realm", "--http-enabled=false", "--https-port=7081", "--https-certificate-file=/certs/services/infrastructure/keycloak/tls.crt", "--https-certificate-key-file=/certs/services/infrastructure/keycloak/tls.key", "--hostname=https://steel-hammer-keycloak:7081", "--hostname-strict=false" ]
     
     volumes:      
        - ./keycloak/dev-realm.json:/opt/keycloak/keycloak/data/import/dev-realm.json
+       - ../certs:/certs:ro
       
     environment:
       #- "KC_HTTPS_KEY_STORE_FILE=/opt/keycloak/certs/keycloak.jks"
@@ -60,7 +92,7 @@ services:
       - steel-hammer-postgres
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7081/realms/dev/.well-known/openid-configuration"]
+      test: ["CMD", "curl", "-kf", "https://localhost:7081/realms/dev/.well-known/openid-configuration"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -79,6 +111,12 @@ services:
     depends_on:
       - steel-hammer-keycloak
       - steel-hammer-postgres
+      - steel-hammer-vault
+
+    user: "0:0"
+
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["cp /certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar app.jar --spring.profiles.active=docker${MTLS_PROFILE:-}"]
 
     volumes:
       - ../certs:/certs:ro
@@ -86,8 +124,14 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker${MTLS_PROFILE:-}"
       - "CERT_BASE_PATH=file:/certs"
+      - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "SPRING_APPLICATION_NAME=buzzle-vane"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
+      - "SPRING_CLOUD_VAULT_ENABLED=${SPRING_CLOUD_VAULT_ENABLED:-true}"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/buzzle-vane}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
       - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
@@ -123,6 +167,12 @@ services:
       - steel-hammer-postgres
       - steel-hammer-buzzle-vane
       - steel-hammer-graphite-forge
+      - steel-hammer-vault
+
+    user: "0:0"
+
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["cp /certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar app.jar --spring.profiles.active=docker${MTLS_PROFILE:-}"]
 
     volumes:
       # Mount certificates for mTLS (if --with-mtls flag is used)
@@ -131,10 +181,21 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker${MTLS_PROFILE:-}"
       - "CERT_BASE_PATH=file:/certs"
+      - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=sentinel-gear"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
+      - "SPRING_CLOUD_VAULT_ENABLED=${SPRING_CLOUD_VAULT_ENABLED:-true}"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/sentinel-gear}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
+      - "IRONBUCKET_SECURITY_VAULT_ENABLED=${IRONBUCKET_SECURITY_VAULT_ENABLED:-true}"
+      - "IRONBUCKET_SECURITY_VAULT_URI=https://steel-hammer-vault:8200"
+      - "IRONBUCKET_SECURITY_VAULT_TOKEN=${IRONBUCKET_SECURITY_VAULT_TOKEN:-dev-root-token}"
+      - "IRONBUCKET_SECURITY_VAULT_KV_PATH=${IRONBUCKET_SECURITY_VAULT_KV_PATH:-secret/data/ironbucket/sentinel-gear}"
+      - "IRONBUCKET_SECURITY_VAULT_SECRET_KEY=${IRONBUCKET_SECURITY_VAULT_SECRET_KEY:-presignedSecret}"
       - "IRONBUCKET_SECURITY_PRESIGNED_ENABLED=${IRONBUCKET_SECURITY_PRESIGNED_ENABLED:-true}"
       - "IRONBUCKET_SECURITY_PRESIGNED_SECRET=${IRONBUCKET_SECURITY_PRESIGNED_SECRET:-dev-presigned-secret-for-steel-hammer}"
       - "IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL=${IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL:-PT5M}"
@@ -170,15 +231,27 @@ services:
       - steel-hammer-postgres
       - steel-hammer-buzzle-vane
       - steel-hammer-sentinel-gear
+      - steel-hammer-vault
+
+    user: "0:0"
+
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["cp /certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar app.jar --spring.profiles.active=docker"]
 
     volumes:
       - ../certs:/certs:ro
 
     environment:
       - "CERT_BASE_PATH=file:/certs"
+      - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=claimspindel"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
+      - "SPRING_CLOUD_VAULT_ENABLED=${SPRING_CLOUD_VAULT_ENABLED:-true}"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/claimspindel}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
@@ -213,6 +286,12 @@ services:
       - steel-hammer-postgres
       - steel-hammer-claimspindel
       - steel-hammer-minio
+      - steel-hammer-vault
+
+    user: "0:0"
+
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["cp /certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar app.jar --spring.profiles.active=docker${MTLS_PROFILE:-}"]
 
     volumes:
       - ../certs:/certs:ro
@@ -220,11 +299,17 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker${MTLS_PROFILE:-}"
       - "CERT_BASE_PATH=file:/certs"
+      - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-vault-managed-root-user}"
       - "MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-vault-managed-root-password}"
       - "SPRING_APPLICATION_NAME=brazz-nossel"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
+      - "SPRING_CLOUD_VAULT_ENABLED=${SPRING_CLOUD_VAULT_ENABLED:-true}"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/brazz-nossel}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
@@ -251,14 +336,33 @@ services:
       context: ../services/Graphite-Forge
       dockerfile: Dockerfile
 
+    user: "0:0"
+
+    entrypoint: ["/bin/bash", "-lc"]
+    command: ["cp /certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar /app/graphite-forge.jar"]
+
+    volumes:
+      - ../certs:/certs:ro
+
     environment:
       - "SPRING_APPLICATION_NAME=graphite-forge"
       - "SPRING_PROFILES_ACTIVE=docker"
+      - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
+      - "SPRING_CLOUD_VAULT_ENABLED=${SPRING_CLOUD_VAULT_ENABLED:-true}"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/graphite-forge}"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
       - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+
+    depends_on:
+      - steel-hammer-vault
+      - steel-hammer-buzzle-vane
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
@@ -281,15 +385,18 @@ services:
       context: ./minio
       dockerfile: DockerfileMinio
 
-    command: /opt/minio/minio server /opt/minio/data --console-address=":9001"
+    command: /bin/sh -c "mkdir -p /opt/minio/.minio/certs && cp /certs/services/infrastructure/minio/tls.crt /opt/minio/.minio/certs/public.crt && cp /certs/services/infrastructure/minio/tls.key /opt/minio/.minio/certs/private.key && exec /opt/minio/minio server /opt/minio/data --console-address=':9001'"
 
     environment:
       - "MINIO_BROWSER=on"
       - "MINIO_ROOT_USER=${MINIO_ROOT_USER:-vault-managed-root-user}"
       - "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-vault-managed-root-password}"
 
+    volumes:
+      - ../certs:/certs:ro
+
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://steel-hammer-minio:9000/minio/health/live"]
+      test: ["CMD", "curl", "-kf", "https://steel-hammer-minio:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -315,6 +422,7 @@ services:
       - ../tools:/workspaces/IronBucket/tools:ro
       - ../docs:/workspaces/IronBucket/docs:ro
       - ../README.md:/workspaces/IronBucket/README.md:ro
+      - ../certs:/certs:ro
       - /workspaces/IronBucket/temp:/workspaces/IronBucket/temp
       - /workspaces/IronBucket/.git:/ironbucket/.git:ro
 
@@ -333,13 +441,15 @@ services:
         condition: service_healthy
 
     environment:
-      - "KEYCLOAK_URL=http://steel-hammer-keycloak:7081"
-      - "MINIO_URL=http://steel-hammer-minio:9000"
+      - "KEYCLOAK_URL=https://steel-hammer-keycloak:7081"
+      - "MINIO_URL=https://steel-hammer-minio:9000"
       - "POSTGRES_HOST=steel-hammer-postgres"
       - "SENTINEL_GEAR_URL=http://steel-hammer-sentinel-gear:8080"
       - "CLAIMSPINDEL_URL=http://steel-hammer-claimspindel:8081"
       - "BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082"
       - "BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083"
+      - "CURL_CA_BUNDLE=/certs/ca/ca.crt"
+      - "NODE_EXTRA_CA_CERTS=/certs/ca/ca.crt"
       - "OTEL_SERVICE_NAME=steel-hammer-test"
       - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4318"
       - "PLAYWRIGHT_REPORT_DIR=/workspaces/IronBucket/test-results"
@@ -365,6 +475,7 @@ services:
 
     volumes:
       - ../ironbucket-app-nextjs:/workspace/ironbucket-app-nextjs
+      - ../certs:/certs:ro
       - /workspaces/IronBucket/test-results:/workspaces/IronBucket/test-results
 
     depends_on:
@@ -380,7 +491,8 @@ services:
       - "NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://steel-hammer-sentinel-gear:8080/graphql"
       - "E2E_SENTINEL_URL=http://steel-hammer-sentinel-gear:8080"
       - "E2E_GATEWAY_GRAPHQL_URL=http://steel-hammer-sentinel-gear:8080/graphql"
-      - "E2E_KEYCLOAK_TOKEN_URL=http://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/token"
+      - "E2E_KEYCLOAK_TOKEN_URL=https://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/token"
+      - "NODE_EXTRA_CA_CERTS=/certs/ca/ca.crt"
       - "OTEL_SERVICE_NAME=ironbucket-ui-e2e"
       - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4318"
       - "PLAYWRIGHT_REPORT_DIR=/workspaces/IronBucket/test-results"
@@ -395,3 +507,6 @@ services:
 networks:
   steel-hammer-network:
     driver: bridge
+
+volumes:
+  vault-storage:

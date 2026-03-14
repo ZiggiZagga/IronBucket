@@ -17,9 +17,9 @@ NC='\033[0m'
 
 # Configuration
 GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
-KEYCLOAK_URL="${KEYCLOAK_URL:-http://steel-hammer-keycloak:7081}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-https://steel-hammer-keycloak:7081}"
 EUREKA_URL="${EUREKA_URL:-http://steel-hammer-buzzle-vane:8083}"
-MINIO_URL="${MINIO_URL:-http://steel-hammer-minio:9000}"
+MINIO_URL="${MINIO_URL:-https://steel-hammer-minio:9000}"
 LOKI_URL="${LOKI_URL:-http://steel-hammer-loki:3100}"
 TEMPO_URL="${TEMPO_URL:-http://steel-hammer-tempo:3200}"
 MIMIR_URL="${MIMIR_URL:-http://steel-hammer-mimir:9009}"
@@ -97,7 +97,7 @@ test_fail() {
 
 http_status() {
     local URL=$1
-    curl -s -o /dev/null -w "%{http_code}" --max-time 8 "$URL" 2>/dev/null || echo "000"
+    curl -ks -o /dev/null -w "%{http_code}" --max-time 8 "$URL" 2>/dev/null || echo "000"
 }
 
 check_required_http() {

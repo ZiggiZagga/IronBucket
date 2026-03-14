@@ -26,6 +26,51 @@ The plan focuses on converting roadmap assertions into implementation increments
 
 ---
 
+## Historical Gap Closure Evidence (2026-03-14)
+
+The historical P0/P1/P2 clusters above were re-verified with current blocking/roadmap gates.
+
+### P0 (Blockers) closure mapping
+- TLS configuration not declared in Sentinel-Gear:
+  - Verified by `scripts/ci/run-sentinel-roadmap-gate.sh`
+  - Result: PASS (roadmap profile green)
+- Vault dependency/config not present:
+  - Verified by `scripts/ci/run-sentinel-roadmap-gate.sh`
+  - Result: PASS (roadmap profile green)
+- GraphQL management plane missing:
+  - Verified by `scripts/ci/run-sentinel-roadmap-gate.sh`
+  - Result: PASS (GraphQL completeness 100%)
+- S3 completeness below gate:
+  - Verified by `scripts/ci/run-sentinel-roadmap-gate.sh`
+  - Result: PASS (S3 completeness 100%; production-readiness 100%)
+
+### P1/P2 (Major) closure mapping
+- Governance resilience suite lacks required artifacts/tests:
+  - Verified by `scripts/ci/run-governance-roadmap-gate.sh`
+  - Result: PASS (22/22, 0 failures, 0 errors)
+- Priority coverage scoreboard missing required test files:
+  - Verified by `scripts/ci/run-governance-roadmap-gate.sh`
+  - Result: PASS (Immediate 4/4, High 3/3, Medium 5/5)
+- Advanced S3 and cross-backend parity behaviors underrepresented:
+  - Verified by `scripts/ci/run-phase4-versioning-multipart-gate.sh`
+  - Result: PASS (provider-neutral parity and capability registry contracts green)
+  - Verified by `scripts/ci/run-jclouds-provider-probe-gate.sh`
+  - Result: PASS (9/9 capability probe tests green for AWS/GCS/Azure adapters)
+  - Verified by `scripts/ci/run-jclouds-provider-integration-parity-gate.sh`
+  - Result: PASS in skip-safe mode when provider integration toggles are not enabled
+  - Verified by `scripts/ci/run-jclouds-provider-integration-probe-gate.sh`
+  - Result: expected skip when provider integration toggles are not enabled
+
+### Verification summary
+- Sentinel roadmap gate: 105 tests, 0 failures, 0 errors
+- Governance roadmap gate: 22 tests, 0 failures, 0 errors
+- Phase 4 versioning/multipart gate: PASS
+- Provider capability probes: 9 tests, 0 failures, 0 errors
+
+Note: Full non-skip multi-cloud integration parity remains credential/toggle dependent by design; CI gates are currently enforcing the skip-safe contract path when those toggles are absent.
+
+---
+
 ## Execution Update (2026-03-12, latest)
 
 ### ✅ Phase A — Stabilize Security Baseline (Completed)
