@@ -13,6 +13,9 @@ source "$SCRIPT_DIR/lib/common.sh"
 # Register error trap
 register_error_trap
 
+# Ensure TLS cert artifacts exist before any stack/service checks.
+ensure_cert_artifacts
+
 # Test counters
 TOTAL_TESTS=0
 TOTAL_PASSED=0
@@ -168,6 +171,7 @@ run_test_suite "Infrastructure_Tests" \
                     return 1
                 }
                 check_with_retry keycloak https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration 180 2 &&
+                check_with_retry vault https://steel-hammer-vault:8200/v1/sys/health?standbyok=true 180 2 &&
                 check_with_retry gateway http://steel-hammer-sentinel-gear:8080/actuator/health 60 2 &&
                 check_with_retry claimspindel http://steel-hammer-claimspindel:8081/actuator/health 60 2 &&
                 check_with_retry brazz http://steel-hammer-brazz-nossel:8082/actuator/health 60 2 &&

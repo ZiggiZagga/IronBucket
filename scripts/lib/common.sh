@@ -210,6 +210,51 @@ require_file() {
     fi
 }
 
+# Ensure generated certificate artifacts exist. If missing, generate them.
+ensure_cert_artifacts() {
+    local certs_dir="${PROJECT_ROOT}/certs"
+    local generator_script="${certs_dir}/generate-certificates.sh"
+    local required_files=(
+        "ca/ca.crt"
+        "ca/ca-truststore.p12"
+        "services/infrastructure/keycloak/tls.crt"
+        "services/infrastructure/keycloak/tls.key"
+        "services/infrastructure/minio/tls.crt"
+        "services/infrastructure/minio/tls.key"
+        "services/infrastructure/vault/tls.crt"
+        "services/infrastructure/vault/tls.key"
+    )
+    local missing_files=()
+    local rel_path
+
+    for rel_path in "${required_files[@]}"; do
+        if [[ ! -f "${certs_dir}/${rel_path}" ]]; then
+            missing_files+=("${rel_path}")
+        fi
+    done
+
+    if [[ ${#missing_files[@]} -eq 0 ]]; then
+        log_info "Certificate artifacts already present"
+        return 0
+    fi
+
+    log_warn "Missing certificate artifacts detected; generating certificates"
+    if [[ ! -f "${generator_script}" ]]; then
+        error_exit 1 "Certificate generator script not found: ${generator_script}"
+    fi
+
+    (cd "${certs_dir}" && bash "./generate-certificates.sh") || \
+        error_exit 1 "Certificate generation failed"
+
+    for rel_path in "${required_files[@]}"; do
+        if [[ ! -f "${certs_dir}/${rel_path}" ]]; then
+            error_exit 1 "Certificate generation incomplete. Missing: ${certs_dir}/${rel_path}"
+        fi
+    done
+
+    log_success "Certificate artifacts generated successfully"
+}
+
 # Check service availability
 check_service_health() {
     local url="$1"

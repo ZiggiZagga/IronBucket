@@ -69,6 +69,7 @@ generate_service_cert() {
   local service_name=$1
   local service_cn=$2
   local service_dns=${3:-$(basename "${service_name}")}
+  local service_alt_dns=${4:-}
   local service_dir="${SERVICES_DIR}/${service_name}"
   
   echo -e "${BLUE}Generating certificate for ${service_name}...${NC}"
@@ -83,8 +84,13 @@ generate_service_cert() {
     -subj "/C=US/ST=California/L=San Francisco/O=IronBucket/OU=${service_name}/CN=${service_cn}"
   
   # Create certificate extension file for SAN (Subject Alternative Names)
+  local san_entries="DNS:${service_dns},DNS:localhost,DNS:${service_cn},IP:127.0.0.1"
+  if [[ -n "${service_alt_dns}" ]]; then
+    san_entries="DNS:${service_dns},DNS:${service_alt_dns},DNS:localhost,DNS:${service_cn},IP:127.0.0.1"
+  fi
+
   cat > "${service_dir}/cert-ext.cnf" <<EOF
-subjectAltName = DNS:${service_dns},DNS:localhost,DNS:${service_cn},IP:127.0.0.1
+subjectAltName = ${san_entries}
 extendedKeyUsage = serverAuth,clientAuth
 EOF
   
@@ -134,8 +140,8 @@ generate_service_cert "brazz-nossel" "brazz-nossel.ironbucket.local"
 generate_service_cert "buzzle-vane" "buzzle-vane.ironbucket.local"
 
 # Infrastructure services
-generate_service_cert "infrastructure/postgres" "postgres.ironbucket.local" "postgres"
-generate_service_cert "infrastructure/minio" "minio.ironbucket.local" "minio"
+generate_service_cert "infrastructure/postgres" "postgres.ironbucket.local" "postgres" "steel-hammer-postgres"
+generate_service_cert "infrastructure/minio" "minio.ironbucket.local" "minio" "steel-hammer-minio"
 generate_service_cert "infrastructure/keycloak" "keycloak.ironbucket.local" "steel-hammer-keycloak"
 generate_service_cert "infrastructure/vault" "vault.ironbucket.local" "steel-hammer-vault"
 

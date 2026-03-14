@@ -18,6 +18,10 @@ if [[ -f "$ROOT_DIR/lib/common.sh" ]]; then
     fi
 fi
 
+if declare -F ensure_cert_artifacts >/dev/null; then
+    ensure_cert_artifacts
+fi
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================

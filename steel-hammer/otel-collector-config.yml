@@ -42,6 +42,16 @@ receivers:
           metrics_path: /metrics
           static_configs:
             - targets: [steel-hammer-postgres-exporter:9187]
+        - job_name: steel-hammer-vault
+          metrics_path: /v1/sys/metrics
+          params:
+            format: [prometheus]
+          scheme: https
+          tls_config:
+            insecure_skip_verify: true
+          bearer_token: dev-root-token
+          static_configs:
+            - targets: [steel-hammer-vault:8200]
 
 processors:
   batch:

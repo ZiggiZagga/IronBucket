@@ -16,6 +16,9 @@ source "$E2E_SCRIPT_DIR/../lib/common.sh"
 # Register error trap
 register_error_trap
 
+# Ensure TLS cert artifacts exist before infrastructure verification.
+ensure_cert_artifacts
+
 # Override service URLs if needed for this script
 # (They are already set from .env.defaults based on IS_CONTAINER)
 

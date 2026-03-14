@@ -89,6 +89,35 @@ services:
     restart: always
 
   # =============================================
+  # SECRETS / VAULT (TLS)
+  # =============================================
+
+  steel-hammer-vault:
+    networks:
+      - steel-hammer-network
+    image: hashicorp/vault:1.17
+    container_name: steel-hammer-vault
+    hostname: steel-hammer-vault
+    cap_add:
+      - IPC_LOCK
+    command: /bin/sh /vault/local/start-with-shared-ca.sh
+    ports:
+      - "8200:8200"
+    volumes:
+      - vault-storage:/vault/file
+      - ../certs:/certs:ro
+      - ./vault:/vault/local:ro
+    environment:
+      - "VAULT_ADDR=https://127.0.0.1:8200"
+      - "VAULT_CACERT=/certs/ca/ca.crt"
+    healthcheck:
+      test: ["CMD", "wget", "--no-check-certificate", "-qO-", "https://127.0.0.1:8200/v1/sys/health?standbyok=true"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: always
+
+  # =============================================
   # DATA LAYER
   # =============================================
 
@@ -404,6 +433,7 @@ networks:
     driver: bridge
 
 volumes:
+  vault-storage:
   postgres-storage:
   minio-storage:
   loki-storage:

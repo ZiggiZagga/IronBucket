@@ -9,6 +9,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$ROOT_DIR/scripts/.env.defaults"
 source "$ROOT_DIR/scripts/lib/common.sh"
 register_error_trap
+ensure_cert_artifacts
 
 print_header "        IronBucket Containerized E2E Tests - Quick Start         "
 

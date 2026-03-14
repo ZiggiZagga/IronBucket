@@ -15,6 +15,10 @@ if [[ -f "$ROOT_DIR/lib/common.sh" ]]; then
     source "$ROOT_DIR/lib/common.sh"
 fi
 
+if declare -F ensure_cert_artifacts >/dev/null; then
+    ensure_cert_artifacts
+fi
+
 # We want to continue after individual failures to gather coverage
 set +e
 
