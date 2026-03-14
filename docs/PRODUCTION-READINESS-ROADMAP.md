@@ -6,16 +6,17 @@ Canonical roadmap has been unified at:
 
 This file exists as a compatibility entry for older documentation links.
 
-## Verified status snapshot (2026-03-13)
+## Verified status snapshot (2026-03-14)
 
 - Backend modules: 9/9 passing
-- Full orchestrator: 190/190 passing (`scripts/run-all-tests-complete.sh`)
+- Full orchestrator: 194 total, 193 passing, 2 failing (`scripts/run-all-tests-complete.sh`)
 - E2E smoke path: passing
 - Security validation path: passing
 - Roadmap profile (`services/Sentinel-Gear`, `-Proadmap`): 105 run, 0 failing
 - GraphQL completeness: 100%
 - S3 completeness: 100%
 - Current readiness gate from roadmap tests: current Sentinel roadmap scope is green; broader production rollout hardening continues
+- TLS/Vault hardening: Vault TLS in LGTM stack and Vault health check integrated in infrastructure test phase
 
 For actionable next steps and execution order, use:
 - [../docs/ROADMAP-EXECUTION-PLAN-2026-03-12.md](ROADMAP-EXECUTION-PLAN-2026-03-12.md)

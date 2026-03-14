@@ -4,7 +4,7 @@ Production-ready S3-compatible microservices platform with JWT authentication, m
 
 ## 🚨 Production Readiness Status
 
-**Current Status**: 🟢 **Core Build/Test Gates Green** | 🟡 **Operational Hardening Active**
+**Current Status**: 🟢 **Core Build/Test + E2E Gates Green** | 🟡 **Release Hardening Active**
 
 IronBucket has validated Java test baselines and roadmap/behavioral gates, with ongoing hardening focused on release governance and production operations.
 
@@ -16,8 +16,8 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 | CI/CD | ✅ A- | Build, roadmap, behavioral, and provenance pipelines active |
 | Security Design | ✅ A+ | Zero-trust, multi-layer |
 | **Network Isolation** | 🔴 **C** | **NetworkPolicies required** |
-| **Credential Mgmt** | 🔴 **D** | **Vault integration needed** |
-| Observability | ✅ A- | Logs/Metrics/Tracing operational in Phase-2 proof; advanced coverage still expanding |
+| **Credential Mgmt** | 🟡 **C+** | **Vault TLS integrated in LGTM; secret lifecycle/runbook hardening pending** |
+| Observability | ✅ A- | LGTM logs/metrics/tracing operational incl. Vault metrics scrape; proof hardening still expanding |
 
 **⚠️ Remaining production actions:**
 1. Enforce required branch checks and release preflight in protected-branch policy
@@ -131,7 +131,14 @@ PostgreSQL (Metadata)
 
 ✅ **Core module test pathways passing** (latest comprehensive run)  
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
-✅ **Full orchestrator green** (187/187 passing, 2026-03-13 22:22:00 UTC)
+🟡 **Latest full orchestrator** (2026-03-14): 194 total, 193 passed, 2 failed
+
+Latest known failing suites:
+- `tools/Storage-Conductor` build failed in Maven phase
+- `Observability_Phase2_Proof` failed in observability phase
+
+Validation note:
+- Complete run was executed after deleting generated certificates; cert bootstrap regeneration path worked as expected.
 
 ### Run Comprehensive Tests
 
@@ -189,7 +196,7 @@ From clean Docker environment:
 
 See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](docs/E2E-OBSERVABILITY-GUIDE.md), and [OBSERVABILITY-FEATURESET-STATUS.md](docs/OBSERVABILITY-FEATURESET-STATUS.md) for details.
 
-## Observability Runtime Status (2026-03-13)
+## Observability Runtime Status (2026-03-14)
 
 Latest verified proof: `test-results/phase2-observability/20260313T222356Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
 Latest verified performance proof: `test-results/phase2-performance/20260313T222700Z/PHASE2_PERFORMANCE_REPORT.md`
@@ -202,9 +209,11 @@ Verified completed:
 - ✅ Metrics (Mimir): service + infra metrics ingested and queryable
 - ✅ Traces (Tempo + OTEL): synthetic OTLP trace accepted and ingestion counters > 0
 - ✅ Runtime wiring: OTEL env wiring validated for sentinel/claimspindel/brazz/buzzle
+- ✅ Vault telemetry: Vault runs with TLS in LGTM compose and metrics are scraped via OTEL collector
 - ✅ Error handling + correlation propagation: Graphite-Forge 404 + GraphQL parse-error checks with `X-Correlation-ID` propagation
 
 Verified not completed (remaining gaps):
+- ⚠️ `Observability_Phase2_Proof` currently failing in latest complete run and requires stabilization before next release cut.
 - ⚠️ Cross-service correlation-id search in Loki is not yet a blocking gate assertion (current gate verifies stream presence, not semantic correlation joins).
 - ⚠️ Authenticated error-path proof across JWT-protected service endpoints is not yet automated in Phase-2 proof (current error checks run on Graphite-Forge).
 - ⚠️ Trace-by-id assertion from UI E2E artifact to Tempo query is not yet mandatory in the gate.
