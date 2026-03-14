@@ -1,36 +1,39 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -eu
 
 VAULT_ADDR="${VAULT_ADDR:-https://127.0.0.1:8200}"
 VAULT_TOKEN="${VAULT_TOKEN:-dev-root-token}"
 VAULT_CACERT="${VAULT_CACERT:-/certs/ca/ca.crt}"
 
-if ! command -v curl >/dev/null 2>&1; then
-  echo "ERROR: curl is required" >&2
+if ! command -v vault >/dev/null 2>&1; then
+  echo "ERROR: vault CLI is required" >&2
   exit 1
 fi
 
-put_secret() {
-  local path="$1"
-  local json="$2"
-
-  curl --cacert "${VAULT_CACERT}" -fsS \
-    -H "X-Vault-Token: ${VAULT_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -X POST \
-    -d "${json}" \
-    "${VAULT_ADDR}/v1/${path}" >/dev/null
-}
+export VAULT_ADDR VAULT_TOKEN VAULT_CACERT
 
 echo "Seeding Vault dev secrets at ${VAULT_ADDR}..."
 
+# Ensure KV v2 mount exists.
+if ! vault secrets list -format=json | grep -q '"secret/"'; then
+  vault secrets enable -path=secret -version=2 kv >/dev/null 2>&1 || true
+fi
+
 # Sentinel-Gear presigned secret resolver expects KV v2 payload at this path.
-put_secret "secret/data/ironbucket/sentinel-gear" '{"data":{"presignedSecret":"dev-presigned-secret-from-vault"}}'
+vault kv put secret/ironbucket/sentinel-gear \
+  presignedSecret="dev-presigned-secret-from-vault" \
+  oidcClientSecret="dev-secret" >/dev/null
 
 # Shared app credentials in KV v2 contexts.
-put_secret "secret/data/ironbucket/brazz-nossel" '{"data":{"minioAccessKey":"vault-managed-root-user","minioSecretKey":"vault-managed-root-password"}}'
-put_secret "secret/data/ironbucket/claimspindel" '{"data":{"jwtAudience":"ironbucket"}}'
-put_secret "secret/data/ironbucket/buzzle-vane" '{"data":{"eurekaTag":"dev-region-1"}}'
-put_secret "secret/data/ironbucket/graphite-forge" '{"data":{"graphqlAdminMode":"enabled"}}'
+vault kv put secret/ironbucket/brazz-nossel \
+  app.s3.access-key="vault-managed-root-user" \
+  app.s3.secret-key="vault-managed-root-password" \
+  APP_S3_ACCESS_KEY="vault-managed-root-user" \
+  APP_S3_SECRET_KEY="vault-managed-root-password" \
+  minioAccessKey="vault-managed-root-user" \
+  minioSecretKey="vault-managed-root-password" >/dev/null
+vault kv put secret/ironbucket/claimspindel jwtAudience="ironbucket" >/dev/null
+vault kv put secret/ironbucket/buzzle-vane eurekaTag="dev-region-1" >/dev/null
+vault kv put secret/ironbucket/graphite-forge graphqlAdminMode="enabled" >/dev/null
 
 echo "Vault dev secrets seeded successfully."

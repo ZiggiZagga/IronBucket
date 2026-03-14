@@ -27,6 +27,8 @@ declare -a TEST_RESULTS=()
 declare -a FAILED_TESTS=()
 START_TIME=$(date +%s)
 STACK_NETWORK=""
+MINIO_ACCESS_KEY_FROM_VAULT=""
+MINIO_SECRET_KEY_FROM_VAULT=""
 
 ensure_stack_running() {
     if docker ps --format '{{.Names}}' | grep -q '^steel-hammer-loki$'; then
@@ -109,6 +111,22 @@ has_failed_suite() {
     return 1
 }
 
+resolve_minio_credentials_from_vault() {
+    local vault_json=""
+
+    vault_json="$(docker run --rm --network "$STACK_NETWORK" curlimages/curl:8.12.1 -kfsS \
+        -H "X-Vault-Token: dev-root-token" \
+        "https://steel-hammer-vault:8200/v1/secret/data/ironbucket/brazz-nossel")"
+
+    MINIO_ACCESS_KEY_FROM_VAULT="$(printf '%s' "$vault_json" | sed -n 's/.*"minioAccessKey":"\([^"]*\)".*/\1/p' | head -n1)"
+    MINIO_SECRET_KEY_FROM_VAULT="$(printf '%s' "$vault_json" | sed -n 's/.*"minioSecretKey":"\([^"]*\)".*/\1/p' | head -n1)"
+
+    if [[ -z "$MINIO_ACCESS_KEY_FROM_VAULT" || -z "$MINIO_SECRET_KEY_FROM_VAULT" ]]; then
+        echo -e "${RED}❌ Failed to resolve MinIO credentials from Vault path secret/data/ironbucket/brazz-nossel${NC}"
+        exit 1
+    fi
+}
+
 # ============================================================================
 # PHASE 1: MAVEN TESTS (Backend)
 # ============================================================================
@@ -181,6 +199,48 @@ run_test_suite "Infrastructure_Tests" \
                 check_with_retry mimir http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo 60 2
         '"
 
+run_test_suite "Vault_Enabled_In_All_Services" \
+    "for svc in sentinel-gear claimspindel brazz-nossel buzzle-vane graphite-forge; do
+        env_dump=\"\$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' steel-hammer-\$svc)\"
+        echo \"\$env_dump\" | grep -q '^SPRING_CLOUD_VAULT_ENABLED=true$' || { echo \"vault disabled for \$svc\"; exit 1; }
+        echo \"\$env_dump\" | grep -q '^SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200$' || { echo \"vault uri missing for \$svc\"; exit 1; }
+    done"
+
+run_test_suite "SpringBoot_Vault_Health_Endpoints" \
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 sh -ec '
+        check_vault_health() {
+            name=\"\$1\"; url=\"\$2\";
+            code=\"\$(curl -s -o /tmp/health.json -w \"%{http_code}\" \"\$url\")\"
+            [ \"\$code\" = \"200\" ] || { echo \"FAIL: \$name http=\$code\"; return 1; }
+            grep -q \"\\\"status\\\":\\\"UP\\\"\" /tmp/health.json || { echo \"FAIL: \$name vault status not UP\"; cat /tmp/health.json; return 1; }
+            echo \"OK: \$name\"
+        }
+        check_vault_health sentinel http://steel-hammer-sentinel-gear:8080/actuator/health/vault &&
+        check_vault_health claimspindel http://steel-hammer-claimspindel:8081/actuator/health/vault &&
+        check_vault_health brazz http://steel-hammer-brazz-nossel:8082/actuator/health/vault &&
+        check_vault_health buzzle http://steel-hammer-buzzle-vane:8083/actuator/health/vault
+    '"
+
+run_test_suite "Vault_Secrets_Baseline" \
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 sh -ec '
+        check_secret_key() {
+            path=\"\$1\"; key=\"\$2\";
+            body=\"\$(curl -kfsS -H \"X-Vault-Token: dev-root-token\" \"https://steel-hammer-vault:8200/v1/\$path\")\"
+            echo \"\$body\" | grep -q \"\\\"\$key\\\"\"
+        }
+        check_secret_key secret/data/ironbucket/sentinel-gear presignedSecret &&
+        check_secret_key secret/data/ironbucket/sentinel-gear oidcClientSecret &&
+        check_secret_key secret/data/ironbucket/brazz-nossel app.s3.access-key &&
+        check_secret_key secret/data/ironbucket/brazz-nossel app.s3.secret-key &&
+        check_secret_key secret/data/ironbucket/brazz-nossel APP_S3_ACCESS_KEY &&
+        check_secret_key secret/data/ironbucket/brazz-nossel APP_S3_SECRET_KEY &&
+        check_secret_key secret/data/ironbucket/brazz-nossel minioAccessKey &&
+        check_secret_key secret/data/ironbucket/brazz-nossel minioSecretKey &&
+        check_secret_key secret/data/ironbucket/claimspindel jwtAudience &&
+        check_secret_key secret/data/ironbucket/buzzle-vane eurekaTag &&
+        check_secret_key secret/data/ironbucket/graphite-forge graphqlAdminMode
+    '"
+
 # ============================================================================
 # PHASE 3: E2E ALICE-BOB SCENARIO (Adapted for Container)
 # ============================================================================
@@ -206,10 +266,63 @@ if has_failed_suite "E2E_Alice_Bob_Scenario"; then
 fi
 
 # ============================================================================
-# PHASE 4: OBSERVABILITY VALIDATION
+# PHASE 4: VAULT + MINIO ENCRYPTION/JCLOUDS VALIDATION
 # ============================================================================
 
-log_section "PHASE 4: Observability Stack Validation"
+log_section "PHASE 4: Vault + MinIO Encryption & jclouds CRUD"
+
+resolve_minio_credentials_from_vault
+
+run_test_suite "Vault_Minio_SSE_Encryption" \
+    "docker run --rm --network $STACK_NETWORK \
+        -e AWS_ACCESS_KEY_ID=\"$MINIO_ACCESS_KEY_FROM_VAULT\" \
+        -e AWS_SECRET_ACCESS_KEY=\"$MINIO_SECRET_KEY_FROM_VAULT\" \
+        -e AWS_DEFAULT_REGION=us-east-1 \
+        debian:bookworm-slim sh -lc '
+        set -e
+        apt-get update -qq
+        apt-get install -y -qq ca-certificates jq awscli coreutils >/dev/null
+
+        test -n \"\$AWS_ACCESS_KEY_ID\"
+        test -n \"\$AWS_SECRET_ACCESS_KEY\"
+
+        BUCKET=\"ib-vault-sse-\$(date +%s)-\$\$\"
+        KEY=\"vault-sse-check.txt\"
+
+        echo \"vault-sse-validation\" > /tmp/payload.txt
+        aws --endpoint-url https://steel-hammer-minio:9000 --no-verify-ssl s3api create-bucket --bucket \"\$BUCKET\" >/dev/null
+        aws --endpoint-url https://steel-hammer-minio:9000 --no-verify-ssl s3api put-object --bucket \"\$BUCKET\" --key \"\$KEY\" --body /tmp/payload.txt --server-side-encryption AES256 >/dev/null
+        SSE=\"\$(aws --endpoint-url https://steel-hammer-minio:9000 --no-verify-ssl s3api head-object --bucket \"\$BUCKET\" --key \"\$KEY\" | jq -r .ServerSideEncryption)\"
+        test \"\$SSE\" = \"AES256\"
+        aws --endpoint-url https://steel-hammer-minio:9000 --no-verify-ssl s3api get-object --bucket \"\$BUCKET\" --key \"\$KEY\" /tmp/download.txt >/dev/null
+        cmp -s /tmp/payload.txt /tmp/download.txt
+        aws --endpoint-url https://steel-hammer-minio:9000 --no-verify-ssl s3api delete-object --bucket \"\$BUCKET\" --key \"\$KEY\" >/dev/null
+        aws --endpoint-url https://steel-hammer-minio:9000 --no-verify-ssl s3api delete-bucket --bucket \"\$BUCKET\" >/dev/null
+    '"
+
+run_test_suite "Jclouds_Minio_CRUD_Via_Vault" \
+    "MAVEN_CONTAINER_NETWORK=$STACK_NETWORK \
+     MAVEN_DOCKER_ENV_VARS=IRONBUCKET_MINIO_ENDPOINT,IRONBUCKET_MINIO_ACCESS_KEY,IRONBUCKET_MINIO_SECRET_KEY,IRONBUCKET_MINIO_REGION \
+     IRONBUCKET_MINIO_ENDPOINT=https://steel-hammer-minio:9000 \
+     IRONBUCKET_MINIO_ACCESS_KEY=$MINIO_ACCESS_KEY_FROM_VAULT \
+     IRONBUCKET_MINIO_SECRET_KEY=$MINIO_SECRET_KEY_FROM_VAULT \
+     IRONBUCKET_MINIO_REGION=us-east-1 \
+     bash $PROJECT_ROOT/scripts/ci/run-maven-in-container.sh services/jclouds-adapter-core -B -V verify -Pminio-it"
+
+# ============================================================================
+# PHASE 5: PERFORMANCE VALIDATION
+# ============================================================================
+
+log_section "PHASE 5: Performance Validation"
+
+run_test_suite "Performance_Phase2_Proof" \
+    "PERF_REUSE_STACK=true KEEP_STACK=true $PROJECT_ROOT/scripts/e2e/prove-phase2-performance.sh"
+
+# ============================================================================
+# PHASE 6: OBSERVABILITY VALIDATION
+# ============================================================================
+
+log_section "PHASE 6: Observability Stack Validation"
 
 run_test_suite "Observability_Loki" \
     "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 sh -ec 'i=1; while [ \$i -le 60 ]; do if curl -fsS http://steel-hammer-loki:3100/ready >/dev/null 2>&1; then exit 0; fi; i=\$((i+1)); sleep 2; done; exit 1'"
@@ -227,10 +340,10 @@ run_test_suite "Observability_Phase2_Proof" \
     "KEEP_STACK=true $PROJECT_ROOT/scripts/e2e/prove-phase2-observability.sh"
 
 # ============================================================================
-# PHASE 5: COLLECT OBSERVABILITY ARTIFACTS
+# PHASE 7: COLLECT OBSERVABILITY ARTIFACTS
 # ============================================================================
 
-log_section "PHASE 5: Collect Observability Artifacts"
+log_section "PHASE 7: Collect Observability Artifacts"
 
 echo "Collecting Loki logs..."
 docker exec steel-hammer-sentinel-gear curl -s http://steel-hammer-loki:3100/loki/api/v1/labels > "$ARTIFACT_DIR/loki-labels.json" 2>&1 || true
@@ -250,10 +363,10 @@ echo -e "${GREEN}✅ Artifacts collected${NC}"
 echo ""
 
 # ============================================================================
-# PHASE 6: GENERATE COMPREHENSIVE REPORT
+# PHASE 8: GENERATE COMPREHENSIVE REPORT
 # ============================================================================
 
-log_section "PHASE 6: Generate Comprehensive Report"
+log_section "PHASE 8: Generate Comprehensive Report"
 
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
@@ -329,7 +442,17 @@ fi)
 - **Tests:** Authentication, Authorization, File Upload, Security policies
 - **Framework:** Bash + Keycloak + S3
 
-### Phase 4: Observability Stack Validation
+### Phase 4: Vault + MinIO Encryption & jclouds CRUD
+- **Purpose:** Validate Vault-backed MinIO credentials and encrypted object lifecycle
+- **Tests:** SSE-S3 upload/download/delete and jclouds MinIO CRUD integration profile
+- **Framework:** AWS CLI + Maven Failsafe
+
+### Phase 5: Performance Validation
+- **Purpose:** Validate latency, throughput, success and error-rate SLOs under load
+- **Tests:** Phase2 performance proof with service-level evidence
+- **Framework:** scripts/e2e/prove-phase2-performance.sh
+
+### Phase 6: Observability Stack Validation
 - **Purpose:** Validate logging, tracing, metrics collection
 - **Components:** Loki, Tempo, Grafana, Promtail, OTEL Collector
 - **Framework:** Container-based health checks
@@ -338,9 +461,13 @@ fi)
     - scripts/e2e/prove-phase2-observability.sh
     - Generates evidence-backed report under test-results/phase2-observability/
 
-### Phase 5: Artifact Collection
+### Phase 7: Artifact Collection
 - **Purpose:** Collect observability data for analysis
 - **Artifacts:** Logs, traces, metrics, service logs
+
+### Phase 8: Report Generation
+- **Purpose:** Consolidate all suite outputs into a single evidence report
+- **Artifacts:** Markdown summary, failed-suite log excerpts, latest symlink
 
 ---
 

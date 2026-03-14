@@ -12,6 +12,8 @@ Key focus of this increment:
 - TLS/Vault runtime hardening in LGTM
 - deterministic certificate bootstrap for test scripts
 - startup reliability fixes in WebFlux security setup
+- Vault-first runtime verification in complete orchestrator and E2E path
+- performance proof integration as explicit pre-observability phase
 
 ## Highlights
 
@@ -74,15 +76,35 @@ Added explicit JWT decoder bean registration in:
 Result:
 - Removes runtime startup failure caused by missing ReactiveJwtDecoder bean in those services.
 
+### 6) Vault-First Runtime & E2E Hardening
+
+Vault coverage was expanded across runtime config, seeding, and E2E verification:
+- `steel-hammer/docker-compose-lgtm.yml` enables Spring Vault + Vault health indicators for Sentinel-Gear, Claimspindel, Brazz-Nossel, Buzzle-Vane, and Graphite-Forge.
+- `steel-hammer/vault/init-dev-secrets.sh` now uses Vault CLI seeding and includes `presignedSecret`, `oidcClientSecret`, and Brazz `app.s3.*` credentials.
+- `steel-hammer/vault/start-with-shared-ca.sh` now runs secret seeding during startup when local script mount is present.
+- `scripts/e2e/e2e-alice-bob-test.sh` now validates Vault health/secret availability before auth/upload flow.
+
+### 7) Complete Orchestrator Phase Expansion
+
+The complete suite now includes additional hardening and performance phases:
+- `Vault_Enabled_In_All_Services`
+- `SpringBoot_Vault_Health_Endpoints`
+- `Vault_Secrets_Baseline`
+- `Vault_Minio_SSE_Encryption`
+- `Jclouds_Minio_CRUD_Via_Vault`
+- `Performance_Phase2_Proof` (executed before observability proof)
+
 ## Validation Evidence
 
-Latest complete orchestrator run after cert artifact deletion:
+Latest complete orchestrator run after Vault-first + performance integration:
 - Command: bash scripts/run-all-tests-complete.sh
-- Result: 194 total, 193 passed, 2 failed
-- Passed phases: Infrastructure, Alice-Bob E2E, core observability endpoints
+- Result: 200 total, 197 passed, 4 failed
+- Passed phases include: Infrastructure, Vault runtime checks, Alice-Bob E2E, performance proof, core observability endpoints
 - Failing suites:
   - tools/Storage-Conductor build failure
-  - Observability_Phase2_Proof failure
+  - Vault_Minio_SSE_Encryption failure (MinIO reports SSE requested without KMS configured)
+  - Jclouds_Minio_CRUD_Via_Vault failure (failsafe verify in `services/jclouds-adapter-core`)
+  - Observability_Phase2_Proof failure (report generated but suite returns non-zero in complete orchestrator path)
 
 Additional runtime checks confirmed:
 - Vault HTTPS health endpoint reachable
@@ -93,8 +115,10 @@ Additional runtime checks confirmed:
 
 Before final v1.2.13 tag and merge to main:
 1. Resolve Storage-Conductor Maven/build failure in complete orchestrator path.
-2. Stabilize Observability_Phase2_Proof assertions and rerun complete suite to green baseline.
-3. Re-run release preflight and required gate checks on develop.
+2. Decide and implement MinIO encryption test strategy (configure KMS/SSE-KMS in stack or relax check to supported mode).
+3. Triage and fix `services/jclouds-adapter-core` failsafe verification under `-Pminio-it`.
+4. Stabilize Observability_Phase2_Proof assertions/exit criteria and rerun complete suite to green baseline.
+5. Re-run release preflight and required gate checks on develop.
 
 ## Suggested Tag Plan
 

@@ -32,6 +32,8 @@ ALICE_USERNAME="${ALICE_USERNAME:-alice}"
 ALICE_PASSWORD="${ALICE_PASSWORD:-aliceP@ss}"
 BOB_USERNAME="${BOB_USERNAME:-bob}"
 BOB_PASSWORD="${BOB_PASSWORD:-bobP@ss}"
+VAULT_URL="${VAULT_URL:-https://steel-hammer-vault:8200}"
+VAULT_TOKEN="${VAULT_TOKEN:-dev-root-token}"
 
 CURL_TLS_ARGS=()
 if [[ "$KEYCLOAK_URL" == https://* ]]; then
@@ -145,6 +147,50 @@ else
 fi
 
 echo ""
+echo "Checking Vault (Secrets Manager)..."
+VAULT_STATUS=$(curl "${CURL_TLS_ARGS[@]}" -s -o "$PROOF_DIR/vault-health.out" -w "%{http_code}" "$VAULT_URL/v1/sys/health?standbyok=true")
+if [ "$VAULT_STATUS" -eq 200 ] || [ "$VAULT_STATUS" -eq 429 ] || [ "$VAULT_STATUS" -eq 472 ] || [ "$VAULT_STATUS" -eq 473 ]; then
+        echo -e "${GREEN}✅ Vault is reachable (HTTP $VAULT_STATUS)${NC}"
+else
+        echo -e "${RED}❌ Vault is NOT reachable (HTTP $VAULT_STATUS)${NC}"
+        exit 1
+fi
+
+BRAZZ_VAULT_RESPONSE=$(curl "${CURL_TLS_ARGS[@]}" -s \
+    -H "X-Vault-Token: ${VAULT_TOKEN}" \
+    "$VAULT_URL/v1/secret/data/ironbucket/brazz-nossel")
+BRAZZ_MINIO_ACCESS_KEY=$(echo "$BRAZZ_VAULT_RESPONSE" | jq -r '.data.data.minioAccessKey // empty')
+BRAZZ_MINIO_SECRET_KEY=$(echo "$BRAZZ_VAULT_RESPONSE" | jq -r '.data.data.minioSecretKey // empty')
+
+if [ -z "$BRAZZ_MINIO_ACCESS_KEY" ] || [ -z "$BRAZZ_MINIO_SECRET_KEY" ]; then
+        echo -e "${RED}❌ Vault secret missing for brazz-nossel MinIO credentials${NC}"
+        echo "   Response: $BRAZZ_VAULT_RESPONSE"
+        exit 1
+fi
+
+SENTINEL_VAULT_RESPONSE=$(curl "${CURL_TLS_ARGS[@]}" -s \
+    -H "X-Vault-Token: ${VAULT_TOKEN}" \
+    "$VAULT_URL/v1/secret/data/ironbucket/sentinel-gear")
+SENTINEL_PRESIGNED_SECRET=$(echo "$SENTINEL_VAULT_RESPONSE" | jq -r '.data.data.presignedSecret // empty')
+SENTINEL_OIDC_CLIENT_SECRET=$(echo "$SENTINEL_VAULT_RESPONSE" | jq -r '.data.data.oidcClientSecret // empty')
+
+if [ -z "$SENTINEL_PRESIGNED_SECRET" ]; then
+        echo -e "${RED}❌ Vault secret missing for sentinel-gear presigned secret${NC}"
+        echo "   Response: $SENTINEL_VAULT_RESPONSE"
+        exit 1
+fi
+
+if [ -z "$SENTINEL_OIDC_CLIENT_SECRET" ]; then
+    echo -e "${RED}❌ Vault secret missing for sentinel-gear OIDC client secret${NC}"
+    echo "   Response: $SENTINEL_VAULT_RESPONSE"
+    exit 1
+fi
+
+OIDC_CLIENT_SECRET="$SENTINEL_OIDC_CLIENT_SECRET"
+
+echo -e "${GREEN}✅ Vault secrets resolved for Sentinel-Gear and Brazz-Nossel${NC}"
+
+echo ""
 echo "Checking PostgreSQL (Database)..."
 if PGPASSWORD=postgres_admin_pw psql -h "$POSTGRES_HOST" -U postgres -c "SELECT 1" 2>/dev/null | grep -q "1"; then
     echo -e "${GREEN}✅ PostgreSQL is running${NC}"
@@ -154,6 +200,34 @@ fi
 
 echo ""
 echo -e "${GREEN}✅ Infrastructure verification complete!${NC}"
+
+echo ""
+echo "Checking core service readiness (Sentinel/Claimspindel/Brazz/Buzzle-Vane)..."
+
+check_http_with_retry() {
+    local name="$1"
+    local url="$2"
+    local attempts="${3:-60}"
+    local delay="${4:-2}"
+    local status="000"
+
+    for i in $(seq 1 "$attempts"); do
+        status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
+        if [ "$status" -eq 200 ]; then
+            echo -e "${GREEN}✅ ${name} ready (HTTP ${status})${NC}"
+            return 0
+        fi
+        sleep "$delay"
+    done
+
+    echo -e "${RED}❌ ${name} not ready (last HTTP ${status})${NC}"
+    return 1
+}
+
+check_http_with_retry "Sentinel-Gear" "${SENTINEL_GEAR_URL}/actuator/health" 90 2
+check_http_with_retry "Claimspindel" "${CLAIMSPINDEL_URL:-http://steel-hammer-claimspindel:8081}/actuator/health" 90 2
+check_http_with_retry "Brazz-Nossel" "${BRAZZ_NOSSEL_URL}/actuator/health" 90 2
+check_http_with_retry "Buzzle-Vane" "${BUZZLE_VANE_URL:-http://steel-hammer-buzzle-vane:8083}/eureka/apps" 90 2
 
 # ============================================================================
 # PHASE 2: Alice's Authentication & File Upload

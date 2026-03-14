@@ -39,12 +39,16 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     
     public S3ProxyServiceImpl(
             @Value("${app.s3.endpoint:http://localhost:9000}") String endpoint,
-            @Value("${app.s3.access-key:minioadmin}") String accessKey,
-            @Value("${app.s3.secret-key:minioadmin}") String secretKey,
+            @Value("${app.s3.access-key}") String accessKey,
+            @Value("${app.s3.secret-key}") String secretKey,
             @Value("${app.s3.region:us-east-1}") String region,
             @Value("${app.s3.routing.tenant-defaults:}") String tenantDefaults,
             @Value("${app.s3.routing.bucket-overrides:}") String bucketOverrides) {
         
+        if (accessKey == null || accessKey.isBlank() || secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("Vault-backed S3 credentials are required: app.s3.access-key and app.s3.secret-key must be set");
+        }
+
         logger.info("Initializing S3 Proxy Service with endpoint: {}", endpoint);
         
         this.s3Client = S3Client.builder()
