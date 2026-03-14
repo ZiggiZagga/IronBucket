@@ -221,7 +221,9 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 **UI feature baseline update (2026-03-13):**
 - Added Next.js object-browser baseline scenario route (`/e2e-object-browser`) with bucket/object browse, search, sort, upload, download, and delete interactions.
 - Added live Playwright scenario `tests/ui-live-upload-persistence.spec.ts` that validates UI upload through Sentinel-Gear with real backend read-back verification.
-- `scripts/ci/run-all-projects-e2e-gate.sh` now executes the non-mocked UI baseline through `npm run test:e2e:ui`.
+- Added live Playwright scenario `tests/object-browser-baseline.spec.ts` that verifies bucket browse + object list/search/sort + upload/download/delete against live backend flow.
+- `scripts/ci/run-all-projects-e2e-gate.sh` now executes the non-mocked UI baseline through the `steel-hammer-ui-e2e` container runner (live upload persistence + S3 methods + performance scenarios).
+- UI gate baseline now runs all live scenarios in one pass: `object-browser-baseline`, `ui-live-upload-persistence`, `ui-s3-methods-e2e`, `ui-s3-methods-performance`.
 
 **Observability verification matrix update (2026-03-13):**
 
@@ -243,16 +245,15 @@ Verified completed:
 - `tools/Vault-Smith` uses `spring-boot-starter-webflux`.
 - `services/Buzzle-Vane` intentionally remains on `spring-boot-starter-web` because forcing reactive mode breaks Eureka server discovery contracts in container E2E.
 
-Verified not completed:
-- ⚠️ No mandatory gate assertion yet for correlation-id semantic search in Loki across multiple services (stream presence is verified, semantic correlation join is not).
-- ⚠️ No authenticated negative-path gate yet for JWT-protected service APIs (error handling is currently verified on Graphite-Forge endpoints).
-- ⚠️ No mandatory UI trace-id to Tempo trace lookup assertion yet.
+Verified completed (blocking gate path):
+- ✅ Mandatory gate assertion for correlation-id semantic search in Loki across multiple services (semantic cross-service assertion + header propagation checks).
+- ⚠️ Authenticated negative-path observability gate for JWT-protected service APIs is partially evidenced in latest LGTM proof run (401 + `WWW-Authenticate` verified, correlation-id header missing on protected unauth response artifact).
+- ✅ Mandatory UI trace-id to Tempo trace lookup assertion.
+- ✅ SLO threshold enforcement in observability/performance gates (p95, p99, throughput, error-rate).
 
-Missing cases queued for future implementation:
-- Add an authenticated service error-path scenario (Bearer token) to verify global error handlers under protected endpoints.
-- Add a correlation-id log semantic assertion in Loki (`correlationId`/`traceId` fields) as a blocking check.
-- Add UI trace-id roundtrip assertion (artifact trace id -> Tempo query success) as a release-gate check.
-- Add dashboard-level SLO checks (p95/p99 latency and error-rate thresholds) to Phase-6 advanced observability gates.
+Further enhancements queued:
+- Add dashboard-level SLO visualization/alert assertions as a future release-gate expansion beyond current script-level threshold enforcement.
+- Close protected unauth correlation-id evidence gap so JWT negative-path claim can be restored to full ✅ state.
 
 ### 3) Kick Off Phase 4 (Next Sprint)
 - ✅ Created `jclouds-adapter-core` skeleton and capability matrix baseline document.

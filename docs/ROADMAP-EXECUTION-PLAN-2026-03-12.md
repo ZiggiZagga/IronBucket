@@ -64,8 +64,8 @@ The plan focuses on converting roadmap assertions into implementation increments
   - observability dashboard/alert asset validation.
 - Added UI baseline parity scenario based on object-browser core interactions:
   - route `/e2e-object-browser`
-  - Playwright test `tests/object-browser-baseline.spec.ts`
-  - enforced in cross-project gate via `npm run test:e2e:ui`.
+  - Playwright baseline specs: `tests/object-browser-baseline.spec.ts`, `tests/ui-live-upload-persistence.spec.ts`, `tests/ui-s3-methods-e2e.spec.ts`, `tests/ui-s3-methods-performance.spec.ts`
+  - enforced in cross-project gate via `scripts/ci/run-all-projects-e2e-gate.sh` using the `steel-hammer-ui-e2e` container runner.
 - Observability hardening from evidence:
   - keycloak readiness budget increased for proof waits,
   - infra scrape verification switched to window-based `max_over_time(up[10m])` checks,
