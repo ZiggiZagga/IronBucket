@@ -20,6 +20,13 @@ Thumbs.db
 *.pem
 *.key
 
+# Generated certificate artifacts
+certs/ca/**
+certs/client/**
+certs/services/**
+!certs/README.md
+!certs/generate-certificates.sh
+
 # Node.js / frontend artifacts
 node_modules/
 **/node_modules/
