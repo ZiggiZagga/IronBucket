@@ -42,6 +42,9 @@ pnpm-debug.log*
 *.jar
 *.war
 
+# Explicit generated artifacts (graphite-admin-shell)
+tools/graphite-admin-shell/target/
+
 # Test outputs and logs
 test-results/
 test-output/
