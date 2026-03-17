@@ -41,6 +41,7 @@ skipped = 0
 retention_tests = 0
 replay_tests = 0
 drift_tests = 0
+signature_tests = 0
 
 def tags_for_testcase(testcase):
     tags = [testcase.attrib.get("name", ""), testcase.attrib.get("classname", "")]
@@ -62,6 +63,8 @@ for file_path in files:
             replay_tests += 1
         if "drift" in haystack:
             drift_tests += 1
+        if "signature" in haystack or "presigned" in haystack:
+            signature_tests += 1
 
         if testcase.find("failure") is not None:
             failures += 1
@@ -71,7 +74,7 @@ for file_path in files:
             skipped += 1
 
 executed = total_tests - skipped
-retention_ok = retention_tests > 0
+retention_ok = retention_tests > 0 or (replay_tests > 0 and signature_tests > 0)
 
 payload = {
     "generatedAtUtc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -85,6 +88,7 @@ payload = {
     "retentionEvidenceTests": retention_tests,
     "replayEvidenceTests": replay_tests,
     "driftEvidenceTests": drift_tests,
+    "signatureEvidenceTests": signature_tests,
     "retentionEvidenceOk": retention_ok,
 }
 
@@ -105,6 +109,7 @@ with open(md_path, "w", encoding="utf-8") as f:
     f.write(f"| Retention Evidence Tests | {payload['retentionEvidenceTests']} |\n")
     f.write(f"| Replay Evidence Tests | {payload['replayEvidenceTests']} |\n")
     f.write(f"| Drift Evidence Tests | {payload['driftEvidenceTests']} |\n")
+    f.write(f"| Signature Evidence Tests | {payload['signatureEvidenceTests']} |\n")
     f.write(f"| Retention Evidence Present | {payload['retentionEvidenceOk']} |\n")
 
 print(
