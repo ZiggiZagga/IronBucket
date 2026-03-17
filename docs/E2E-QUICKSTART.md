@@ -36,6 +36,34 @@ Artifacts are written to:
 test-results/phase2-observability/
 ```
 
+## LGTM Fast Diagnostics
+
+Run a one-command diagnostics snapshot for Loki, Tempo, Mimir, Grafana, Keycloak, and MinIO:
+
+```bash
+bash scripts/e2e/diagnose-lgtm.sh
+```
+
+Artifacts are written to:
+
+```bash
+test-results/lgtm-diagnostics/
+```
+
+## Phase 1-3 Gate (Keep Containers Running)
+
+Rerun the full Phase 1-3 proof and keep the stack alive for follow-up debugging:
+
+```bash
+KEEP_STACK=true bash scripts/e2e/prove-phase1-3-complete.sh
+```
+
+Artifacts are written to:
+
+```bash
+test-results/phase1-3-proof/
+```
+
 ## Steel-Hammer Complete Suite (Container Runtime)
 
 For container-runtime parity checks and deep diagnostics, run the steel-hammer suite directly:

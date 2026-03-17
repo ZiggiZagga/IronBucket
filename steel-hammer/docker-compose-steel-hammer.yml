@@ -72,7 +72,7 @@ services:
       context: . 
       dockerfile: ./keycloak/DockerfileKeycloak
     
-    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start", "--import-realm", "--http-enabled=false", "--https-port=7081", "--https-certificate-file=/certs/services/infrastructure/keycloak/tls.crt", "--https-certificate-key-file=/certs/services/infrastructure/keycloak/tls.key", "--hostname=https://steel-hammer-keycloak:7081", "--hostname-strict=false" ]
+    entrypoint: [ "/opt/keycloak/keycloak/bin/kc.sh", "start", "--import-realm", "--http-enabled=false", "--https-port=7081", "--https-certificate-file=/certs/services/infrastructure/keycloak/tls.crt", "--https-certificate-key-file=/certs/services/infrastructure/keycloak/tls.key", "--https-client-auth=request", "--https-trust-store-file=/certs/ca/ca-truststore.p12", "--https-trust-store-password=changeit", "--https-trust-store-type=PKCS12", "--hostname=https://steel-hammer-keycloak:7081", "--hostname-strict=false" ]
     
     volumes:      
        - ./keycloak/dev-realm.json:/opt/keycloak/keycloak/data/import/dev-realm.json
@@ -391,6 +391,14 @@ services:
       - "MINIO_BROWSER=on"
       - "MINIO_ROOT_USER=${MINIO_ROOT_USER:-vault-managed-root-user}"
       - "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-vault-managed-root-password}"
+      - "MINIO_BROWSER_REDIRECT_URL=https://steel-hammer-minio:9001"
+      - "MINIO_IDENTITY_OPENID_CONFIG_URL=https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration"
+      - "MINIO_IDENTITY_OPENID_CLIENT_ID=minio-console"
+      - "MINIO_IDENTITY_OPENID_CLIENT_SECRET=minio-console-secret"
+      - "MINIO_IDENTITY_OPENID_SCOPES=openid,profile,email"
+      - "MINIO_IDENTITY_OPENID_CLAIM_NAME=preferred_username"
+      - "MINIO_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC=on"
+      - "MINIO_IDENTITY_OPENID_TLS_SKIP_VERIFY=on"
 
     volumes:
       - ../certs:/certs:ro

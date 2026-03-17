@@ -152,6 +152,7 @@ set -e
 PHASE1_INFRA_OK=false
 PHASE2_ALICE_OK=false
 PHASE3_BOB_OK=false
+KEYCLOAK_MTLS_MINIO_OIDC_OK=false
 
 if grep -q 'Infrastructure verification complete' "$EVIDENCE_DIR/e2e-alice-bob.log"; then
   PHASE1_INFRA_OK=true
@@ -165,6 +166,17 @@ fi
 if grep -q 'Bob received JWT token' "$EVIDENCE_DIR/e2e-alice-bob.log" \
   && grep -q 'Bob upload/get via Sentinel-Gear successful' "$EVIDENCE_DIR/e2e-alice-bob.log"; then
   PHASE3_BOB_OK=true
+fi
+
+log "Running Keycloak mTLS + MinIO OIDC web identity E2E scenario"
+set +e
+dc run --rm --no-deps --entrypoint /bin/bash steel-hammer-test -lc '/workspaces/IronBucket/scripts/e2e/e2e-keycloak-mtls-minio-oidc.sh' \
+  | tee "$EVIDENCE_DIR/e2e-keycloak-mtls-minio-oidc.log"
+KEYCLOAK_MTLS_MINIO_OIDC_EXIT=${PIPESTATUS[0]}
+set -e
+
+if [[ "$KEYCLOAK_MTLS_MINIO_OIDC_EXIT" -eq 0 ]]; then
+  KEYCLOAK_MTLS_MINIO_OIDC_OK=true
 fi
 
 ALICE_OBJECT="$(grep -E 'Object: default-alice-files/' "$EVIDENCE_DIR/e2e-alice-bob.log" | tail -1 | sed -E 's/.*Object: //')"
@@ -186,7 +198,7 @@ fi
 dc ps > "$EVIDENCE_DIR/compose-ps-final.txt" 2>&1 || true
 
 OVERALL_OK=false
-if [[ "$STACK_READY" == "true" && "$E2E_EXIT" -eq 0 && "$PHASE1_INFRA_OK" == "true" && "$PHASE2_ALICE_OK" == "true" && "$PHASE3_BOB_OK" == "true" && "$NOAUTH_DENY_OK" == "true" ]]; then
+if [[ "$STACK_READY" == "true" && "$E2E_EXIT" -eq 0 && "$PHASE1_INFRA_OK" == "true" && "$PHASE2_ALICE_OK" == "true" && "$PHASE3_BOB_OK" == "true" && "$KEYCLOAK_MTLS_MINIO_OIDC_OK" == "true" && "$NOAUTH_DENY_OK" == "true" ]]; then
   OVERALL_OK=true
 fi
 
@@ -205,8 +217,10 @@ cat > "$REPORT_FILE" <<EOF
 | Phase 1 infrastructure verification | $(bool_text "$PHASE1_INFRA_OK") | e2e-alice-bob.log |
 | Phase 2 Alice auth + upload/get | $(bool_text "$PHASE2_ALICE_OK") | e2e-alice-bob.log |
 | Phase 3 Bob auth + upload/get | $(bool_text "$PHASE3_BOB_OK") | e2e-alice-bob.log |
+| Keycloak mTLS cert auth + MinIO OIDC web identity (bob + charly) | $(bool_text "$KEYCLOAK_MTLS_MINIO_OIDC_OK") | e2e-keycloak-mtls-minio-oidc.log |
 | Unauthenticated access denied (401/403) | $(bool_text "$NOAUTH_DENY_OK") | no-auth probe HTTP=$NOAUTH_CODE |
 | e2e-alice-bob script exit code | $E2E_EXIT | e2e-alice-bob.log |
+| keycloak-mtls-minio-oidc script exit code | ${KEYCLOAK_MTLS_MINIO_OIDC_EXIT:-1} | e2e-keycloak-mtls-minio-oidc.log |
 
 ## Extracted Artifacts
 

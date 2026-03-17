@@ -187,6 +187,34 @@ docker ps | grep keycloak
 docker exec steel-hammer-keycloak /opt/keycloak/bin/kcadm.sh list-users -r dev --admin-server-url http://localhost:8080
 ```
 
+### Keycloak mTLS Browser Flow Returns No Authorization Redirect
+
+**Problem:** `scripts/e2e/e2e-keycloak-mtls-minio-oidc.sh` fails with:
+
+```text
+No redirect location found for bob. Keycloak did not issue an auth redirect.
+```
+
+**Diagnosis:** Keycloak serves login HTML (`HTTP 200`) instead of issuing an auth-code redirect with `code=...`. This indicates x509 browser-flow mapping is not completing automatic user binding.
+
+**Solutions:**
+
+```bash
+# Reproduce and inspect headers/body in test-network context
+cd steel-hammer
+docker compose -f docker-compose-steel-hammer.yml run --rm --entrypoint /bin/bash steel-hammer-test -lc '
+AUTH_URL="https://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/auth?client_id=dev-client&redirect_uri=https://steel-hammer-minio:9001/oauth_callback&response_type=code&scope=openid"
+curl -k -sS -D /tmp/h.txt -o /tmp/b.txt --cert /certs/client/bob.crt --key /certs/client/bob.key "$AUTH_URL"
+head -n 20 /tmp/h.txt
+head -n 40 /tmp/b.txt
+'
+
+# Verify realm flow import and browser flow assignment
+docker logs --tail 200 steel-hammer-keycloak | grep -Ei 'import|flow|x509|realm|error|warn'
+```
+
+**Expected fix direction:** ensure x509 authenticator mapping matches certificate subject/username for `bob` and `charly`, and verify `browserFlow` assignment is effective after realm import.
+
 ### Service Discovery Not Working
 
 **Problem:** Services can't find each other
@@ -207,6 +235,100 @@ docker ps | grep buzzle
 docker-compose restart brazz-nossel
 docker-compose restart sentinel-gear
 docker-compose restart claimspindel
+```
+
+## LGTM Observability Troubleshooting
+
+### One-Command LGTM Diagnostics
+
+```bash
+# Generates readiness, API, and log evidence under test-results/lgtm-diagnostics/<timestamp>
+bash scripts/e2e/diagnose-lgtm.sh
+```
+
+### LGTM Services Are Running But Host `localhost` Checks Fail
+
+**Problem:** Containers are `Up`, but checks like `curl http://localhost:3100/ready` fail from host shell.
+
+**Why this happens:** In `steel-hammer/docker-compose-lgtm.yml`, most LGTM services are not published to host ports.
+
+**Solutions:**
+
+```bash
+# Check LGTM container status first
+docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E 'steel-hammer-(loki|tempo|mimir|grafana|promtail|otel-collector)'
+
+# Run checks from inside the compose network instead of host localhost
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS http://steel-hammer-loki:3100/ready
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS http://steel-hammer-tempo:3200/ready
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS http://steel-hammer-mimir:9009/ready
+```
+
+### LGTM Readiness Returns 503 During Startup
+
+**Problem:** `tempo`/`mimir`/`loki` return HTTP 503 for a short time right after `docker compose up -d`.
+
+**Diagnosis:** Usually startup warm-up, ring/bootstrap, or storage init delay.
+
+**Solutions:**
+
+```bash
+# Retry readiness checks before declaring failure
+for i in {1..8}; do
+   code=$(docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS -o /dev/null -w '%{http_code}' http://steel-hammer-mimir:9009/ready || true)
+   echo "mimir:$code attempt:$i"
+   [ "$code" = "200" ] && break
+   sleep 2
+done
+```
+
+### Collector Shows "Failed to Scrape Prometheus Endpoint"
+
+**Problem:** `steel-hammer-otel-collector` logs show warnings like `Failed to scrape Prometheus endpoint` for some jobs.
+
+**Diagnosis:** Common during startup race while services are not fully ready yet.
+
+**Solutions:**
+
+```bash
+# Inspect collector warnings/errors
+docker logs --tail 200 steel-hammer-otel-collector 2>&1 | grep -Ei 'error|warn|failed|refused|timeout'
+
+# Confirm dependencies are healthy, then re-check after warm-up
+docker ps --format '{{.Names}}\t{{.Status}}' | grep -E 'steel-hammer-(keycloak|minio|claimspindel|sentinel-gear)'
+```
+
+### Loki Query Errors With Instant Query API
+
+**Problem:** Querying logs with `/loki/api/v1/query` returns bad request for log selectors.
+
+**Diagnosis:** Instant query endpoint does not support log queries in the same way as range queries.
+
+**Solutions:**
+
+```bash
+# Use label discovery for quick smoke checks
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS \
+   'http://steel-hammer-loki:3100/loki/api/v1/label/service_name/values'
+
+# Use query_range for log content retrieval
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -G -sS \
+   --data-urlencode 'query={service_name=~".+"}' \
+   --data-urlencode 'limit=100' \
+   --data-urlencode "start=$(date -u -d '5 minutes ago' +%s%N)" \
+   --data-urlencode "end=$(date -u +%s%N)" \
+   'http://steel-hammer-loki:3100/loki/api/v1/query_range'
+```
+
+### Fast LGTM API Smoke Test
+
+```bash
+# Mimir API status and sample count
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS \
+   'http://steel-hammer-mimir:9009/prometheus/api/v1/query?query=up' | jq '.status, (.data.result|length)'
+
+# Grafana logs for provisioning hints (datasources/dashboards)
+docker logs --tail 200 steel-hammer-grafana 2>&1 | grep -Ei 'error|warn|provision|datasource'
 ```
 
 ## Network Troubleshooting

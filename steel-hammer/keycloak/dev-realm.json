@@ -12,6 +12,21 @@
       "directAccessGrantsEnabled": true,
       "redirectUris": ["*"],
       "baseUrl": "http://localhost:7085"
+    },
+    {
+      "clientId": "minio-console",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "minio-console-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "https://steel-hammer-minio:9001/oauth_callback",
+        "https://localhost:9001/oauth_callback",
+        "http://localhost:9001/oauth_callback"
+      ],
+      "webOrigins": ["+"]
     }
   ],
   "roles": {
@@ -86,6 +101,23 @@
       "realmRoles": ["devrole"]
     },
     {
+      "username": "charly",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Charly",
+      "lastName": "Cloud",
+      "email": "charly@ironbucket.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "charlyP@ss",
+          "temporary": false
+        }
+      ],
+      "groups": ["devgroup"],
+      "realmRoles": ["devrole"]
+    },
+    {
       "username": "dana",
       "enabled": true,
       "emailVerified": true,
@@ -122,8 +154,8 @@
   ],
   "authenticationFlows": [
     {
-      "alias": "browser",
-      "description": "Browser based authentication",
+      "alias": "browser-x509",
+      "description": "Browser based authentication with optional client certificate",
       "providerId": "basic-flow",
       "topLevel": true,
       "builtIn": false,
@@ -141,10 +173,10 @@
           "userSetupAllowed": false
         },
         {
-          "authenticator": "webauthn-authenticator",
+          "authenticator": "auth-x509-client-username-form",
           "requirement": "ALTERNATIVE",
           "priority": 2,
-          "userSetupAllowed": true
+          "userSetupAllowed": false
         },
         {
           "authenticator": "auth-username-password-form",
@@ -153,22 +185,8 @@
           "userSetupAllowed": false
         }
       ]
-    },
-    {
-      "alias": "webauthn-browser",
-      "description": "WebAuthn browser authentication",
-      "providerId": "basic-flow",
-      "topLevel": true,
-      "builtIn": false,
-      "authenticationExecutions": [
-        {
-          "authenticator": "webauthn-authenticator",
-          "requirement": "REQUIRED",
-          "priority": 0,
-          "userSetupAllowed": true
-        }
-      ]
     }
-  ]
+  ],
+  "browserFlow": "browser-x509"
 }
 

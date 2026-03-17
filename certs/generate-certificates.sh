@@ -73,6 +73,11 @@ generate_service_cert() {
   local service_dir="${SERVICES_DIR}/${service_name}"
   
   echo -e "${BLUE}Generating certificate for ${service_name}...${NC}"
+
+  if [[ -f "${service_dir}/tls.key" && -f "${service_dir}/tls.crt" ]]; then
+    echo -e "${YELLOW}⚠ ${service_name} certificate already exists, skipping key/cert generation${NC}"
+    return 0
+  fi
   
   # Generate service private key
   openssl genrsa -out "${service_dir}/tls.key" 2048
@@ -148,33 +153,57 @@ generate_service_cert "infrastructure/vault" "vault.ironbucket.local" "steel-ham
 ###############################################################################
 # Step 3: Generate client certificate for testing
 ###############################################################################
-echo -e "${BLUE}Step 3: Generating client test certificate...${NC}"
+echo -e "${BLUE}Step 3: Generating client certificates...${NC}"
 
 CLIENT_DIR="${CERTS_DIR}/client"
 mkdir -p "${CLIENT_DIR}"
 
-openssl genrsa -out "${CLIENT_DIR}/client.key" 2048
+generate_client_cert() {
+  local name="$1"
+  local cn="$2"
 
-openssl req -new \
-  -key "${CLIENT_DIR}/client.key" \
-  -out "${CLIENT_DIR}/client.csr" \
-  -subj "/C=US/ST=California/L=San Francisco/O=IronBucket/OU=Testing/CN=test-client"
+  if [[ -f "${CLIENT_DIR}/${name}.key" && -f "${CLIENT_DIR}/${name}.crt" ]]; then
+    echo -e "${YELLOW}⚠ Client certificate already exists: ${name} (skipping)${NC}"
+    return 0
+  fi
 
-cat > "${CLIENT_DIR}/client-ext.cnf" <<EOF
+  openssl genrsa -out "${CLIENT_DIR}/${name}.key" 2048
+
+  openssl req -new \
+    -key "${CLIENT_DIR}/${name}.key" \
+    -out "${CLIENT_DIR}/${name}.csr" \
+    -subj "/C=US/ST=California/L=San Francisco/O=IronBucket/OU=Testing/CN=${cn}"
+
+  cat > "${CLIENT_DIR}/${name}-ext.cnf" <<EOF
 extendedKeyUsage = clientAuth
+subjectAltName = DNS:${cn},DNS:localhost
 EOF
 
-openssl x509 -req \
-  -in "${CLIENT_DIR}/client.csr" \
-  -CA "${CA_DIR}/ca.crt" \
-  -CAkey "${CA_DIR}/ca.key" \
-  -CAcreateserial \
-  -out "${CLIENT_DIR}/client.crt" \
-  -days 365 \
-  -sha256 \
-  -extfile "${CLIENT_DIR}/client-ext.cnf"
+  openssl x509 -req \
+    -in "${CLIENT_DIR}/${name}.csr" \
+    -CA "${CA_DIR}/ca.crt" \
+    -CAkey "${CA_DIR}/ca.key" \
+    -CAcreateserial \
+    -out "${CLIENT_DIR}/${name}.crt" \
+    -days 365 \
+    -sha256 \
+    -extfile "${CLIENT_DIR}/${name}-ext.cnf"
 
-echo -e "${GREEN}✓ Client certificate generated${NC}\n"
+  openssl pkcs12 -export \
+    -in "${CLIENT_DIR}/${name}.crt" \
+    -inkey "${CLIENT_DIR}/${name}.key" \
+    -out "${CLIENT_DIR}/${name}.p12" \
+    -name "${name}" \
+    -passout pass:changeit
+
+  echo -e "${GREEN}✓${NC} Client certificate generated: ${name}"
+}
+
+generate_client_cert "client" "test-client"
+generate_client_cert "bob" "bob"
+generate_client_cert "charly" "charly"
+
+echo ""
 
 ###############################################################################
 # Step 4: Create certificate bundle
