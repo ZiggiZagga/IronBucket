@@ -16,6 +16,11 @@ bash "${SCRIPT_DIR}/run-maven-in-container.sh" "${MODULE_PATH}" -B -V test -Pint
 MVN_EXIT=$?
 set -e
 
+if [[ "${MVN_EXIT}" -ne 0 ]]; then
+    echo "Behavioral integration tests failed, collecting surefire diagnostics..."
+    bash "${SCRIPT_DIR}/print-surefire-failures.sh" "${REPO_ROOT}/${MODULE_PATH}/target/surefire-reports" "TEST-com.ironbucket.sentinelgear.integration*.xml" 20 || true
+fi
+
 REPORT_DIR="${REPO_ROOT}/${MODULE_PATH}/target/surefire-reports"
 PATTERN="TEST-com.ironbucket.sentinelgear.integration*.xml"
 
