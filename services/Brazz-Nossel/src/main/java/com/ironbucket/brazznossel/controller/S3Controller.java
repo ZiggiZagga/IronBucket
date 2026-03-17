@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.s3.model.CompletedPart;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/s3")
@@ -33,10 +34,7 @@ public class S3Controller {
 			username = jwt.getSubject();
 		}
 		
-		String tenant = jwt.getClaimAsString("tenant");
-		if (tenant == null) {
-			tenant = "default";
-		}
+		String tenant = resolveTenant(jwt);
 		
 		List<String> roles = jwt.getClaimAsStringList("roles");
 		if (roles == null) {
@@ -51,6 +49,74 @@ public class S3Controller {
 				.roles(roles)
 				.region(jwt.getClaimAsString("region"))
 				.build();
+	}
+
+	private String resolveTenant(Jwt jwt) {
+		String tenant = firstNonBlank(
+				jwt.getClaimAsString("tenant"),
+				jwt.getClaimAsString("tenant_id"),
+				jwt.getClaimAsString("tenantId"));
+		if (tenant != null) {
+			return tenant;
+		}
+
+		Object organizationClaim = jwt.getClaims().get("organization");
+		if (organizationClaim instanceof String org && !org.isBlank()) {
+			return org;
+		}
+		if (organizationClaim instanceof Map<?, ?> organizationMap) {
+			Object id = organizationMap.get("id");
+			if (id instanceof String idValue && !idValue.isBlank()) {
+				return idValue;
+			}
+			Object name = organizationMap.get("name");
+			if (name instanceof String nameValue && !nameValue.isBlank()) {
+				return nameValue;
+			}
+		}
+
+		String orgAlias = firstNonBlank(
+				jwt.getClaimAsString("organization_id"),
+				jwt.getClaimAsString("org"),
+				jwt.getClaimAsString("org_id"),
+				jwt.getClaimAsString("kc_org"));
+		if (orgAlias != null) {
+			return orgAlias;
+		}
+
+		List<String> organizations = jwt.getClaimAsStringList("organizations");
+		if (organizations != null && !organizations.isEmpty() && organizations.get(0) != null && !organizations.get(0).isBlank()) {
+			return organizations.get(0);
+		}
+
+		List<String> groups = jwt.getClaimAsStringList("groups");
+		if (groups != null) {
+			for (String group : groups) {
+				if (group == null || group.isBlank()) {
+					continue;
+				}
+				if (group.startsWith("org:")) {
+					return group.substring("org:".length());
+				}
+				if (group.startsWith("/org/")) {
+					return group.substring("/org/".length());
+				}
+				if (group.startsWith("/orgs/")) {
+					return group.substring("/orgs/".length());
+				}
+			}
+		}
+
+		return "default";
+	}
+
+	private String firstNonBlank(String... values) {
+		for (String value : values) {
+			if (value != null && !value.isBlank()) {
+				return value;
+			}
+		}
+		return null;
 	}
 	
 	@GetMapping(path="/dev")

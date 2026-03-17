@@ -76,9 +76,12 @@ public class JWTValidator {
     public String extractTenant(String token) {
         try {
             Claims claims = parser.parseClaimsJws(token).getBody();
-            Object tenant = claims.get("tenant");
-            if (tenant instanceof String && !((String) tenant).isBlank()) {
-                return (String) tenant;
+            String tenant = firstNonBlankClaim(claims,
+                    "tenant",
+                    "tenant_id",
+                    "tenantId");
+            if (tenant != null) {
+                return tenant;
             }
             return extractOrganizationFromClaims(claims);
         } catch (JwtException e) {

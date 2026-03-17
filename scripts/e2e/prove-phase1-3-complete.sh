@@ -90,6 +90,15 @@ wait_container_ready "steel-hammer-buzzle-vane" || STACK_READY=false
 wait_container_ready "steel-hammer-claimspindel" || STACK_READY=false
 wait_container_ready "steel-hammer-brazz-nossel" || STACK_READY=false
 wait_container_ready "steel-hammer-sentinel-gear" || STACK_READY=false
+wait_container_ready "steel-hammer-graphite-forge" || STACK_READY=false
+
+log "Restarting Graphite-Forge to refresh runtime DNS cache"
+dc restart steel-hammer-graphite-forge > "$EVIDENCE_DIR/graphite-restart.log" 2>&1 || true
+wait_container_ready "steel-hammer-graphite-forge" || STACK_READY=false
+
+log "Restarting Sentinel-Gear after Graphite-Forge refresh"
+dc restart steel-hammer-sentinel-gear > "$EVIDENCE_DIR/sentinel-restart.log" 2>&1 || true
+wait_container_ready "steel-hammer-sentinel-gear" || STACK_READY=false
 
 log "Running real Alice/Bob E2E scenario in internal Docker network"
 set +e
