@@ -67,6 +67,58 @@
       "groups": ["admingroup"],
       "realmRoles": ["adminrole"]
     }
+    ,
+    {
+      "username": "charlie",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Charlie",
+      "lastName": "Cloud",
+      "email": "charlie@ironbucket.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "charlieP@ss",
+          "temporary": false
+        }
+      ],
+      "groups": ["devgroup"],
+      "realmRoles": ["devrole"]
+    },
+    {
+      "username": "dana",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dana",
+      "lastName": "Data",
+      "email": "dana@ironbucket.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "danaP@ss",
+          "temporary": false
+        }
+      ],
+      "groups": ["devgroup"],
+      "realmRoles": ["devrole"]
+    },
+    {
+      "username": "eve",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Eve",
+      "lastName": "Edge",
+      "email": "eve@ironbucket.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "eveP@ss",
+          "temporary": false
+        }
+      ],
+      "groups": ["devgroup"],
+      "realmRoles": ["devrole"]
+    }
   ],
   "authenticationFlows": [
     {

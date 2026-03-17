@@ -1,6 +1,8 @@
 package com.ironbucket.roadmap;
 
+import com.ironbucket.sentinelgear.GatewayApp;
 import com.ironbucket.sentinelgear.security.TamperReplayDetector;
+import com.ironbucket.sentinelgear.testing.TestJwtDecoderConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.Instant;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @SpringBootTest(
+    classes = {GatewayApp.class, TestJwtDecoderConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.cloud.discovery.enabled=false",
@@ -74,10 +76,10 @@ class GovernanceIntegrityResilienceTest {
         String signature = detector.sign(payload);
 
         webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
             .headers(headers -> {
+                headers.setBearerAuth("roadmap-token");
                 headers.add("X-Actor", "alice@tenant-a");
                 headers.add("X-Request-ID", "req-valid");
                 headers.add("X-Bucket", "tenant-a");
@@ -132,10 +134,10 @@ class GovernanceIntegrityResilienceTest {
         String signature = detector.sign(payload);
 
         webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
             .headers(headers -> {
+                headers.setBearerAuth("roadmap-token");
                 headers.add("X-Actor", "alice@tenant-a");
                 headers.add("X-Request-ID", "req-header");
                 headers.add("X-Bucket", "tenant-a");
@@ -157,10 +159,10 @@ class GovernanceIntegrityResilienceTest {
         String signature
     ) {
         return webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
             .headers(headers -> {
+                headers.setBearerAuth("roadmap-token");
                 headers.add("X-Actor", "alice@tenant-a");
                 headers.add("X-Request-ID", "req-replay");
                 headers.add("X-Bucket", "tenant-a");
@@ -183,7 +185,7 @@ class GovernanceIntegrityResilienceTest {
     }
 
     private static Stream<Arguments> signatureVerificationCases() {
-        TamperReplayDetector local = new TamperReplayDetector("contract-secret", java.time.Duration.ofMinutes(5), java.time.Clock.systemUTC());
+        TamperReplayDetector local = new TamperReplayDetector("test-presigned-secret", java.time.Duration.ofMinutes(5), java.time.Clock.systemUTC());
         return Stream.of(
             Arguments.of("payload-a", local.sign("payload-a"), true),
             Arguments.of("payload-b", local.sign("payload-b"), true),
@@ -268,7 +270,6 @@ class GovernanceIntegrityResilienceTest {
                 headers.add("X-Actor", "alice");
                 headers.add("X-Request-ID", "req-6");
                 headers.add("X-Bucket", "tenant-a");
-                headers.add(HEADER_NONCE, " ");
                 headers.add(HEADER_EXPIRES_AT, String.valueOf(Instant.now().plusSeconds(120).getEpochSecond()));
                 headers.add(HEADER_SIGNED_HEADERS, "x-actor,x-request-id,x-bucket");
                 headers.add(HEADER_SIGNATURE, "sig-6");

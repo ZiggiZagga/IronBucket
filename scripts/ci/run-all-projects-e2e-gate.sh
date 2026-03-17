@@ -41,7 +41,7 @@ run_java_modules() {
 
   for module in "${modules[@]}"; do
     log "Java module test: $module"
-    if (cd "$ROOT_DIR/$module" && mvn -B test) >>"$LOG_FILE" 2>&1; then
+    if bash "$ROOT_DIR/scripts/ci/run-maven-in-container.sh" "$module" -B -V test >>"$LOG_FILE" 2>&1; then
       JAVA_PASSED=$((JAVA_PASSED + 1))
       log "PASS: $module"
     else
@@ -61,8 +61,14 @@ run_ui_projects() {
   UI_PASSED=0
 
   for project in "${projects[@]}"; do
-    log "UI project checks (npm ci/test/build): $project"
-    if (cd "$ROOT_DIR/$project" && npm ci --no-audit --no-fund && npm test && npm run build) >>"$LOG_FILE" 2>&1; then
+    log "UI project checks in container (npm ci/test/build): $project"
+    if docker run --rm \
+      --user "$(id -u):$(id -g)" \
+      -e HOME=/tmp \
+      -v "$ROOT_DIR/$project:/workspace" \
+      -w /workspace \
+      node:20-bookworm \
+      bash -lc "npm ci --no-audit --no-fund && npm test && npm run build" >>"$LOG_FILE" 2>&1; then
       if [[ "$project" == "ironbucket-app-nextjs" ]]; then
         local dc="docker compose"
         if command -v docker-compose >/dev/null 2>&1; then

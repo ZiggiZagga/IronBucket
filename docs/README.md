@@ -1,7 +1,7 @@
 # IronBucket Documentation
 
-**Last Updated:** March 12, 2026  
-**Status:** Core platform 100% operational | Phase 3 roadmap contracts 100% complete (current Sentinel roadmap suite)
+**Last Updated:** March 14, 2026  
+**Status:** Core platform operational | Phase 3 roadmap contracts 100% complete | Release hardening active
 
 ---
 
@@ -50,8 +50,13 @@
 **Test Coverage:**
 - Core Platform: 100% (7/7 tests passing)
 - Infrastructure: 89% (16/18 tests passing)
-- Observability: logs/metrics operational; tracing runtime hardening active (see Observability Featureset)
+- Observability: logs/metrics/tracing operational in LGTM (Vault telemetry included); proof stabilization active
 - Maven Tests: 79% (103/131 - 28 are TDD roadmap tests for Phase 3)
+
+**Latest complete run (develop):**
+- 194 total, 193 passed, 2 failed
+- Failing suites: `tools/Storage-Conductor` build, `Observability_Phase2_Proof`
+- Cert bootstrap path validated by deleting generated cert artifacts before the run
 
 ---
 

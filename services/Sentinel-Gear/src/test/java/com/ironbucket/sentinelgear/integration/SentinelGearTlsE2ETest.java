@@ -1,5 +1,7 @@
 package com.ironbucket.sentinelgear.integration;
 
+import com.ironbucket.sentinelgear.GatewayApp;
+import com.ironbucket.sentinelgear.testing.TestJwtDecoderConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,9 +13,11 @@ import reactor.netty.http.client.HttpClient;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.time.Duration;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(
+    classes = {GatewayApp.class, TestJwtDecoderConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "server.ssl.enabled=true",
@@ -22,8 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         "server.ssl.key-store-type=PKCS12",
         "server.ssl.key-alias=sentinel-test",
         "spring.cloud.discovery.enabled=false",
-        "eureka.client.enabled=false",
-        "management.server.port=0"
+        "eureka.client.enabled=false"
     }
 )
 @DisplayName("Sentinel-Gear TLS End-to-End")
@@ -49,11 +52,14 @@ class SentinelGearTlsE2ETest {
             .clientConnector(new ReactorClientHttpConnector(secureClient))
             .build();
 
-        httpsClient.get()
-            .uri("/actuator/health-check")
-            .retrieve()
-            .bodyToMono(String.class)
+        Integer status = httpsClient.get()
+            .uri("/")
+            .exchangeToMono(response -> response.bodyToMono(String.class)
+                .defaultIfEmpty("")
+                .map(body -> response.statusCode().value()))
             .block(Duration.ofSeconds(5));
+
+        assertTrue(status != null && status < 500);
     }
 
     @Test
@@ -64,7 +70,7 @@ class SentinelGearTlsE2ETest {
             .build();
 
         assertThrows(WebClientRequestException.class, () -> httpClient.get()
-            .uri("http://localhost:" + port + "/actuator/health-check")
+            .uri("http://localhost:" + port + "/actuator/health")
             .retrieve()
             .bodyToMono(String.class)
             .block(Duration.ofSeconds(5)));

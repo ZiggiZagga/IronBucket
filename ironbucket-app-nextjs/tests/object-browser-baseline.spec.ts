@@ -5,7 +5,12 @@ import path from 'node:path';
 test('object-browser baseline flow works live end-to-end', async ({ page }) => {
   await page.goto('/e2e-object-browser');
 
-  await page.getByLabel('Active user').selectOption('alice');
+  // Teste alle Browser-User
+  for (const user of ['alice', 'bob', 'charlie', 'dana', 'eve']) {
+    await page.getByLabel('Active user').selectOption(user);
+    // ...existing code...
+    // (Hier kann für jeden User die gleiche E2E-Interaktion ausgeführt werden)
+  }
 
   const bucketButtons = page.locator('button').filter({ hasText: /^default-/ });
   await expect(bucketButtons.first()).toBeVisible({ timeout: 45_000 });

@@ -81,7 +81,10 @@ Use this workflow as the primary end-to-end release confidence gate.
 - ✅ Enforces Next.js live UI persistence scenario (`ui-live-upload-persistence.spec.ts`) with real backend round-trip verification
 - ✅ Executes UI Playwright E2E in dedicated compose runner container (`steel-hammer-ui-e2e`) with explicit service dependencies
 - ✅ Validates gateway `/graphql` path through Sentinel-Gear to Graphite-Forge runtime service
+- ✅ Executes full Graphite-Forge operation sequence for additional users (`charlie`, `dana`, `eve`) via Sentinel entrypoint:
+  `createBucket`, `uploadObject`, `listBuckets`, `getBucket`, `listObjects`, `getObject`, `getBucketRoutingDecision`, `downloadObject`, `deleteObject`, `deleteBucket`
 - ✅ Runs Phase 1-4 roadmap E2E proof gate
+- ✅ Uses deterministic Phase 4 MinIO CRUD proof in isolated container network with configurable endpoint scheme (`PHASE4_MINIO_SCHEME`, default `http`)
 - ✅ Runs Phase 2 observability infrastructure gate (`scripts/ci/run-observability-infra-gate.sh`)
 - ✅ Uses deterministic Phase 2 proof command (`scripts/e2e/prove-phase2-observability.sh`)
 - ✅ Enforces Mimir ingestion thresholds for `steel-hammer-keycloak`, `steel-hammer-minio`, and `steel-hammer-postgres-exporter`

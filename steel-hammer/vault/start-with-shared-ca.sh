@@ -56,6 +56,10 @@ if [ -f "$ROOT_FILE" ]; then
   if ! vault secrets list -format=json | grep -q '"secret/"'; then
     vault secrets enable -path=secret -version=2 kv >/dev/null 2>&1 || true
   fi
+
+  if [ -f /vault/local/init-dev-secrets.sh ]; then
+    /bin/sh /vault/local/init-dev-secrets.sh >/dev/null 2>&1 || true
+  fi
 fi
 
 wait "$VAULT_PID"

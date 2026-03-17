@@ -219,13 +219,19 @@ services:
       - ../certs:/certs:ro
     depends_on:
       - steel-hammer-keycloak
+      - steel-hammer-vault
       - otel-collector
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
       - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "SPRING_APPLICATION_NAME=buzzle-vane"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
-      - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
+      - "SPRING_CLOUD_VAULT_ENABLED=true"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/buzzle-vane}"
+      - "MANAGEMENT_HEALTH_VAULT_ENABLED=true"
       - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
@@ -257,6 +263,7 @@ services:
       - ../certs:/certs:ro
     depends_on:
       - steel-hammer-keycloak
+      - steel-hammer-vault
       - steel-hammer-postgres
       - steel-hammer-graphite-forge
       - otel-collector
@@ -265,9 +272,18 @@ services:
       - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=sentinel-gear"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
-      - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
-      - "IRONBUCKET_SECURITY_PRESIGNED_SECRET=${IRONBUCKET_SECURITY_PRESIGNED_SECRET:-dev-presigned-secret-for-steel-hammer}"
+      - "SPRING_CLOUD_VAULT_ENABLED=true"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/sentinel-gear}"
+      - "MANAGEMENT_HEALTH_VAULT_ENABLED=true"
+      - "IRONBUCKET_SECURITY_VAULT_ENABLED=${IRONBUCKET_SECURITY_VAULT_ENABLED:-true}"
+      - "IRONBUCKET_SECURITY_VAULT_URI=https://steel-hammer-vault:8200"
+      - "IRONBUCKET_SECURITY_VAULT_TOKEN=${IRONBUCKET_SECURITY_VAULT_TOKEN:-dev-root-token}"
+      - "IRONBUCKET_SECURITY_VAULT_KV_PATH=${IRONBUCKET_SECURITY_VAULT_KV_PATH:-secret/data/ironbucket/sentinel-gear}"
+      - "IRONBUCKET_SECURITY_VAULT_SECRET_KEY=${IRONBUCKET_SECURITY_VAULT_SECRET_KEY:-presignedSecret}"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
@@ -297,10 +313,18 @@ services:
     command: ["cp /certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar /app/graphite-forge.jar"]
     volumes:
       - ../certs:/certs:ro
+    depends_on:
+      - steel-hammer-vault
     environment:
       - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "SPRING_APPLICATION_NAME=graphite-forge"
       - "SPRING_PROFILES_ACTIVE=docker"
+      - "SPRING_CLOUD_VAULT_ENABLED=true"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/graphite-forge}"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0"
@@ -328,6 +352,7 @@ services:
       - ../certs:/certs:ro
     depends_on:
       - steel-hammer-keycloak
+      - steel-hammer-vault
       - steel-hammer-postgres
       - steel-hammer-sentinel-gear
       - otel-collector
@@ -336,8 +361,13 @@ services:
       - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
       - "SPRING_APPLICATION_NAME=claimspindel"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
-      - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
+      - "SPRING_CLOUD_VAULT_ENABLED=true"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/claimspindel}"
+      - "MANAGEMENT_HEALTH_VAULT_ENABLED=true"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
@@ -366,6 +396,7 @@ services:
       - ../certs:/certs:ro
     depends_on:
       - steel-hammer-keycloak
+      - steel-hammer-vault
       - steel-hammer-postgres
       - steel-hammer-claimspindel
       - steel-hammer-minio
@@ -374,11 +405,14 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"
       - "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/certs/ca/ca-truststore.p12 -Djavax.net.ssl.trustStorePassword=changeit -Djavax.net.ssl.trustStoreType=PKCS12"
       - "POSTGRES_PASSWORD=postgres_admin_pw"
-      - "MINIO_ACCESS_KEY=vault-managed-root-user"
-      - "MINIO_SECRET_KEY=vault-managed-root-password"
       - "SPRING_APPLICATION_NAME=brazz-nossel"
-      - "SPRING_CLOUD_VAULT_ENABLED=false"
-      - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
+      - "SPRING_CLOUD_VAULT_ENABLED=true"
+      - "SPRING_CLOUD_VAULT_URI=https://steel-hammer-vault:8200"
+      - "SPRING_CLOUD_VAULT_SSL_SKIP_VERIFY=false"
+      - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
+      - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
+      - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/brazz-nossel}"
+      - "MANAGEMENT_HEALTH_VAULT_ENABLED=true"
       - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
       - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"

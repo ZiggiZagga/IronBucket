@@ -1,5 +1,7 @@
 package com.ironbucket.roadmap;
 
+import com.ironbucket.sentinelgear.GatewayApp;
+import com.ironbucket.sentinelgear.testing.TestJwtDecoderConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -8,7 +10,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.stream.Stream;
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(
+    classes = {GatewayApp.class, TestJwtDecoderConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.cloud.discovery.enabled=false",
@@ -51,9 +53,9 @@ class S3FeaturesTest {
     @MethodSource("s3Paths")
     void authenticatedRequestsReachRoutingLayer(HttpMethod method, String path) {
         webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
+            .headers(headers -> headers.setBearerAuth("roadmap-token"))
             .exchange()
             .expectStatus()
             .value(status -> assertFalse(status == 401 || status == 403));
@@ -74,9 +76,9 @@ class S3FeaturesTest {
     @MethodSource("pathStyleBucketPaths")
     void authenticatedPathStyleBucketContractsRoute(HttpMethod method, String path) {
         webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
+            .headers(headers -> headers.setBearerAuth("roadmap-token"))
             .exchange()
             .expectStatus()
             .value(status -> assertFalse(status == 401 || status == 403));

@@ -10,7 +10,15 @@ export MAVEN_DOCKER_ENV_VARS="${MAVEN_DOCKER_ENV_VARS:-ROADMAP_MIN_TESTS}"
 export REPO_ROOT MODULE_PATH
 
 echo "Running Sentinel-Gear roadmap profile tests in container..."
+set +e
 bash "${SCRIPT_DIR}/run-maven-in-container.sh" "${MODULE_PATH}" -B -V test -Proadmap
+MVN_EXIT=$?
+set -e
+
+if [[ "${MVN_EXIT}" -ne 0 ]]; then
+    echo "Roadmap profile tests failed, collecting surefire diagnostics..."
+    bash "${SCRIPT_DIR}/print-surefire-failures.sh" "${REPO_ROOT}/${MODULE_PATH}/target/surefire-reports" "TEST-com.ironbucket.roadmap*.xml" 20 || true
+fi
 
 REPORT_DIR="${REPO_ROOT}/${MODULE_PATH}/target/surefire-reports"
 PATTERN="TEST-com.ironbucket.roadmap*.xml"
@@ -20,6 +28,7 @@ if ! compgen -G "${REPORT_DIR}/${PATTERN}" > /dev/null; then
   exit 1
 fi
 
+export MVN_EXIT
 python3 - <<'PY'
 import glob
 import os
@@ -29,6 +38,7 @@ import xml.etree.ElementTree as ET
 report_dir = os.path.join(os.environ["REPO_ROOT"], os.environ["MODULE_PATH"], "target", "surefire-reports")
 pattern = os.path.join(report_dir, "TEST-com.ironbucket.roadmap*.xml")
 min_tests = int(os.environ.get("ROADMAP_MIN_TESTS", "50"))
+mvn_exit = int(os.environ.get("MVN_EXIT", "1"))
 
 files = sorted(glob.glob(pattern))
 if not files:
@@ -55,11 +65,11 @@ for file_path in files:
 executed = total_tests - total_skipped
 summary = (
     f"Sentinel roadmap gate summary: files={len(files)}, tests={total_tests}, "
-    f"executed={executed}, skipped={total_skipped}, failures={total_failures}, errors={total_errors}"
+    f"executed={executed}, skipped={total_skipped}, failures={total_failures}, errors={total_errors}, mvn_exit={mvn_exit}"
 )
 print(summary)
 
-if total_failures > 0 or total_errors > 0:
+if mvn_exit != 0 or total_failures > 0 or total_errors > 0:
     print("ERROR: Roadmap gate failed due to failing tests", file=sys.stderr)
     sys.exit(1)
 
@@ -82,5 +92,6 @@ if step_summary:
         f.write(f"| Skipped | {total_skipped} |\n")
         f.write(f"| Failures | {total_failures} |\n")
         f.write(f"| Errors | {total_errors} |\n")
+        f.write(f"| Maven Exit Code | {mvn_exit} |\n")
         f.write(f"| Minimum Required Executed | {min_tests} |\n")
 PY

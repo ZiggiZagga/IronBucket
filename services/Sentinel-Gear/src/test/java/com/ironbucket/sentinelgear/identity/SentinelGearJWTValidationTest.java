@@ -360,6 +360,41 @@ public class SentinelGearJWTValidationTest {
             String tenant = validator.extractTenant(token);
             assertEquals("tenant-override", tenant);
         }
+
+        @Test
+        @DisplayName("Tenant extracted from tenant_id alias")
+        public void testTenantExtractedFromTenantIdAlias() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "tenant_id", "tenant-from-snake-case"
+            ));
+
+            String tenant = validator.extractTenant(token);
+            assertEquals("tenant-from-snake-case", tenant);
+        }
+
+        @Test
+        @DisplayName("Tenant extracted from tenantId alias")
+        public void testTenantExtractedFromTenantIdCamelAlias() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "tenantId", "tenant-from-camel-case"
+            ));
+
+            String tenant = validator.extractTenant(token);
+            assertEquals("tenant-from-camel-case", tenant);
+        }
+
+        @Test
+        @DisplayName("Explicit tenant has priority over alias claims")
+        public void testTenantClaimHasPriorityOverAliases() {
+            String token = createJWTWithCustomClaims(Map.of(
+                    "tenant", "tenant-primary",
+                    "tenant_id", "tenant-secondary",
+                    "tenantId", "tenant-tertiary"
+            ));
+
+            String tenant = validator.extractTenant(token);
+            assertEquals("tenant-primary", tenant);
+        }
     }
     
     @Nested

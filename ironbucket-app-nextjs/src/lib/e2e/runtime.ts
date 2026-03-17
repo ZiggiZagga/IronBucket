@@ -5,7 +5,10 @@ export type ActorCredentials = {
 
 export const ACTOR_CREDENTIALS = {
   alice: { username: 'alice', password: 'aliceP@ss' },
-  bob: { username: 'bob', password: 'bobP@ss' }
+  bob: { username: 'bob', password: 'bobP@ss' },
+  charlie: { username: 'charlie', password: 'charlieP@ss' },
+  dana: { username: 'dana', password: 'danaP@ss' },
+  eve: { username: 'eve', password: 'eveP@ss' }
 } as const satisfies Record<string, ActorCredentials>;
 
 export type SupportedActor = keyof typeof ACTOR_CREDENTIALS;
