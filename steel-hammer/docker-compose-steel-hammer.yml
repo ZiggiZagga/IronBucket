@@ -500,7 +500,7 @@ services:
     entrypoint:
       - /bin/bash
       - -lc
-      - npm ci --no-audit --no-fund && npx playwright install --with-deps chromium && npm run build && npx playwright test --config playwright.config.ts tests/object-browser-baseline.spec.ts tests/ui-live-upload-persistence.spec.ts tests/ui-s3-methods-e2e.spec.ts tests/ui-s3-methods-performance.spec.ts --workers=1
+      - npm ci --no-audit --no-fund && npx playwright install --with-deps chromium && npm run build && npx playwright test --config playwright.config.ts tests/object-browser-baseline.spec.ts tests/ui-live-upload-persistence.spec.ts tests/ui-s3-methods-e2e.spec.ts tests/ui-s3-methods-performance.spec.ts tests/ui-governance-methods-e2e.spec.ts --workers=1
 
     restart: "no"
 

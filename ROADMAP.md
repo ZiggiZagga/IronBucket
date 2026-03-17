@@ -1,7 +1,7 @@
 # IronBucket Roadmap: Journey to Graphite Forge
 
-**Last Updated:** March 14, 2026 (12:20 UTC)  
-**Current Phase:** Phase E closeout + Vault-first hardening on develop  
+**Last Updated:** March 17, 2026 (03:20 UTC)  
+**Current Phase:** Phase E closeout + Vault-first hardening on develop (with full governance operation coverage validation)  
 **Overall Status:** 🟢 **Core roadmap gates validated** | 🟡 **Release hardening pending for four failing suites in latest complete run**
 
 **Verified Test Snapshot (2026-03-14):**
@@ -14,6 +14,11 @@
 - Cert-bootstrap resilience: validated by deleting generated cert artifacts before complete run; scripts regenerated required TLS assets automatically
 - Vault runtime hardening: Vault runs with TLS in LGTM compose and is included in infrastructure readiness checks
 - Complete-suite phase order now includes explicit performance proof before observability validation
+
+**Incremental Validation Snapshot (2026-03-17):**
+- Graphite-Forge governance resolver coverage expanded for Phase 2 operations and aliases
+- Java compile blocker in governance resolver fixed and validated (`mvn -DskipTests compile` in `services/Graphite-Forge`)
+- Containerized governance Playwright scenario passing: `tests/ui-governance-methods-e2e.spec.ts` (1/1 green)
 
 ---
 

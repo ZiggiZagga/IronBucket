@@ -4,7 +4,7 @@ Production-ready S3-compatible microservices platform with JWT authentication, m
 
 ## 🚨 Production Readiness Status
 
-**Current Status**: 🟢 **Core Build/Test + E2E Gates Green** | 🟡 **Release Hardening Active**
+**Current Status**: 🟢 **Core Build/Test + E2E Gates Green** | 🟢 **Phase 2 Governance Coverage Validated in Containers** | 🟡 **Release Hardening Active**
 
 IronBucket has validated Java test baselines and roadmap/behavioral gates, with ongoing hardening focused on release governance and production operations.
 
@@ -12,7 +12,7 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 |-----------|--------|-------|
 | Architecture | ✅ A+ | Zero-trust design, excellent |
 | Code Quality | ✅ A | Modern Java 25, Spring Boot 4 |
-| Tests | ✅ A | Backend suites and Sentinel gates passing |
+| Tests | ✅ A | Backend suites, Sentinel gates, and containerized governance E2E passing |
 | CI/CD | ✅ A- | Build, roadmap, behavioral, and provenance pipelines active |
 | Security Design | ✅ A+ | Zero-trust, multi-layer |
 | **Network Isolation** | 🔴 **C** | **NetworkPolicies required** |
@@ -131,6 +131,7 @@ PostgreSQL (Metadata)
 
 ✅ **Core module test pathways passing** (latest comprehensive run)  
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
+✅ **Graphite-Forge governance operation coverage validated in containerized Playwright** (`tests/ui-governance-methods-e2e.spec.ts`)
 🟡 **Latest full orchestrator** (2026-03-14): 194 total, 193 passed, 2 failed
 
 Latest known failing suites:
@@ -193,6 +194,7 @@ From clean Docker environment:
 - ✅ File retrieval from MinIO successful
 - ✅ JWT authentication enforced (HTTP 401)
 - ✅ Complete S3 API compatibility verified
+- ✅ Governance GraphQL operation flow verified in containerized UI E2E (`/e2e-governance-methods`)
 
 See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](docs/E2E-OBSERVABILITY-GUIDE.md), and [OBSERVABILITY-FEATURESET-STATUS.md](docs/OBSERVABILITY-FEATURESET-STATUS.md) for details.
 
