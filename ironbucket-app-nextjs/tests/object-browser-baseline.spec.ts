@@ -2,15 +2,30 @@ import { test, expect } from '@playwright/test';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-test('object-browser baseline flow works live end-to-end', async ({ page }) => {
+test('object-browser baseline flow works live end-to-end', async ({ page, request }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('ironbucket.e2e.actor', 'alice');
+  });
+
+  const bootstrapKey = `object-browser-bootstrap-${Date.now()}.txt`;
+  const bootstrapResponse = await request.post('/api/e2e/live-upload', {
+    data: {
+      actor: 'alice',
+      key: bootstrapKey,
+      content: 'object-browser bootstrap payload',
+      contentType: 'text/plain'
+    }
+  });
+  expect(bootstrapResponse.ok()).toBeTruthy();
+
   await page.goto('/e2e-object-browser');
 
-  // Teste alle Browser-User
-  for (const user of ['alice', 'bob', 'charlie', 'dana', 'eve']) {
+  // Only users exposed by this page are supported by this baseline scenario.
+  for (const user of ['alice', 'bob']) {
     await page.getByLabel('Active user').selectOption(user);
-    // ...existing code...
-    // (Hier kann für jeden User die gleiche E2E-Interaktion ausgeführt werden)
   }
+
+  await page.getByLabel('Active user').selectOption('alice');
 
   const bucketButtons = page.locator('button').filter({ hasText: /^default-/ });
   await expect(bucketButtons.first()).toBeVisible({ timeout: 45_000 });

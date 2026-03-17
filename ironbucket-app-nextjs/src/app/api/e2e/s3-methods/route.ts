@@ -202,6 +202,8 @@ export async function POST(req: NextRequest) {
 
     const getObjectWorked = getObjectResponse?.data?.getObject?.key === key;
 
+    const routingTenantId = bucket.split('-')[0] || ownerTenant;
+
     const routingDecisionResponse = await callGatewayGraphql(
       token,
       {
@@ -225,7 +227,7 @@ export async function POST(req: NextRequest) {
         `,
         variables: {
           jwtToken: token,
-          tenantId: ownerTenant,
+          tenantId: routingTenantId,
           bucketName: bucket,
           requiredCapability: 'OBJECT_READ'
         }

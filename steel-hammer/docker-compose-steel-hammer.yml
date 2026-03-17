@@ -396,9 +396,9 @@ services:
       - "MINIO_IDENTITY_OPENID_CLIENT_ID=minio-console"
       - "MINIO_IDENTITY_OPENID_CLIENT_SECRET=minio-console-secret"
       - "MINIO_IDENTITY_OPENID_SCOPES=openid,profile,email"
-      - "MINIO_IDENTITY_OPENID_CLAIM_NAME=preferred_username"
+      - "MINIO_IDENTITY_OPENID_CLAIM_NAME=policy"
       - "MINIO_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC=on"
-      - "MINIO_IDENTITY_OPENID_TLS_SKIP_VERIFY=on"
+      - "SSL_CERT_FILE=/certs/ca/ca.crt"
 
     volumes:
       - ../certs:/certs:ro
@@ -425,6 +425,7 @@ services:
       - /tmp/ironbucket-test:/tmp/ironbucket-test
       - /workspaces/IronBucket/test-results:/workspaces/IronBucket/test-results
       - ./test-scripts:/scripts:ro
+      - ./keycloak/dev-realm.json:/workspaces/IronBucket/steel-hammer/keycloak/dev-realm.json:ro
       - ../scripts:/workspaces/IronBucket/scripts:ro
       - ../services:/workspaces/IronBucket/services:ro
       - ../tools:/workspaces/IronBucket/tools:ro

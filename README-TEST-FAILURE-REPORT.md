@@ -95,3 +95,103 @@ Observed outcome:
 - Keep this report synchronized with actual gate behavior and workflow policy checks.
 
 _Last updated: March 17, 2026_
+
+---
+
+## UI E2E Troubleshooting Handoff (March 17, 2026)
+
+### Scope of this handoff
+This addendum captures the latest troubleshooting cycle for UI Playwright E2E failures related to:
+- `tests/object-browser-baseline.spec.ts`
+- `tests/ui-s3-methods-e2e.spec.ts`
+- `tests/ui-s3-methods-performance.spec.ts`
+
+### Final status from the last retry
+- Total Playwright tests executed in containerized UI suite: 5
+- Passing: 4
+- Failing: 1
+
+Passing in latest run:
+- `ui-governance-methods-e2e.spec.ts`
+- `ui-live-upload-persistence.spec.ts`
+- `ui-s3-methods-e2e.spec.ts`
+- `ui-s3-methods-performance.spec.ts`
+
+Still failing in latest run:
+- `object-browser-baseline.spec.ts`
+
+Failure signature:
+- UI cannot find any bucket button matching `^default-`
+- Assertion timeout at `expect(bucketButtons.first()).toBeVisible({ timeout: 45_000 })`
+
+### What was changed during this troubleshooting cycle
+
+1) `ironbucket-app-nextjs/src/app/api/e2e/s3-methods/route.ts`
+- Routing decision tenant alignment was adjusted to satisfy bucket ownership validation on default-prefixed buckets.
+
+2) `ironbucket-app-nextjs/src/app/api/e2e/screenshot-proof/route.ts`
+- `createBucket` in proof flow was made non-blocking (warn + continue) so repeated runs are not stopped by fixed proof-bucket create failures.
+
+3) `ironbucket-app-nextjs/tests/object-browser-baseline.spec.ts`
+- Unsupported actor options were removed from the test loop.
+- Actor initialization was moved earlier via `page.addInitScript` for deterministic request headers.
+- Bootstrap strategy was switched to `/api/e2e/live-upload` with actor `alice` to force a stable precondition.
+
+4) `ironbucket-app-nextjs/tests/ui-s3-methods-e2e.spec.ts`
+- Assertion alignment was kept consistent with `default-alice-methods-*` bucket naming.
+
+### What these results mean
+
+1) The S3 methods scenario is now stable end-to-end
+- Method coverage checks pass, performance test passes, and trace/correlation fields are present in result payload.
+
+2) The remaining failure is isolated to Object Browser baseline preconditions
+- The object-browser page still renders with no `default-*` bucket buttons in the failing run.
+- This is now the primary blocker to full green UI E2E.
+
+### Primary evidence locations
+
+- Latest run output (final retry):
+	- `/home/codespace/.vscode-remote/data/User/workspaceStorage/4438bd96/GitHub.copilot-chat/chat-session-resources/593bf6e2-7b96-4c2a-b1f6-b976f62c448c/call_lcwrQJVzaSZm9QZCsa3ZJd4j__vscode-1773744750015/content.txt`
+
+- Playwright report:
+	- `test-results/ui-playwright-report.json`
+
+- Failing test artifacts:
+	- `test-results/ui-playwright-artifacts/object-browser-baseline-ob-0b655--flow-works-live-end-to-end/trace.zip`
+	- `test-results/ui-playwright-artifacts/object-browser-baseline-ob-0b655--flow-works-live-end-to-end/error-context.md`
+
+- Passing-but-relevant proof flow context:
+	- `test-results/ui-playwright-artifacts/ui-s3-methods-e2e-ui-prove-eb925-phQL-object-browser-methods/trace.zip`
+
+### Recommended next actions for the next engineer
+
+1) Confirm bucket visibility contract for Object Browser page
+- Verify what `GET_BUCKETS` is expected to return for actor `alice` under current auth/policy mode.
+- Verify whether the bucket created via `/api/e2e/live-upload` is expected to be returned by `listBuckets` in this context.
+
+2) Add deterministic bucket setup API specifically for object-browser baseline
+- Create a dedicated `/api/e2e/object-browser-bootstrap` route that:
+	- creates a known bucket for actor `alice`
+	- uploads one known object
+	- returns bucket name
+- Use that route in `object-browser-baseline.spec.ts` instead of inferring state through another scenario.
+
+3) Add short diagnostic logging around Object Browser bucket query
+- Temporarily log bucket list count + first few names during test run to confirm whether failure is "no buckets returned" vs "buckets returned but naming mismatch".
+
+4) If bucket names are non-default under current policy mapping
+- Relax the baseline selector from `^default-` to a deterministic bucket returned by bootstrap response.
+
+### Reproduction command
+
+Run the same targeted test set in UI E2E container:
+
+```bash
+docker compose -f steel-hammer/docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e bash -lc 'cd /workspaces/IronBucket/ironbucket-app-nextjs && npx playwright test tests/object-browser-baseline.spec.ts tests/ui-s3-methods-e2e.spec.ts tests/ui-s3-methods-performance.spec.ts'
+```
+
+Expected current outcome (latest known):
+- 4 passed, 1 failed (`object-browser-baseline.spec.ts`)
+
+_UI E2E handoff updated: March 17, 2026_

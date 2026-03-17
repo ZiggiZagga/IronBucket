@@ -169,8 +169,12 @@ if grep -q 'Bob received JWT token' "$EVIDENCE_DIR/e2e-alice-bob.log" \
 fi
 
 log "Running Keycloak mTLS + MinIO OIDC web identity E2E scenario"
+MINIO_OIDC_ROLE_ARN="$(docker logs steel-hammer-minio 2>&1 | grep -Eo 'arn:minio:iam:::[^[:space:]]+' | tail -n1 || true)"
+if [[ -n "$MINIO_OIDC_ROLE_ARN" ]]; then
+  log "Detected MinIO OIDC role ARN: $MINIO_OIDC_ROLE_ARN"
+fi
 set +e
-dc run --rm --no-deps --entrypoint /bin/bash steel-hammer-test -lc '/workspaces/IronBucket/scripts/e2e/e2e-keycloak-mtls-minio-oidc.sh' \
+dc run --rm --no-deps --entrypoint /bin/bash -e MINIO_OIDC_ROLE_ARN="$MINIO_OIDC_ROLE_ARN" steel-hammer-test -lc '/workspaces/IronBucket/scripts/e2e/e2e-keycloak-mtls-minio-oidc.sh' \
   | tee "$EVIDENCE_DIR/e2e-keycloak-mtls-minio-oidc.log"
 KEYCLOAK_MTLS_MINIO_OIDC_EXIT=${PIPESTATUS[0]}
 set -e

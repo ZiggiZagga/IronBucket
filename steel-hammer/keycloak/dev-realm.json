@@ -21,6 +21,24 @@
       "secret": "minio-console-secret",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
+      "protocolMappers": [
+        {
+          "name": "policy-from-user-attribute",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "false",
+            "user.attribute": "policy",
+            "claim.name": "policy",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ],
       "redirectUris": [
         "https://steel-hammer-minio:9001/oauth_callback",
         "https://localhost:9001/oauth_callback",
@@ -55,6 +73,11 @@
       "firstName": "Bob",
       "lastName": "Builder",
       "email": "bob@ironbucket.dev",
+      "attributes": {
+        "policy": [
+          "readwrite"
+        ]
+      },
       "credentials": [
         {
           "type": "password",
@@ -72,6 +95,11 @@
       "firstName": "Alice",
       "lastName": "Admin",
       "email": "alice@ironbucket.dev",
+      "attributes": {
+        "policy": [
+          "consoleAdmin"
+        ]
+      },
       "credentials": [
         {
           "type": "password",
@@ -90,6 +118,11 @@
       "firstName": "Charlie",
       "lastName": "Cloud",
       "email": "charlie@ironbucket.dev",
+      "attributes": {
+        "policy": [
+          "readwrite"
+        ]
+      },
       "credentials": [
         {
           "type": "password",
@@ -107,6 +140,11 @@
       "firstName": "Charly",
       "lastName": "Cloud",
       "email": "charly@ironbucket.dev",
+      "attributes": {
+        "policy": [
+          "readwrite"
+        ]
+      },
       "credentials": [
         {
           "type": "password",
@@ -124,6 +162,11 @@
       "firstName": "Dana",
       "lastName": "Data",
       "email": "dana@ironbucket.dev",
+      "attributes": {
+        "policy": [
+          "readwrite"
+        ]
+      },
       "credentials": [
         {
           "type": "password",
@@ -141,6 +184,11 @@
       "firstName": "Eve",
       "lastName": "Edge",
       "email": "eve@ironbucket.dev",
+      "attributes": {
+        "policy": [
+          "readwrite"
+        ]
+      },
       "credentials": [
         {
           "type": "password",
@@ -174,6 +222,7 @@
         },
         {
           "authenticator": "auth-x509-client-username-form",
+          "authenticatorConfig": "x509-cert-cn-username",
           "requirement": "ALTERNATIVE",
           "priority": 2,
           "userSetupAllowed": false
@@ -185,6 +234,19 @@
           "userSetupAllowed": false
         }
       ]
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "x509-cert-cn-username",
+      "config": {
+        "x509-cert-auth.mapping-source-selection": "Subject's Common Name",
+        "x509-cert-auth.mapper-selection": "Username or Email",
+        "x509-cert-auth.canonical-dn-enabled": "false",
+        "x509-cert-auth.serialnumber-hex-enabled": "false",
+        "x509-cert-auth.confirmation-page-disallowed": "true",
+        "x509-cert-auth.timestamp-validation-enabled": "true"
+      }
     }
   ],
   "browserFlow": "browser-x509"
