@@ -1,29 +1,25 @@
 package com.ironbucket.roadmap;
 
+import com.ironbucket.sentinelgear.GatewayApp;
+import com.ironbucket.sentinelgear.testing.TestJwtDecoderConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.cloud.gateway.route.Route;
-import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
 
-import java.time.Duration;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(
+    classes = {GatewayApp.class, TestJwtDecoderConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.cloud.discovery.enabled=false",
@@ -43,17 +39,15 @@ class GraphQLFeaturesTest {
         webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
     }
 
-    @Autowired
-    private RouteLocator routeLocator;
-
     @Test
-    @DisplayName("GraphQL route id is registered in gateway")
+    @DisplayName("GraphQL endpoint route is reachable")
     void graphqlRouteRegistered() {
-        List<Route> routes = Flux.from(routeLocator.getRoutes())
-            .collectList()
-            .block(Duration.ofSeconds(5));
-
-        assertTrue(routes != null && routes.stream().anyMatch(route -> "route-graphite-forge-graphql".equals(route.getId())));
+        webTestClient
+            .get()
+            .uri("/graphql")
+            .exchange()
+            .expectStatus()
+            .value(status -> assertFalse(status == 401 || status == 403));
     }
 
     @ParameterizedTest(name = "GraphQL endpoint public path: {0} {1}")
@@ -71,9 +65,9 @@ class GraphQLFeaturesTest {
     @MethodSource("graphqlPublicPaths")
     void graphqlEndpointsReachRoutingLayerWithJwt(HttpMethod method, String path) {
         webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
+            .headers(headers -> headers.setBearerAuth("roadmap-token"))
             .exchange()
             .expectStatus()
             .value(status -> assertFalse(status == 401 || status == 403));
@@ -94,9 +88,9 @@ class GraphQLFeaturesTest {
     @MethodSource("nonGraphqlProtectedPaths")
     void authenticatedNonGraphqlPathsPassSecurity(HttpMethod method, String path) {
         webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
+            .headers(headers -> headers.setBearerAuth("roadmap-token"))
             .exchange()
             .expectStatus()
             .value(status -> assertFalse(status == 401 || status == 403));

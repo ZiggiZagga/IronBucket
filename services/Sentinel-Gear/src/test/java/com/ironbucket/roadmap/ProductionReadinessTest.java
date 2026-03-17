@@ -1,10 +1,12 @@
 package com.ironbucket.roadmap;
 
+import com.ironbucket.sentinelgear.GatewayApp;
 import com.ironbucket.sentinelgear.config.PresignedSecurityConfig;
 import com.ironbucket.sentinelgear.config.VaultSecretResolver;
 import com.ironbucket.sentinelgear.filter.PresignedRequestSecurityFilter;
 import com.ironbucket.sentinelgear.filter.RequestCorrelationFilter;
 import com.ironbucket.sentinelgear.security.TamperReplayDetector;
+import com.ironbucket.sentinelgear.testing.TestJwtDecoderConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.stream.Stream;
@@ -27,10 +28,23 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(
+    classes = {GatewayApp.class, TestJwtDecoderConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.cloud.discovery.enabled=false",
-        "eureka.client.enabled=false"
+        "eureka.client.enabled=false",
+        "server.ssl.enabled=false",
+        "server.ssl.key-store-type=PKCS12",
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.invalid/issuer",
+        "ironbucket.security.presigned.enabled=true",
+        "ironbucket.security.presigned.nonce-ttl=PT5M",
+        "spring.cloud.vault.enabled=false",
+        "spring.cloud.vault.kv.backend=secret",
+        "spring.cloud.vault.kv.default-context=ironbucket/sentinel-gear",
+        "ironbucket.security.vault.enabled=false",
+        "ironbucket.security.vault.kv-path=secret/ironbucket/sentinel-gear",
+        "ironbucket.security.vault.secret-key=client-secret",
+        "ironbucket.security.vault.timeout=PT2S"
     }
 )
 @DisplayName("Production Readiness Runtime Contracts")
@@ -91,9 +105,9 @@ class ProductionReadinessTest {
     @MethodSource("protectedEndpoints")
     void authenticatedRequestsPassSecurityGate(HttpMethod method, String path) {
         webTestClient
-            .mutateWith(SecurityMockServerConfigurers.mockJwt())
             .method(method)
             .uri(path)
+            .headers(headers -> headers.setBearerAuth("roadmap-token"))
             .exchange()
             .expectStatus()
             .value(status -> assertFalse(status == 401 || status == 403));

@@ -1,5 +1,7 @@
 package com.ironbucket.sentinelgear.integration;
 
+import com.ironbucket.sentinelgear.GatewayApp;
+import com.ironbucket.sentinelgear.testing.TestJwtDecoderConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * ✓ Implement code to make test pass
  * ✓ Verify test passes
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = {GatewayApp.class, TestJwtDecoderConfig.class},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
 @DisplayName("Issue #48: Proxy Request Delegation")
 class SentinelGearProxyDelegationTest {
 

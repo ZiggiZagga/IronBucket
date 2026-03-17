@@ -1,5 +1,7 @@
 package com.ironbucket.sentinelgear.integration;
 
+import com.ironbucket.sentinelgear.GatewayApp;
+import com.ironbucket.sentinelgear.testing.TestJwtDecoderConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -25,7 +27,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * ✓ Implement code to make test pass
  * ✓ Verify test passes
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = {GatewayApp.class, TestJwtDecoderConfig.class},
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
 @DisplayName("Issue #49: Policy Engine Fallback & Retry")
 class SentinelGearPolicyFallbackTest {
 
