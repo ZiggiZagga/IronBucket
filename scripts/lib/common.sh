@@ -212,7 +212,7 @@ require_file() {
 
 # Ensure generated certificate artifacts exist. If missing, generate them.
 ensure_cert_artifacts() {
-    local certs_dir="${PROJECT_ROOT}/certs"
+    local certs_dir="${CERTS_DIR:-${PROJECT_ROOT}/certs}"
     local generator_script="${certs_dir}/generate-certificates.sh"
     local required_files=(
         "ca/ca.crt"
@@ -226,6 +226,11 @@ ensure_cert_artifacts() {
     )
     local missing_files=()
     local rel_path
+
+    if [[ ! -d "${certs_dir}" && -d "/certs" ]]; then
+        certs_dir="/certs"
+        generator_script="${certs_dir}/generate-certificates.sh"
+    fi
 
     for rel_path in "${required_files[@]}"; do
         if [[ ! -f "${certs_dir}/${rel_path}" ]]; then
