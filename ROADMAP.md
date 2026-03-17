@@ -1,8 +1,8 @@
 # IronBucket Roadmap: Journey to Graphite Forge
 
-**Last Updated:** March 17, 2026 (03:20 UTC)  
+**Last Updated:** March 17, 2026 (11:20 UTC)  
 **Current Phase:** Phase E closeout + Vault-first hardening on develop (with full governance operation coverage validation)  
-**Overall Status:** 🟢 **Core roadmap gates validated** | 🟡 **Release hardening pending for four failing suites in latest complete run**
+**Overall Status:** 🟢 **Core roadmap gates validated** | 🟡 **Observability productization hardening active (trace ingestion and Grafana provisioning)**
 
 **Verified Test Snapshot (2026-03-14):**
 - First-user gate: passing via `scripts/ci/run-first-user-experience-gate.sh`
@@ -19,6 +19,15 @@
 - Graphite-Forge governance resolver coverage expanded for Phase 2 operations and aliases
 - Java compile blocker in governance resolver fixed and validated (`mvn -DskipTests compile` in `services/Graphite-Forge`)
 - Containerized governance Playwright scenario passing: `tests/ui-governance-methods-e2e.spec.ts` (1/1 green)
+- Phase 1-4 E2E coverage gate validated at 100% after certificate preflight stabilization
+
+**Runtime Observability Audit Snapshot (2026-03-17):**
+- LGTM infrastructure is up and stable in Docker runtime (Loki, Mimir, Tempo, Promtail, Grafana, OTEL Collector)
+- Logs pipeline is healthy: Promtail -> Loki is active with sustained ingest and zero dropped-byte counters
+- Metrics pipeline is healthy: OTEL Prometheus receiver -> Mimir remote_write is active with successful push counters
+- Traces pipeline transport is configured but currently no searchable traces are present in Tempo (`/api/search` returns empty)
+- Grafana runtime is healthy, but no datasources or dashboards are provisioned yet (API returns empty sets)
+- Collector active config uses debug-only log exporter path; default config includes Loki exporter, indicating config drift to reconcile
 
 ---
 
@@ -34,7 +43,7 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - 99.99% availability for metadata operations ✅
 - 100% audit trail completeness (zero access without record) ✅
 - Zero-trust architecture validation on every request ✅
-- Complete observability (logs, traces, metrics) ✅
+- Complete observability product (logs, traces, metrics + usable dashboards + gates) 🟡
 
 ---
 
@@ -65,9 +74,9 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 **Deliverables:**
 - ✅ LGTM Observability Stack (Loki, Grafana, Tempo, Mimir)
   - Centralized log aggregation (Promtail → Loki)
-  - Distributed tracing (OTEL Collector → Tempo)
+  - Distributed tracing transport path (OTEL Collector → Tempo)
   - Metrics collection (OTEL Collector → Mimir)
-  - Unified visualization (Grafana dashboards)
+  - Grafana service availability (datasource/dashboard provisioning in progress)
 - ✅ Containerized E2E Testing Framework
   - Test-client container with internal network access
   - 18 infrastructure tests (16/18 passing - 89%)
@@ -92,7 +101,7 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 **Test Results:**
 - Core Platform: 100% operational (7/7 tests passing)
 - Infrastructure: 89% passing (16/18 - minor grep issues)
-- Observability: 100% operational (Loki, Tempo, Grafana, Mimir)
+- Observability: logs + metrics operational; trace discoverability and Grafana provisioning are active hardening items
 - Unit Tests: 79% passing (103/131 - 28 are roadmap/TDD tests)
 
 **Status:** 🟢 Production-Ready
@@ -220,6 +229,15 @@ IronBucket is evolving from a zero-trust S3 proxy into **Graphite Forge**—an e
 - Keep Keycloak startup readiness budgets explicit in proof scripts (cold-start can take 2-4 minutes).
 - Prefer Loki `service_name` query fallback when container-label query returns no streams during fresh startup windows.
 - Latest gate run (`20260312T231739Z`) is green with strict MinIO/Postgres scrape thresholds and Keycloak warning-path threshold.
+
+### 2c) Marathon Observability Productization (Immediate)
+- **Trace ingestion as a blocking contract:** add a CI assertion that Tempo search/tag APIs return non-empty data after synthetic OTLP trace injection.
+- **Grafana readiness as a product requirement:** provision Loki/Mimir/Tempo datasources and baseline dashboards through files/API, then gate on Grafana API health + datasource presence.
+- **Collector config drift closure:** reconcile active `otel-collector-config.yml` with default profile so intended log/traces/metrics exporters are explicit and environment-specific.
+- **Startup resilience:** keep startup transients non-blocking for a warm-up window, then enforce strict ingest SLO checks (no prolonged empty-ring/distributor-starting states).
+- **Signal quality budgets:** define cardinality and log-label budgets per service and enforce via periodic evidence checks in proof scripts.
+- **Persistence and retention runway:** document expected storage growth and retention policy per backend (Loki/Mimir/Tempo) and add volume-usage checkpoints to release validation.
+- **Cross-signal correlation gate:** require at least one request path to produce linked log + metric + trace evidence in the same run artifact set.
 
 **Fresh environment complete run update (2026-03-13):**
 - Executed `steel-hammer/test-scripts/run-e2e-complete.sh` from a clean Docker baseline (compose down + orphan cleanup before run).

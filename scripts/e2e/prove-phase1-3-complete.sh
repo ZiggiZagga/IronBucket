@@ -16,6 +16,47 @@ log() {
   printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"
 }
 
+ensure_cert_artifacts_preflight() {
+  local certs_dir="$ROOT_DIR/certs"
+  local generator_script="$certs_dir/generate-certificates.sh"
+  local required_files=(
+    "ca/ca.crt"
+    "ca/ca-truststore.p12"
+    "services/infrastructure/keycloak/tls.crt"
+    "services/infrastructure/keycloak/tls.key"
+    "services/infrastructure/minio/tls.crt"
+    "services/infrastructure/minio/tls.key"
+    "services/infrastructure/vault/tls.crt"
+    "services/infrastructure/vault/tls.key"
+  )
+  local rel_path
+
+  for rel_path in "${required_files[@]}"; do
+    if [[ ! -f "$certs_dir/$rel_path" ]]; then
+      log "Missing certificate artifacts detected; generating certificates"
+      if [[ ! -f "$generator_script" ]]; then
+        echo "ERROR: Certificate generator script not found: $generator_script" >&2
+        exit 1
+      fi
+
+      (
+        cd "$certs_dir"
+        bash "./generate-certificates.sh"
+      )
+      break
+    fi
+  done
+
+  for rel_path in "${required_files[@]}"; do
+    if [[ ! -f "$certs_dir/$rel_path" ]]; then
+      echo "ERROR: Missing certificate artifact after generation: $certs_dir/$rel_path" >&2
+      exit 1
+    fi
+  done
+
+  log "Certificate preflight complete"
+}
+
 resolve_compose_cmd() {
   if command -v docker-compose >/dev/null 2>&1; then
     echo "docker-compose"
@@ -79,6 +120,7 @@ bool_text() {
 }
 
 log "Starting/refreshing steel-hammer stack"
+ensure_cert_artifacts_preflight
 dc up -d > "$EVIDENCE_DIR/compose-up.log" 2>&1 || true
 dc ps > "$EVIDENCE_DIR/compose-ps-initial.txt" 2>&1 || true
 

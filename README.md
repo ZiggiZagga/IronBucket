@@ -132,10 +132,13 @@ PostgreSQL (Metadata)
 ✅ **Core module test pathways passing** (latest comprehensive run)  
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
 ✅ **Graphite-Forge governance operation coverage validated in containerized Playwright** (`tests/ui-governance-methods-e2e.spec.ts`)
-🟡 **Latest full orchestrator** (2026-03-14): 194 total, 193 passed, 2 failed
+🟡 **Latest full orchestrator** (2026-03-17): 204 total, 200 passed, 5 failed
 
 Latest known failing suites:
 - `tools/Storage-Conductor` build failed in Maven phase
+- `SpringBoot_Vault_Health_Endpoints` failed in infrastructure phase
+- `Vault_Minio_SSE_Encryption` failed in Vault + MinIO encryption phase
+- `Jclouds_Minio_CRUD_Via_Vault` failed in jclouds Vault integration phase
 - `Observability_Phase2_Proof` failed in observability phase
 
 Validation note:
@@ -271,7 +274,7 @@ Screenshot proofs (live UI E2E):
 - Transaction records
 - Policy metadata
 
-**Keycloak** - Identity Provider (Port 8080)
+**Keycloak** - Identity Provider (Port 7081, internal network by default)
 - OIDC authentication
 - User & role management
 

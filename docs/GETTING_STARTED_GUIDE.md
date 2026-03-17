@@ -116,16 +116,21 @@ bash scripts/spinup.sh --local-only
 
 **Expected Output:**
 ```
-✅ COMPLETE TEST RUN FINISHED
+COMPLETE TEST RUN FINISHED
 
 Summary:
-   ✅ Maven backend suites: PASSED
-   ✅ Infrastructure checks: PASSED
-   ✅ E2E Alice/Bob scenario: PASSED
-   ✅ Observability validation: PASSED
-
-Ready for production release! 🚀
+   ✅ Total Tests: <N>
+   ✅ Passed: <M>
+   ❌ Failed: <K>
 ```
+
+The script always generates a detailed report at:
+
+```bash
+test-results/reports/LATEST-REPORT.md
+```
+
+Note: a non-zero exit code is expected while release-hardening suites are still active. Treat `LATEST-REPORT.md` as the source of truth for current blockers.
 
 ### Step 3: Verify Services Are Running
 
@@ -144,13 +149,21 @@ docker ps
 # - plus observability/test containers as needed by orchestrator
 ```
 
-### Step 4: Access Admin Consoles
+### Step 4: Verify Service Access
 
-#### Keycloak (Authentication Server)
-- **URL**: http://localhost:7081
-- **Admin Username**: `admin`
-- **Admin Password**: `admin`
-- **Default Realm**: `dev`
+By default, only Sentinel-Gear is exposed on the host (`localhost:8080`).
+Keycloak, MinIO, and most internal services are reachable only from the Docker network.
+
+Use this verification pattern:
+
+```bash
+NET=steel-hammer_steel-hammer-network
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -k -sS https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -k -sS https://steel-hammer-minio:9000/minio/health/live
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-claimspindel:8081/actuator/health
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-brazz-nossel:8082/actuator/health
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-buzzle-vane:8083/actuator/health
+```
 
 ### Step 5: Run Production Preflight (Recommended Before Release)
 
@@ -166,10 +179,8 @@ RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
 
 All preflight test suites run in Docker containers only.
 
-#### MinIO (S3 Storage)
-- **URL**: http://localhost:9000
-- **Access Key**: `minioadmin`
-- **Secret Key**: `minioadmin`
+Host-reachable endpoint:
+- Sentinel-Gear health: `http://localhost:8080/actuator/health`
 
 ---
 

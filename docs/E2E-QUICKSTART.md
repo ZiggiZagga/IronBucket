@@ -5,7 +5,7 @@
 Run the entire IronBucket stack with E2E tests in one command:
 
 ```bash
-./spinup.sh
+bash scripts/spinup.sh
 ```
 
 ## Roadmap Proof Gate (Phase 1-4)
@@ -143,17 +143,17 @@ Summary:
   ✅ E2E Integration Tests: COMPLETED
 
 Services Ready:
-  • Keycloak (OIDC): http://localhost:7081
+  • Keycloak (OIDC): internal-only by default (https://steel-hammer-keycloak:7081 from Docker network)
   • Sentinel-Gear (Gateway): http://localhost:8080
-  • Claimspindel (Policy): http://localhost:8081
-  • Brazz-Nossel (S3 Proxy): http://localhost:8082
-  • Buzzle-Vane (Discovery): http://localhost:8083
-  • MinIO (Storage): http://localhost:9000
+  • Claimspindel (Policy): internal-only by default
+  • Brazz-Nossel (S3 Proxy): internal-only by default
+  • Buzzle-Vane (Discovery): internal-only by default
+  • MinIO (Storage): internal-only by default (https://steel-hammer-minio:9000 from Docker network)
 
 Management:
   • View logs: docker-compose -f steel-hammer/docker-compose-steel-hammer.yml logs -f
   • Stop services: docker-compose -f steel-hammer/docker-compose-steel-hammer.yml down
-  • Restart: ./spinup.sh
+  • Restart: bash scripts/spinup.sh
 
 Full test log: /workspaces/IronBucket/test-execution.log
 
@@ -193,7 +193,7 @@ docker-compose -f steel-hammer/docker-compose-steel-hammer.yml down
 lsof -ti:8080 | xargs kill -9
 
 # Restart
-./spinup.sh
+bash scripts/spinup.sh
 ```
 
 ### Maven Test Failures
@@ -206,20 +206,26 @@ cd services/Brazz-Nossel
 mvn test
 
 # Skip tests and only start services
-./spinup.sh --skip-tests
+bash scripts/spinup.sh --test-only
 ```
 
 ## Options
 
 ```bash
-# Skip Maven tests, only Docker + E2E
-./spinup.sh --skip-tests
+# Run only Maven tests (no Docker)
+bash scripts/spinup.sh --local-only
 
-# Only Maven tests (no Docker)
-./spinup.sh --local-only
+# Run only container tests
+bash scripts/spinup.sh --test-only
 
-# Help
-./spinup.sh --help
+# Run only E2E checks
+bash scripts/spinup.sh --e2e-only
+
+# Debug mode
+bash scripts/spinup.sh --debug
+
+# Follow logs
+bash scripts/spinup.sh --logs
 ```
 
 ## What Services Are Running?
@@ -230,13 +236,13 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 Expected output:
 ```
-steel-hammer-keycloak    Up 2 minutes    0.0.0.0:7081->7081/tcp
-steel-hammer-postgres    Up 2 minutes    0.0.0.0:5432->5432/tcp
-steel-hammer-minio       Up 2 minutes    0.0.0.0:9000-9001->9000-9001/tcp
+steel-hammer-keycloak    Up 2 minutes
+steel-hammer-postgres    Up 2 minutes
+steel-hammer-minio       Up 2 minutes
 steel-hammer-sentinel-gear    Up 90 seconds   0.0.0.0:8080->8080/tcp
-steel-hammer-claimspindel     Up 90 seconds   0.0.0.0:8081->8081/tcp
-steel-hammer-brazz-nossel     Up 90 seconds   0.0.0.0:8082->8082/tcp
-steel-hammer-buzzle-vane      Up 90 seconds   0.0.0.0:8083->8083/tcp
+steel-hammer-claimspindel     Up 90 seconds
+steel-hammer-brazz-nossel     Up 90 seconds
+steel-hammer-buzzle-vane      Up 90 seconds
 ```
 
 ## Stop Everything
@@ -253,26 +259,33 @@ docker-compose -f docker-compose-steel-hammer.yml down -v
 
 After successful spinup:
 
-1. **Access Keycloak Admin**: http://localhost:7081/admin
-   - User: `admin`
-   - Password: `admin`
+1. **Verify internal service endpoints from Docker network**:
+  ```bash
+  NET=steel-hammer_steel-hammer-network
+  docker run --rm --network "$NET" curlimages/curl:8.12.1 -k -sS https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration
+  docker run --rm --network "$NET" curlimages/curl:8.12.1 -k -sS https://steel-hammer-minio:9000/minio/health/live
+  ```
 
 2. **Test S3 Operations**:
    ```bash
-   # Get token
-   TOKEN=$(curl -s -X POST "http://localhost:7081/realms/dev/protocol/openid-connect/token" \
-     -d "client_id=test-client" \
-     -d "client_secret=secret" \
-     -d "grant_type=client_credentials" \
+   # Get token (resource owner flow used by E2E checks)
+  NET=steel-hammer_steel-hammer-network
+  TOKEN=$(docker run --rm --network "$NET" curlimages/curl:8.12.1 -k -s -X POST "https://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/token" \
+    -d "client_id=dev-client" \
+    -d "client_secret=dev-secret" \
+     -d "grant_type=password" \
+     -d "username=alice" \
+     -d "password=aliceP@ss" \
      | jq -r .access_token)
    
    # List buckets
-   curl -H "Authorization: Bearer $TOKEN" http://localhost:8082/s3/buckets
+  docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS -H "Authorization: Bearer $TOKEN" http://steel-hammer-brazz-nossel:8082/s3/buckets
    ```
 
 3. **View Service Discovery**:
    ```bash
-   curl http://localhost:8083/eureka/apps
+  NET=steel-hammer_steel-hammer-network
+  docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-buzzle-vane:8083/eureka/apps
    ```
 
 4. **Check Gateway Routes**:
@@ -324,7 +337,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run E2E Suite
-        run: ./spinup.sh
+        run: bash scripts/spinup.sh
       - name: Upload Logs
         if: always()
         uses: actions/upload-artifact@v3

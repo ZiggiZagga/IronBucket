@@ -27,5 +27,7 @@ For actionable next steps and execution order, use:
 
 1. Enforce branch protection checks for roadmap and behavioral gates.
 2. Operationalize presigned security rollout (manifest + runbook + smoke checks).
-3. Scale Phase 4 from kickoff to full provider parity with `jclouds-adapter-core` as canonical adapter layer.
-4. Resolve remaining complete-suite blockers: `tools/Storage-Conductor` build, MinIO SSE/KMS configuration mismatch, `jclouds-adapter-core` failsafe verification, and `Observability_Phase2_Proof` pass/fail criteria drift.
+3. Productize observability runtime: provision Grafana datasources/dashboards, enforce non-empty Tempo trace evidence, and close OTEL collector config drift.
+4. Add cross-signal release evidence (linked logs + metrics + traces per canonical request flow) as a blocking quality gate.
+5. Scale Phase 4 from kickoff to full provider parity with `jclouds-adapter-core` as canonical adapter layer.
+6. Resolve remaining complete-suite blockers: `tools/Storage-Conductor` build, MinIO SSE/KMS configuration mismatch, `jclouds-adapter-core` failsafe verification, and `Observability_Phase2_Proof` pass/fail criteria drift.
