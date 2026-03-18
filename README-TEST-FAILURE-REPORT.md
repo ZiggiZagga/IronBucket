@@ -166,22 +166,30 @@ Failure signature:
 
 ### Recommended next actions for the next engineer
 
-1) Confirm bucket visibility contract for Object Browser page
-- Verify what `GET_BUCKETS` is expected to return for actor `alice` under current auth/policy mode.
-- Verify whether the bucket created via `/api/e2e/live-upload` is expected to be returned by `listBuckets` in this context.
+1) Confirm the real contract mismatch before changing selectors
+- Inspect the Object Browser bucket query path and verify what `GET_BUCKETS` should return for actor `alice` under the current auth and tenant policy mode.
+- Compare that behavior with `/api/e2e/live-upload`, which currently proves `uploadObject` plus `listObjects` on `default-alice-files` but does not prove that the bucket will appear in the page-level bucket listing.
+- Treat this as the first decision gate: determine whether the failure is caused by `listBuckets` returning no buckets, returning buckets with unexpected names, or returning data that the page does not render.
 
-2) Add deterministic bucket setup API specifically for object-browser baseline
-- Create a dedicated `/api/e2e/object-browser-bootstrap` route that:
-	- creates a known bucket for actor `alice`
-	- uploads one known object
-	- returns bucket name
-- Use that route in `object-browser-baseline.spec.ts` instead of inferring state through another scenario.
+2) Add a dedicated object-browser bootstrap route instead of reusing live-upload
+- Create `/api/e2e/object-browser-bootstrap` specifically for `tests/object-browser-baseline.spec.ts`.
+- The route should create a deterministic bucket for actor `alice`, upload one known object, and return the exact bucket name and object key used during setup.
+- Prefer validating both `createBucket` and `listBuckets` in this route so the test precondition matches what the UI actually needs rather than only proving object upload.
 
-3) Add short diagnostic logging around Object Browser bucket query
-- Temporarily log bucket list count + first few names during test run to confirm whether failure is "no buckets returned" vs "buckets returned but naming mismatch".
+3) Update the baseline test to consume deterministic bootstrap output
+- Change `object-browser-baseline.spec.ts` to read the bucket name from the bootstrap response instead of searching for any button matching `^default-`.
+- Keep actor initialization explicit for `alice`, but remove any remaining assumption that a default-prefixed bucket will always be visible.
+- This makes the test robust against policy-driven bucket naming changes while still keeping the assertion tied to a real created resource.
 
-4) If bucket names are non-default under current policy mapping
-- Relax the baseline selector from `^default-` to a deterministic bucket returned by bootstrap response.
+4) Add temporary diagnostics at the bucket-list boundary
+- Log bucket count and the first few returned bucket names either in the bootstrap route or immediately around the Object Browser bucket fetch used by the page.
+- Use these logs only to distinguish between three cases: empty backend result, naming mismatch, or UI rendering gap.
+- Remove or reduce the diagnostics after the baseline test is green to avoid noisy E2E output.
+
+5) Re-run the narrow UI suite and capture the new steady-state evidence
+- Re-run `tests/object-browser-baseline.spec.ts`, `tests/ui-s3-methods-e2e.spec.ts`, and `tests/ui-s3-methods-performance.spec.ts` in the existing UI E2E container flow.
+- Record whether the remaining failure moved from bucket discovery to a later object-browser action such as upload, download, or delete.
+- Update this handoff with the new root cause and artifact paths so the next retry starts from evidence instead of re-discovery.
 
 ### Reproduction command
 

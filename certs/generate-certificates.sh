@@ -274,6 +274,11 @@ echo -e "${BLUE}Step 7: Setting file permissions...${NC}"
 find "${CERTS_DIR}" -name "*.key" -exec chmod 600 {} \;
 find "${CERTS_DIR}" -name "*.p12" -exec chmod 600 {} \;
 
+# Shared CA truststore is mounted read-only and consumed by non-root services (e.g. Keycloak).
+if [ -f "${CA_DIR}/ca-truststore.p12" ]; then
+  chmod 644 "${CA_DIR}/ca-truststore.p12"
+fi
+
 # Infrastructure services run as non-root users in containers and must read mounted TLS keys.
 for key_file in \
   "${SERVICES_DIR}/infrastructure/minio/tls.key" \

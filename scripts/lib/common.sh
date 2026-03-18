@@ -214,6 +214,7 @@ require_file() {
 ensure_cert_artifacts() {
     local certs_dir="${CERTS_DIR:-${PROJECT_ROOT}/certs}"
     local generator_script="${certs_dir}/generate-certificates.sh"
+    local is_container="${IS_CONTAINER:-false}"
     local required_files=(
         "ca/ca.crt"
         "ca/ca-truststore.p12"
@@ -226,6 +227,12 @@ ensure_cert_artifacts() {
     )
     local missing_files=()
     local rel_path
+
+    # In containerized E2E runs, /certs is the canonical shared mount.
+    if [[ "$is_container" == "true" && -d "/certs" ]]; then
+        certs_dir="/certs"
+        generator_script="${certs_dir}/generate-certificates.sh"
+    fi
 
     if [[ ! -d "${certs_dir}" && -d "/certs" ]]; then
         certs_dir="/certs"
@@ -241,6 +248,10 @@ ensure_cert_artifacts() {
     if [[ ${#missing_files[@]} -eq 0 ]]; then
         log_info "Certificate artifacts already present"
         return 0
+    fi
+
+    if [[ "$certs_dir" == "/certs" && ! -w "$certs_dir" ]]; then
+        error_exit 1 "Certificate artifacts are missing in /certs and this mount is read-only. Generate certificates on the host first (for example via scripts/e2e/prove-phase1-3-complete.sh preflight)."
     fi
 
     log_warn "Missing certificate artifacts detected; generating certificates"
