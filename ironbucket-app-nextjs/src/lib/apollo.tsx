@@ -67,12 +67,17 @@ const tracingLink = setContext((_, previousContext) => {
     typeof window !== 'undefined'
       ? window.localStorage.getItem('ironbucket.e2e.actor') || 'anonymous'
       : 'anonymous';
+  const e2eAccessToken =
+    typeof window !== 'undefined'
+      ? window.localStorage.getItem('ironbucket.e2e.accessToken') || ''
+      : '';
 
   return {
     headers: {
       ...previousContext.headers,
       traceparent,
-      'x-ironbucket-actor': actor
+      'x-ironbucket-actor': actor,
+      ...(e2eAccessToken ? { Authorization: `Bearer ${e2eAccessToken}` } : {})
     }
   };
 });

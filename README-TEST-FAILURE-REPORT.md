@@ -8,6 +8,26 @@ Current state:
 - Sentinel Roadmap Gate: passing
 - Sentinel Behavioral Gate: passing
 
+Latest pipeline reality (last checked commits on `main`/`develop`):
+- `e2e-complete-suite`: failing
+- Failure step: `Run first-user-experience gate`
+- Observed behavior: Phase 1-4 report gets generated, but workflow exits non-zero
+- Root cause class: gate orchestration/exit-path robustness under partial stack failures
+
+## Latest CI Failure Root Cause (Verified)
+
+From recent GitHub Actions runs, the failing workflow is `e2e-complete-suite`, not the Sentinel/Governance Maven roadmap gates.
+
+Primary finding:
+- `scripts/e2e/prove-phase1-3-complete.sh` had an unguarded `docker compose run ... | tail -n1` command substitution in the no-auth probe path.
+- With `set -euo pipefail`, a non-zero compose run could terminate the script before normal gate finalization/report path.
+- That prevented reliable generation of `test-results/phase1-3-proof/.../PHASE1_2_3_PROOF_REPORT.md`.
+- `scripts/e2e/prove-phase1-4-complete.sh` depends on that Phase 1-3 report for phase flags; missing report drives phase coverage to non-100 and exits with code 1.
+
+Secondary signal from artifacts:
+- In the failed run artifact, `phase1-4-proof` existed, while `phase1-3-proof` report file was missing.
+- This is consistent with a premature phase1-3 script abort before report emission.
+
 ## What We Learned From the Latest Failure Analysis
 
 ### 1) Primary failure mode was test infrastructure, not production logic
@@ -65,20 +85,39 @@ This avoids false negatives in containerized environments.
 
 ## Remaining Optimization Plan
 
+### Priority Order (refined from latest CI evidence)
+1. Blocker: First-user gate must always emit deterministic reports, even on partial failures.
+2. Critical: Keep Phase 1-4 proof parser and phase labels in strict sync with Phase 1-3 report schema.
+3. High: Improve health/readiness diagnostics for slow-start services (Keycloak/Graphite/Sentinel chain).
+4. Medium: Strengthen observability proof pass/fail criteria drift checks and docs sync.
+
 ### Phase 1: Immediate guardrails (next PR)
-1. Add a CI step that runs a lightweight static check to detect duplicate test bean names across loaded test configurations.
-2. Add a dedicated script to print oldest root cause from surefire dumps when `ApplicationContext failure threshold` appears.
-3. Persist gate summaries as reusable artifacts for trend tracking.
+1. Keep no-auth probe and similar probe paths non-fatal to report generation (capture exit code, continue, decide at gate decision point).
+2. Add explicit probe exit-code lines to proof reports to separate "probe execution failure" from "authorization failure".
+3. Ensure first-user gate always uploads both phase1-3 and phase1-4 reports for every failed run.
+4. Persist concise gate-summary artifacts for trend tracking.
 
 ### Phase 2: Reliability improvements (short term)
-1. Add service readiness contracts for auth/discovery dependencies in integration stack startup.
-2. Standardize test endpoint contracts to avoid path-mapping drift (especially actuator endpoints).
-3. Add a policy that all gate scripts emit machine-readable summary JSON with explicit `mvn_exit`, `failures`, `errors`.
+1. Add readiness chain diagnostics (health snapshot + tail logs) before running Alice/Bob and no-auth probes.
+2. Standardize proof report schema across phase1-3/phase1-4 (stable check labels + machine-readable status keys).
+3. Add a policy that all gate scripts emit machine-readable summary JSON with explicit `exit`, `failures`, `errors`, `coverage`.
 
 ### Phase 3: Observability and dependency resilience (mid term)
 1. Expand correlation-header contract tests to include non-2xx/4xx paths.
 2. Add verification around external artifact availability and fallback mirrors for critical internal dependencies.
 3. Add MinIO SSE mode compatibility matrix checks in CI profiles.
+
+## Immediate Fixes Applied In This Cycle
+
+1. Hardened Phase 1-3 no-auth probe execution path:
+- File: `scripts/e2e/prove-phase1-3-complete.sh`
+- Change: wrapped no-auth probe command substitution in guarded `set +e` section and captured `NOAUTH_EXIT`.
+- Behavior: script no longer exits prematurely on probe execution failure; it logs and continues to report generation.
+
+2. Added no-auth probe execution signal to proof report:
+- File: `scripts/e2e/prove-phase1-3-complete.sh`
+- Change: report now includes `No-auth probe script exit code` row.
+- Benefit: faster triage between transport/runtime probe failure and auth semantics failure.
 
 ## Validation Executed
 The following gates were executed and verified passing after these changes:
@@ -203,3 +242,63 @@ Expected current outcome (latest known):
 - 4 passed, 1 failed (`object-browser-baseline.spec.ts`)
 
 _UI E2E handoff updated: March 17, 2026_
+
+_CI refinement update: March 18, 2026_
+
+---
+
+## UI E2E Root-Cause Resolution Update (March 18, 2026)
+
+### Final outcome
+- Containerized full UI Playwright suite is now green.
+- Latest result: **5 passed, 0 failed** (`npx playwright test tests` in `steel-hammer-ui-e2e`).
+
+### Root cause (verified)
+The primary instability came from a mixed execution model in object-browser E2E:
+- Setup/bootstrap and fallback flows used server-side token-validated GraphQL calls.
+- UI page interactions depended on a separate browser-driven path that could drift in auth/session semantics.
+- This mismatch produced non-deterministic visibility of uploaded objects and brittle assertions.
+
+Secondary noise source:
+- `screenshot-proof` attempted `createBucket` on every run and generated expected warning-path logs when bucket already existed.
+
+### Corrective actions applied
+1. Added server-side object-browser operations endpoint:
+- `ironbucket-app-nextjs/src/app/api/e2e/object-browser-ops/route.ts`
+- Covers deterministic `listBuckets`, `listObjects`, `downloadObject`, `deleteObject` using actor token and correlation headers.
+
+2. Added actor-session token bootstrap endpoint:
+- `ironbucket-app-nextjs/src/app/api/e2e/actor-token/route.ts`
+- Provides deterministic actor token acquisition for E2E session bootstrap.
+
+3. Refactored object-browser E2E page to unified secure path:
+- `ironbucket-app-nextjs/src/app/e2e-object-browser/page.tsx`
+- Object operations now run through server-side token-validated E2E APIs.
+
+4. Improved fallback upload path bucket determinism:
+- `ironbucket-app-nextjs/src/app/api/e2e/live-upload/route.ts`
+- Supports explicit `bucket` input for E2E fallback alignment.
+
+5. Aligned bootstrap bucket ownership with actor tenant semantics:
+- `ironbucket-app-nextjs/src/app/api/e2e/object-browser-bootstrap/route.ts`
+
+6. Removed screenshot-proof warning noise with idempotent bucket provisioning:
+- `ironbucket-app-nextjs/src/app/api/e2e/screenshot-proof/route.ts`
+- Changed to list-before-create; create only when bucket is absent.
+
+7. Hardened object-browser Playwright assertions:
+- `ironbucket-app-nextjs/tests/object-browser-baseline.spec.ts`
+- Uses deterministic object visibility polling and action-button assertions to avoid text collision false positives.
+
+### Validation evidence
+Executed command:
+
+```bash
+docker compose -f steel-hammer/docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e bash -lc 'cd /workspaces/IronBucket/ironbucket-app-nextjs && npx playwright test tests'
+```
+
+Observed result:
+- `5 passed (7.7s)`
+
+Latest verification timestamp:
+- March 18, 2026

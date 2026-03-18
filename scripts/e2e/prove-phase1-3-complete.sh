@@ -188,11 +188,19 @@ BOB_OBJECT="$(grep -E 'Object: default-bob-files/' "$EVIDENCE_DIR/e2e-alice-bob.
 BUCKET_CREATE_500_WARNINGS="$(grep -c 'bucket create returned 500' "$EVIDENCE_DIR/e2e-alice-bob.log" || true)"
 
 log "Running explicit no-auth deny probe"
+set +e
 NOAUTH_CODE="$(dc run --rm --no-deps --entrypoint /bin/bash steel-hammer-test -lc '
 curl -s -o /tmp/noauth-probe.out -w "%{http_code}" \
   "http://steel-hammer-sentinel-gear:8080/s3/object/default-alice-files/phase1-3-noauth-probe.txt"
 cat /tmp/noauth-probe.out > /tmp/noauth-probe-body.txt
 ' | tail -n1)"
+NOAUTH_EXIT=${PIPESTATUS[0]}
+set -e
+
+if [[ "$NOAUTH_EXIT" -ne 0 ]]; then
+  log "No-auth deny probe execution failed (exit=$NOAUTH_EXIT)"
+  NOAUTH_CODE="000"
+fi
 
 NOAUTH_DENY_OK=false
 if [[ "$NOAUTH_CODE" == "401" || "$NOAUTH_CODE" == "403" ]]; then
@@ -223,6 +231,7 @@ cat > "$REPORT_FILE" <<EOF
 | Phase 3 Bob auth + upload/get | $(bool_text "$PHASE3_BOB_OK") | e2e-alice-bob.log |
 | Keycloak mTLS cert auth + MinIO OIDC web identity (bob + charly) | $(bool_text "$KEYCLOAK_MTLS_MINIO_OIDC_OK") | e2e-keycloak-mtls-minio-oidc.log |
 | Unauthenticated access denied (401/403) | $(bool_text "$NOAUTH_DENY_OK") | no-auth probe HTTP=$NOAUTH_CODE |
+| No-auth probe script exit code | ${NOAUTH_EXIT:-1} | no-auth probe execution |
 | e2e-alice-bob script exit code | $E2E_EXIT | e2e-alice-bob.log |
 | keycloak-mtls-minio-oidc script exit code | ${KEYCLOAK_MTLS_MINIO_OIDC_EXIT:-1} | e2e-keycloak-mtls-minio-oidc.log |
 

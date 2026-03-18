@@ -46,7 +46,24 @@ export async function POST(req: NextRequest) {
     const token = await fetchActorAccessToken(actor);
     const gatewayOptions = { actor, traceparent, correlationId };
 
-    try {
+    const bucketsResponse = await callGatewayGraphql(token, {
+      query: `
+        query ListBuckets($jwtToken: String!) {
+          listBuckets(jwtToken: $jwtToken) {
+            name
+          }
+        }
+      `,
+      variables: {
+        jwtToken: token
+      }
+    }, gatewayOptions);
+
+    const existingBuckets = bucketsResponse?.data?.listBuckets ?? [];
+    const bucketExists = Array.isArray(existingBuckets)
+      && existingBuckets.some((entry: { name?: string }) => entry?.name === bucket);
+
+    if (!bucketExists) {
       await callGatewayGraphql(token, {
         query: `
           mutation CreateBucket($jwtToken: String!, $bucketName: String!, $ownerTenant: String!) {
@@ -61,15 +78,6 @@ export async function POST(req: NextRequest) {
           ownerTenant: actor
         }
       }, gatewayOptions);
-    } catch (createBucketError) {
-      const details = createBucketError instanceof Error ? createBucketError.message : String(createBucketError);
-      logger.warn('CreateBucket in screenshot-proof failed, continuing with existing bucket path.', {
-        route,
-        actor,
-        bucket,
-        correlationId,
-        error: details
-      });
     }
 
     await callGatewayGraphql(token, {

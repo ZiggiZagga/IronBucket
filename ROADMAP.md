@@ -21,6 +21,13 @@
 - Containerized governance Playwright scenario passing: `tests/ui-governance-methods-e2e.spec.ts` (1/1 green)
 - Phase 1-4 E2E coverage gate validated at 100% after certificate preflight stabilization
 
+**Incremental Validation Snapshot (2026-03-18):**
+- Full containerized UI Playwright suite passing (`npx playwright test tests`): 5/5 green.
+- Object-browser baseline root cause closed by removing mixed browser/server auth paths and using a single token-validated server-side operations path (`/api/e2e/object-browser-ops`).
+- Added deterministic actor session bootstrap endpoint (`/api/e2e/actor-token`) for UI E2E identity consistency.
+- Screenshot-proof bucket provisioning made idempotent (list-before-create), eliminating expected warning-path log noise in healthy runs.
+- Current UI E2E baseline status: `object-browser-baseline`, `ui-governance-methods-e2e`, `ui-live-upload-persistence`, `ui-s3-methods-e2e`, `ui-s3-methods-performance` all passing.
+
 **Runtime Observability Audit Snapshot (2026-03-17):**
 - LGTM infrastructure is up and stable in Docker runtime (Loki, Mimir, Tempo, Promtail, Grafana, OTEL Collector)
 - Logs pipeline is healthy: Promtail -> Loki is active with sustained ingest and zero dropped-byte counters

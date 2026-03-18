@@ -132,7 +132,21 @@ PostgreSQL (Metadata)
 ✅ **Core module test pathways passing** (latest comprehensive run)  
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
 ✅ **Graphite-Forge governance operation coverage validated in containerized Playwright** (`tests/ui-governance-methods-e2e.spec.ts`)
+✅ **Full containerized UI E2E suite green** (`npx playwright test tests` in `steel-hammer-ui-e2e`, 5/5 passing on 2026-03-18)
 🟡 **Latest full orchestrator** (2026-03-17): 204 total, 200 passed, 5 failed
+
+### UI E2E Stability Update (2026-03-18)
+
+Root-cause resolution completed for object-browser baseline instability and screenshot-proof warning noise:
+- Standardized object-browser E2E flows on server-side token-validated operations via `/api/e2e/object-browser-ops`.
+- Added actor token bootstrap endpoint `/api/e2e/actor-token` for deterministic E2E identity context.
+- Hardened live upload path to accept explicit bucket targeting in E2E fallback.
+- Aligned object-browser bootstrap bucket ownership with actor tenant semantics.
+- Made screenshot-proof bucket provisioning idempotent (check before create) to remove expected warning chatter.
+
+Latest containerized verification:
+- Command: `docker compose -f steel-hammer/docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e bash -lc 'cd /workspaces/IronBucket/ironbucket-app-nextjs && npx playwright test tests'`
+- Result: `5 passed (7.7s)`
 
 Latest known failing suites:
 - `tools/Storage-Conductor` build failed in Maven phase

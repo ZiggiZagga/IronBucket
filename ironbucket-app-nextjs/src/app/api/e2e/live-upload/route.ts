@@ -7,6 +7,7 @@ import { observeApiRequest } from '@/lib/observability/metrics';
 
 type UploadRequest = {
   actor?: string;
+  bucket?: string;
   key?: string;
   content?: string;
   contentType?: string;
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     return withCorrelationHeaders(NextResponse.json({ error: 'Missing object key' }, { status: 400 }), correlationId);
   }
 
-  const bucket = `default-${actor}-files`;
+  const bucket = (requestBody.bucket ?? '').trim() || `default-${actor}-files`;
 
   try {
     const token = await fetchActorAccessToken(actor);
