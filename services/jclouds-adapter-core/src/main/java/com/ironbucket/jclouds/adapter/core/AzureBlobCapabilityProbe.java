@@ -28,7 +28,7 @@ public final class AzureBlobCapabilityProbe implements CapabilityProbe {
             .map(ProviderCapabilityProfile::supportedCapabilities)
             .orElse(Set.of());
 
-        if (!connectionConfig.hasCredentials()) {
+        if (!JcloudsBlobStoreContextProvider.hasResolvableCredentials(connectionConfig)) {
             return new CapabilityProbeResult(
                 ProviderType.AZURE_BLOB,
                 CapabilityProbeStatus.DEGRADED,

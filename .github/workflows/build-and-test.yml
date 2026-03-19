@@ -130,7 +130,34 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jclouds-provider-integration-parity-reports
-          path: services/jclouds-adapter-core/target/surefire-reports/TEST-com.ironbucket.jclouds.adapter.core.ProviderCrudParityIntegrationTest*.xml
+          path: |
+            services/jclouds-adapter-core/target/surefire-reports/TEST-com.ironbucket.jclouds.adapter.core.*IntegrationTest*.xml
+            test-results/phase4-gates/LATEST-provider-integration-parity-gate-summary.json
+            test-results/phase4-gates/LATEST-provider-integration-parity-gate-summary.md
+          retention-days: 30
+
+  enterprise-admin-runbook-gate:
+    name: Enterprise Admin Runbook Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate shell scripts
+        run: bash scripts/ci/validate-shell-scripts.sh
+
+      - name: Run enterprise admin runbook gate
+        run: bash scripts/ci/run-enterprise-admin-runbook-gate.sh
+
+      - name: Upload enterprise admin runbook artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: enterprise-admin-runbook-gate-reports
+          path: |
+            test-results/release-gates/LATEST-enterprise-admin-runbook-gate-summary.json
+            test-results/release-gates/LATEST-enterprise-admin-runbook-gate-summary.md
           retention-days: 30
 
   phase4-versioning-multipart-gate:

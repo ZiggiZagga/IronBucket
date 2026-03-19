@@ -5,16 +5,37 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STACK_DIR="$ROOT_DIR/steel-hammer"
 COMPOSE_FILE="$STACK_DIR/docker-compose-steel-hammer.yml"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT_DIR="$ROOT_DIR/test-results/phase1-3-proof/$TIMESTAMP"
-EVIDENCE_DIR="$OUT_DIR/evidence"
-REPORT_FILE="$OUT_DIR/PHASE1_2_3_PROOF_REPORT.md"
 KEEP_STACK="${KEEP_STACK:-true}"
-
-mkdir -p "$EVIDENCE_DIR"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
 
 log() {
   printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"
 }
+
+resolve_test_results_dir() {
+  local requested_dir="$1"
+  local fallback_dir="$ROOT_DIR/temp/test-results"
+
+  if mkdir -p "$requested_dir" >/dev/null 2>&1 && [[ -w "$requested_dir" ]]; then
+    echo "$requested_dir"
+    return
+  fi
+
+  mkdir -p "$fallback_dir"
+  echo "$fallback_dir"
+}
+
+REQUESTED_TEST_RESULTS_DIR="$TEST_RESULTS_DIR"
+TEST_RESULTS_DIR="$(resolve_test_results_dir "$TEST_RESULTS_DIR")"
+if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
+  log "Primary test-results directory not writable: $REQUESTED_TEST_RESULTS_DIR"
+  log "Using fallback test-results directory: $TEST_RESULTS_DIR"
+fi
+OUT_DIR="$TEST_RESULTS_DIR/phase1-3-proof/$TIMESTAMP"
+EVIDENCE_DIR="$OUT_DIR/evidence"
+REPORT_FILE="$OUT_DIR/PHASE1_2_3_PROOF_REPORT.md"
+
+mkdir -p "$EVIDENCE_DIR"
 
 ensure_cert_artifacts_preflight() {
   local certs_dir="$ROOT_DIR/certs"

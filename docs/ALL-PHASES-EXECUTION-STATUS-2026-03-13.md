@@ -119,6 +119,16 @@ Master plan: docs/ALL-PHASES-EXECUTION-MASTER-PLAN-2026-03-13.md
 33. Hardened branch-protection fixture test stability:
   - `scripts/testing/test-verify-main-branch-protection.sh` now uses a dynamic free localhost port instead of fixed `18081`
   - readiness wait budget increased to reduce startup race flakes on busy runners
+34. Expanded Phase-4 credential-backed integration parity gate to runtime capability coverage:
+  - updated `scripts/ci/run-jclouds-provider-integration-parity-gate.sh` to execute CRUD parity + provider runtime capability probes in one gate
+  - added runtime integration assertions through `AwsS3CapabilityProbeIntegrationTest`, `GcsCapabilityProbeIntegrationTest`, `AzureBlobCapabilityProbeIntegrationTest`
+  - added machine-readable evidence artifacts (`LATEST-provider-integration-parity-gate-summary.json/.md`)
+  - updated build workflow artifact uploads to include expanded integration reports and gate summaries
+35. Implemented Phase-7 P7-3 enterprise admin runbook/checklist evidence gate:
+  - added `scripts/ci/run-enterprise-admin-runbook-gate.sh`
+  - gate verifies presence/linkage of security runbook, CI/CD runbook sequence, deployment references, and release-preflight enforcement hooks
+  - integrated enterprise admin runbook gate into `scripts/ci/release-preflight.sh`
+  - wired dedicated `Enterprise Admin Runbook Gate` job in build workflow with artifact upload
 
 ## Validations executed
 
@@ -178,6 +188,8 @@ Master plan: docs/ALL-PHASES-EXECUTION-MASTER-PLAN-2026-03-13.md
 - bash scripts/ci/run-jclouds-provider-probe-gate.sh: PASS (9 tests, 0 failures)
 - bash scripts/ci/run-jclouds-provider-integration-probe-gate.sh: PASS (optional mode, no provider toggles enabled -> skip)
 - bash scripts/ci/run-jclouds-provider-integration-parity-gate.sh: PASS (optional mode, provider toggles disabled -> integration tests skip-safe)
+- bash scripts/ci/run-enterprise-admin-runbook-gate.sh: PASS
+- bash scripts/ci/run-jclouds-provider-integration-parity-gate.sh: PASS (expanded runtime capability checks active; provider toggles disabled -> skip-safe integration execution)
 - bash scripts/ci/run-phase4-versioning-multipart-gate.sh: PASS [re-run]
 - bash scripts/ci/run-governance-roadmap-gate.sh: PASS [re-run]
 - bash scripts/ci/run-governance-drift-gate.sh: PASS [re-run]
@@ -211,14 +223,14 @@ Master plan: docs/ALL-PHASES-EXECUTION-MASTER-PLAN-2026-03-13.md
 ## Next execution slice
 
 1. Complete E1 with admin token or owner-confirmed settings evidence.
-2. Continue Phase 4 after probe/parity integration gate slices:
-  - expand credential-backed provider parity from CRUD to explicit provider-runtime versioning/multipart integration scenarios.
+2. Continue Phase 4 runtime integration hardening:
+  - execute expanded provider integration parity gate with real AWS/GCS/Azure credentials in CI and attach non-skip runtime evidence.
 3. Phase 5 current backlog slices: governance roadmap + evidence + drift + incident playbook gates completed.
 4. Phase 6 backlog P6-1..P6-4: completed in current cycle.
 5. Phase 7 status vs master-plan todos:
   - P7-1: completed (adapter upgrade safety gate in CI)
   - P7-2: completed for current deterministic resilience fixture scope (disk pressure, failover, streaming latency, partition reconciliation)
-  - P7-3: partially complete (security runbook exists); continue by consolidating enterprise admin workflow/runbook evidence into explicit release checklist artifacts
+  - P7-3: completed for current gate scope (enterprise admin workflow/runbook evidence consolidated into explicit release checklist artifact checks)
 6. Perform release/tag execution once both external release blockers are cleared:
   - E1 strict branch-protection verification with admin-scoped token
   - fresh required-check run set green on target release commit

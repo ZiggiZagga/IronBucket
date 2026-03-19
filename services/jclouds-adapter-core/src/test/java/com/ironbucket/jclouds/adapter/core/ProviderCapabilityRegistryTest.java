@@ -53,4 +53,19 @@ class ProviderCapabilityRegistryTest {
         assertFalse(aclRequired.contains(ProviderType.AZURE_BLOB));
         assertFalse(aclRequired.contains(ProviderType.LOCAL_FILESYSTEM));
     }
+
+    @Test
+    void profileRegistrationCanExtendProviderCapabilities() {
+        ProviderCapabilityRegistry registry = new ProviderCapabilityRegistry();
+
+        registry.registerProfile(
+            new ProviderCapabilityProfile(
+                ProviderType.LOCAL_FILESYSTEM,
+                EnumSet.of(ProviderCapability.OBJECT_READ, ProviderCapability.OBJECT_WRITE, ProviderCapability.VERSIONING)
+            )
+        );
+
+        assertTrue(registry.supports(ProviderType.LOCAL_FILESYSTEM, ProviderCapability.VERSIONING));
+        assertFalse(registry.supports(ProviderType.LOCAL_FILESYSTEM, ProviderCapability.MULTIPART_UPLOAD));
+    }
 }

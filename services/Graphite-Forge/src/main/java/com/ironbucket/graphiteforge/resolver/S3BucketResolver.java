@@ -1,5 +1,6 @@
 package com.ironbucket.graphiteforge.resolver;
 
+import com.ironbucket.graphiteforge.model.ProviderCapabilityProfile;
 import com.ironbucket.graphiteforge.model.ProviderRoutingDecision;
 import com.ironbucket.graphiteforge.model.S3Bucket;
 import com.ironbucket.graphiteforge.service.IronBucketS3Service;
@@ -41,5 +42,29 @@ public class S3BucketResolver {
         String requiredCapability
     ) {
         return s3Service.getBucketRoutingDecision(jwtToken, tenantId, bucketName, requiredCapability);
+    }
+
+    public List<ProviderCapabilityProfile> getProviderCapabilityMatrix(String jwtToken) {
+        return s3Service.getProviderCapabilityMatrix(jwtToken);
+    }
+
+    public List<String> providersSupportingCapabilities(String jwtToken, List<String> requiredCapabilities) {
+        return s3Service.providersSupportingCapabilities(jwtToken, requiredCapabilities);
+    }
+
+    public ProviderRoutingDecision getCapabilityAwareRoutingDecision(
+        String jwtToken,
+        String tenantId,
+        String bucketName,
+        List<String> requiredCapabilities,
+        List<String> deniedProviders
+    ) {
+        return s3Service.getCapabilityAwareRoutingDecision(
+            jwtToken,
+            tenantId,
+            bucketName,
+            requiredCapabilities,
+            deniedProviders
+        );
     }
 }

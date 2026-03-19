@@ -4,7 +4,29 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STACK_DIR="$ROOT_DIR/steel-hammer"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT_DIR="$ROOT_DIR/test-results/lgtm-diagnostics/$TIMESTAMP"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
+
+resolve_test_results_dir() {
+  local requested_dir="$1"
+  local fallback_dir="$ROOT_DIR/temp/test-results"
+
+  if mkdir -p "$requested_dir" >/dev/null 2>&1 && [[ -w "$requested_dir" ]]; then
+    echo "$requested_dir"
+    return
+  fi
+
+  mkdir -p "$fallback_dir"
+  echo "$fallback_dir"
+}
+
+REQUESTED_TEST_RESULTS_DIR="$TEST_RESULTS_DIR"
+TEST_RESULTS_DIR="$(resolve_test_results_dir "$TEST_RESULTS_DIR")"
+if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
+  echo "[diagnose-lgtm] Primary test-results directory not writable: $REQUESTED_TEST_RESULTS_DIR" >&2
+  echo "[diagnose-lgtm] Using fallback test-results directory: $TEST_RESULTS_DIR" >&2
+fi
+
+OUT_DIR="$TEST_RESULTS_DIR/lgtm-diagnostics/$TIMESTAMP"
 mkdir -p "$OUT_DIR"
 
 NET_NAME="$(docker network ls --format '{{.Name}}' | grep 'steel-hammer_steel-hammer-network' | head -n1 || true)"

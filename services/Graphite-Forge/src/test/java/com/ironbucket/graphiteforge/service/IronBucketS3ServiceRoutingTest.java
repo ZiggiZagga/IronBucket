@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -159,6 +160,31 @@ class IronBucketS3ServiceRoutingTest {
 
         assertEquals("OBJECT_READ", decision.requiredCapability());
         assertTrue(decision.reason().contains("capability-validated"));
+    }
+
+    @Test
+    void exposesProviderCapabilityMatrixAndSupportsCapabilityFiltering() {
+        var matrix = service.getProviderCapabilityMatrix("jwt");
+        var multipartProviders = service.providersSupportingCapabilities("jwt", List.of("multipart_upload"));
+
+        assertTrue(matrix.stream().anyMatch(profile -> "AWS_S3".equals(profile.provider())));
+        assertTrue(matrix.stream().anyMatch(profile -> "LOCAL_FILESYSTEM".equals(profile.provider())));
+        assertTrue(multipartProviders.containsAll(Arrays.asList("AWS_S3", "GCS", "AZURE_BLOB")));
+        assertTrue(!multipartProviders.contains("LOCAL_FILESYSTEM"));
+    }
+
+    @Test
+    void capabilityAwareRoutingHonorsDeniedProviders() {
+        var decision = service.getCapabilityAwareRoutingDecision(
+            "jwt",
+            "tenant-a",
+            "tenant-a-files",
+            List.of("VERSIONING"),
+            List.of("AWS_S3")
+        );
+
+        assertEquals("GCS", decision.selectedProvider());
+        assertTrue(decision.reason().contains("capability-matrix-selection"));
     }
 
     private void assertAuth(HttpExchange exchange) {

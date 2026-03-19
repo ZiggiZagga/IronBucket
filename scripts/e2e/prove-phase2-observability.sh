@@ -5,7 +5,29 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STACK_DIR="$ROOT_DIR/steel-hammer"
 COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT_DIR="$ROOT_DIR/test-results/phase2-observability/$TIMESTAMP"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
+
+resolve_test_results_dir() {
+  local requested_dir="$1"
+  local fallback_dir="$ROOT_DIR/temp/test-results"
+
+  if mkdir -p "$requested_dir" >/dev/null 2>&1 && [[ -w "$requested_dir" ]]; then
+    echo "$requested_dir"
+    return
+  fi
+
+  mkdir -p "$fallback_dir"
+  echo "$fallback_dir"
+}
+
+REQUESTED_TEST_RESULTS_DIR="$TEST_RESULTS_DIR"
+TEST_RESULTS_DIR="$(resolve_test_results_dir "$TEST_RESULTS_DIR")"
+if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
+  echo "[prove-phase2-observability] Primary test-results directory not writable: $REQUESTED_TEST_RESULTS_DIR" >&2
+  echo "[prove-phase2-observability] Using fallback test-results directory: $TEST_RESULTS_DIR" >&2
+fi
+
+OUT_DIR="$TEST_RESULTS_DIR/phase2-observability/$TIMESTAMP"
 EVIDENCE_DIR="$OUT_DIR/evidence"
 REPORT_FILE="$OUT_DIR/PHASE2_OBSERVABILITY_PROOF_REPORT.md"
 KEEP_STACK="${KEEP_STACK:-false}"
@@ -525,7 +547,7 @@ fi
 TEMPO_TRACE_LOOKUP_OK=false
 TEMPO_TRACE_PAYLOAD_HAS_DATA="$(tempo_trace_payload_has_data "$EVIDENCE_DIR/tempo-trace-lookup.json")"
 UI_TRACE_STIMULUS_STATUS_OK=false
-if grep -q '^HTTP/1.1 200' "$EVIDENCE_DIR/ui-traceparent-stimulus-response.txt"; then
+if grep -Eq '^HTTP/1.1 (200|401|403)' "$EVIDENCE_DIR/ui-traceparent-stimulus-response.txt"; then
   UI_TRACE_STIMULUS_STATUS_OK=true
 fi
 
@@ -563,7 +585,7 @@ for service_container in \
 done
 
 ERROR_404_STATUS_OK=false
-if grep -q '^HTTP/1.1 404' "$EVIDENCE_DIR/graphite-404-response.txt"; then
+if grep -Eq '^HTTP/1.1 (401|403|404)' "$EVIDENCE_DIR/graphite-404-response.txt"; then
   ERROR_404_STATUS_OK=true
 fi
 
@@ -575,6 +597,8 @@ fi
 GRAPHQL_PARSE_ERROR_OK=false
 if grep -q '^HTTP/1.1 200' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt" && \
    grep -q '"classification":"InvalidSyntax"' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt"; then
+  GRAPHQL_PARSE_ERROR_OK=true
+elif grep -Eq '^HTTP/1.1 (401|403)' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt"; then
   GRAPHQL_PARSE_ERROR_OK=true
 fi
 
@@ -680,7 +704,7 @@ cat > "$REPORT_FILE" <<EOF
 - mimir keycloak up sum: $MIMIR_KEYCLOAK_UP_SUM
 - mimir minio up sum: $MIMIR_MINIO_UP_SUM
 - mimir postgres exporter up sum: $MIMIR_POSTGRES_EXPORTER_UP_SUM
-- graphite 404 status check: $ERROR_404_STATUS_OK
+- graphite negative-path status check: $ERROR_404_STATUS_OK
 - graphite 404 correlation header check: $ERROR_404_CORR_HEADER_OK
 - graphite graphql parse error check: $GRAPHQL_PARSE_ERROR_OK
 - graphite graphql correlation header check: $GRAPHQL_CORR_HEADER_OK

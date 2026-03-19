@@ -3,9 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT_DIR="$ROOT_DIR/test-results/phase1-4-proof/$TIMESTAMP"
-EVIDENCE_DIR="$OUT_DIR/evidence"
-REPORT_FILE="$OUT_DIR/PHASE1_2_3_4_PROOF_REPORT.md"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
 
 PHASE4_MINIO_CONTAINER="minio"
 PHASE4_MINIO_PORT="${PHASE4_MINIO_PORT:-19000}"
@@ -13,11 +11,34 @@ PHASE4_DOCKER_NETWORK="${PHASE4_DOCKER_NETWORK:-phase4-proof-net}"
 PHASE4_MINIO_SCHEME="${PHASE4_MINIO_SCHEME:-http}"
 KEEP_STACK="${KEEP_STACK:-true}"
 
-mkdir -p "$EVIDENCE_DIR"
-
 log() {
   printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$*"
 }
+
+resolve_test_results_dir() {
+  local requested_dir="$1"
+  local fallback_dir="$ROOT_DIR/temp/test-results"
+
+  if mkdir -p "$requested_dir" >/dev/null 2>&1 && [[ -w "$requested_dir" ]]; then
+    echo "$requested_dir"
+    return
+  fi
+
+  mkdir -p "$fallback_dir"
+  echo "$fallback_dir"
+}
+
+REQUESTED_TEST_RESULTS_DIR="$TEST_RESULTS_DIR"
+TEST_RESULTS_DIR="$(resolve_test_results_dir "$TEST_RESULTS_DIR")"
+if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
+  log "Primary test-results directory not writable: $REQUESTED_TEST_RESULTS_DIR"
+  log "Using fallback test-results directory: $TEST_RESULTS_DIR"
+fi
+OUT_DIR="$TEST_RESULTS_DIR/phase1-4-proof/$TIMESTAMP"
+EVIDENCE_DIR="$OUT_DIR/evidence"
+REPORT_FILE="$OUT_DIR/PHASE1_2_3_4_PROOF_REPORT.md"
+
+mkdir -p "$EVIDENCE_DIR"
 
 bool_text() {
   if [[ "$1" == "true" ]]; then
@@ -29,7 +50,7 @@ bool_text() {
 
 find_latest_phase13_report() {
   local report
-  report="$(find "$ROOT_DIR/test-results/phase1-3-proof" -mindepth 2 -maxdepth 2 -name 'PHASE1_2_3_PROOF_REPORT.md' 2>/dev/null | sort | tail -1 || true)"
+  report="$(find "$TEST_RESULTS_DIR/phase1-3-proof" -mindepth 2 -maxdepth 2 -name 'PHASE1_2_3_PROOF_REPORT.md' 2>/dev/null | sort | tail -1 || true)"
   echo "$report"
 }
 
@@ -74,7 +95,7 @@ wait_minio_ready() {
 
 log "Running Phase 1-3 proof gate"
 set +e
-KEEP_STACK="$KEEP_STACK" bash "$ROOT_DIR/scripts/e2e/prove-phase1-3-complete.sh" \
+TEST_RESULTS_DIR="$TEST_RESULTS_DIR" KEEP_STACK="$KEEP_STACK" bash "$ROOT_DIR/scripts/e2e/prove-phase1-3-complete.sh" \
   | tee "$EVIDENCE_DIR/phase1-3-proof.log"
 PHASE13_EXIT=${PIPESTATUS[0]}
 set -e

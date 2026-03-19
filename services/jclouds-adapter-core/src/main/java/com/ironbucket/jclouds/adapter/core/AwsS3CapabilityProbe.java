@@ -28,7 +28,7 @@ public final class AwsS3CapabilityProbe implements CapabilityProbe {
             .map(ProviderCapabilityProfile::supportedCapabilities)
             .orElse(Set.of());
 
-        if (!connectionConfig.hasCredentials()) {
+        if (!JcloudsBlobStoreContextProvider.hasResolvableCredentials(connectionConfig)) {
             return new CapabilityProbeResult(
                 ProviderType.AWS_S3,
                 CapabilityProbeStatus.DEGRADED,

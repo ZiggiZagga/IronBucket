@@ -1,10 +1,12 @@
 package com.ironbucket.graphiteforge.config;
 
+import com.ironbucket.graphiteforge.filter.RequestCorrelationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
@@ -12,8 +14,12 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain springSecurityFilterChain(
+        ServerHttpSecurity http,
+        RequestCorrelationFilter requestCorrelationFilter
+    ) {
         http
+            .addFilterAt(requestCorrelationFilter, SecurityWebFiltersOrder.FIRST)
             .authorizeExchange(authz -> authz
                 .pathMatchers("/actuator/**").permitAll()
                 .anyExchange().authenticated())

@@ -2,6 +2,7 @@ package com.ironbucket.graphiteforge.service;
 
 import com.ironbucket.graphiteforge.exception.BucketNotFoundException;
 import com.ironbucket.graphiteforge.exception.IronBucketServiceException;
+import com.ironbucket.graphiteforge.model.ProviderCapabilityProfile;
 import com.ironbucket.graphiteforge.model.ProviderRoutingDecision;
 import com.ironbucket.graphiteforge.model.S3Bucket;
 import com.ironbucket.graphiteforge.model.S3Object;
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -33,6 +35,12 @@ public class IronBucketS3Service {
         "OBJECT_ACL",
         "LIFECYCLE_POLICY",
         "PRESIGNED_URLS"
+    );
+    private static final Map<String, Set<String>> PROVIDER_CAPABILITY_MATRIX = Map.of(
+        "AWS_S3", Set.of("OBJECT_READ", "OBJECT_WRITE", "OBJECT_DELETE", "MULTIPART_UPLOAD", "VERSIONING", "OBJECT_TAGGING", "OBJECT_ACL", "LIFECYCLE_POLICY", "PRESIGNED_URLS"),
+        "GCS", Set.of("OBJECT_READ", "OBJECT_WRITE", "OBJECT_DELETE", "MULTIPART_UPLOAD", "VERSIONING", "OBJECT_TAGGING", "LIFECYCLE_POLICY", "PRESIGNED_URLS"),
+        "AZURE_BLOB", Set.of("OBJECT_READ", "OBJECT_WRITE", "OBJECT_DELETE", "MULTIPART_UPLOAD", "OBJECT_TAGGING", "PRESIGNED_URLS"),
+        "LOCAL_FILESYSTEM", Set.of("OBJECT_READ", "OBJECT_WRITE", "OBJECT_DELETE")
     );
 
     private final WebClient webClient;
@@ -254,6 +262,65 @@ public class IronBucketS3Service {
         );
     }
 
+    public List<ProviderCapabilityProfile> getProviderCapabilityMatrix(String jwtToken) {
+        authorizationHeader(jwtToken);
+        return PROVIDER_CAPABILITY_MATRIX.entrySet().stream()
+            .map(entry -> new ProviderCapabilityProfile(entry.getKey(), entry.getValue().stream().sorted().toList()))
+            .toList();
+    }
+
+    public List<String> providersSupportingCapabilities(String jwtToken, List<String> requiredCapabilities) {
+        authorizationHeader(jwtToken);
+        Set<String> required = normalizeCapabilities(requiredCapabilities);
+
+        return PROVIDER_CAPABILITY_MATRIX.entrySet().stream()
+            .filter(entry -> entry.getValue().containsAll(required))
+            .map(Map.Entry::getKey)
+            .toList();
+    }
+
+    public ProviderRoutingDecision getCapabilityAwareRoutingDecision(
+        String jwtToken,
+        String tenantId,
+        String bucketName,
+        List<String> requiredCapabilities,
+        List<String> deniedProviders
+    ) {
+        authorizationHeader(jwtToken);
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalArgumentException("tenantId is required for provider routing decision");
+        }
+        if (bucketName == null || bucketName.isBlank()) {
+            throw new IllegalArgumentException("bucketName is required for provider routing decision");
+        }
+
+        validateTenantBucketAlignment(tenantId, bucketName);
+
+        Set<String> required = normalizeCapabilities(requiredCapabilities);
+        Set<String> denied = normalizeProviderNames(deniedProviders);
+
+        LinkedHashMap<String, Set<String>> orderedMatrix = new LinkedHashMap<>();
+        orderedMatrix.putAll(PROVIDER_CAPABILITY_MATRIX);
+
+        String selectedProvider = orderedMatrix.entrySet().stream()
+            .filter(entry -> !denied.contains(entry.getKey()))
+            .filter(entry -> entry.getValue().containsAll(required))
+            .map(Map.Entry::getKey)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(
+                "No provider satisfies required capabilities " + required + " with deniedProviders=" + denied
+            ));
+
+        String requiredCapabilityLabel = required.isEmpty() ? "OBJECT_READ" : String.join(",", required.stream().sorted().toList());
+        return new ProviderRoutingDecision(
+            tenantId,
+            bucketName,
+            requiredCapabilityLabel,
+            selectedProvider,
+            ROUTED_REASON + ";capability-matrix-selection"
+        );
+    }
+
     private String normalizeRequiredCapability(String requiredCapability) {
         String normalized = requiredCapability == null || requiredCapability.isBlank()
             ? "OBJECT_READ"
@@ -265,6 +332,25 @@ public class IronBucketS3Service {
             );
         }
         return normalized;
+    }
+
+    private Set<String> normalizeCapabilities(List<String> requiredCapabilities) {
+        if (requiredCapabilities == null || requiredCapabilities.isEmpty()) {
+            return Set.of();
+        }
+        return requiredCapabilities.stream()
+            .map(capability -> normalizeRequiredCapability(capability == null ? "" : capability))
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    private Set<String> normalizeProviderNames(List<String> providerNames) {
+        if (providerNames == null || providerNames.isEmpty()) {
+            return Set.of();
+        }
+        return providerNames.stream()
+            .filter(name -> name != null && !name.isBlank())
+            .map(name -> name.trim().toUpperCase(Locale.ROOT))
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 
     private void validateTenantBucketAlignment(String tenantId, String bucketName) {

@@ -35,14 +35,17 @@ log "Step 5/7: Sentinel roadmap + behavioral gates (containers only)"
 bash "$ROOT_DIR/scripts/ci/run-sentinel-roadmap-gate.sh"
 BEHAVIORAL_GATE_STRICT=true bash "$ROOT_DIR/scripts/ci/run-sentinel-behavioral-gate.sh"
 
-log "Step 6/7: Sentinel presigned security smoke gate"
+log "Step 6/8: Enterprise admin runbook evidence gate"
+bash "$ROOT_DIR/scripts/ci/run-enterprise-admin-runbook-gate.sh"
+
+log "Step 7/8: Sentinel presigned security smoke gate"
 bash "$ROOT_DIR/scripts/ci/run-presigned-security-smoke.sh"
 
 if [[ "$RUN_FULL_ORCHESTRATOR" == "true" ]]; then
-  log "Step 7/7: Full orchestrator (enabled)"
+  log "Step 8/8: Full orchestrator (enabled)"
   bash "$ROOT_DIR/scripts/run-all-tests-complete.sh"
 else
-  log "Step 7/7: Full orchestrator skipped (set RUN_FULL_ORCHESTRATOR=true to enable)"
+  log "Step 8/8: Full orchestrator skipped (set RUN_FULL_ORCHESTRATOR=true to enable)"
 fi
 
 log "Release preflight passed"

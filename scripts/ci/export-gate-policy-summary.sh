@@ -2,8 +2,30 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-OUT_DIR="${ROOT_DIR}/test-results/ci-gates"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+
+resolve_test_results_dir() {
+  local requested_dir="$1"
+  local fallback_dir="$ROOT_DIR/temp/test-results"
+
+  if mkdir -p "$requested_dir" >/dev/null 2>&1 && [[ -w "$requested_dir" ]]; then
+    echo "$requested_dir"
+    return
+  fi
+
+  mkdir -p "$fallback_dir"
+  echo "$fallback_dir"
+}
+
+REQUESTED_TEST_RESULTS_DIR="$TEST_RESULTS_DIR"
+TEST_RESULTS_DIR="$(resolve_test_results_dir "$TEST_RESULTS_DIR")"
+if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
+  echo "[export-gate-policy-summary] Primary test-results directory not writable: $REQUESTED_TEST_RESULTS_DIR" >&2
+  echo "[export-gate-policy-summary] Using fallback test-results directory: $TEST_RESULTS_DIR" >&2
+fi
+
+OUT_DIR="${TEST_RESULTS_DIR}/ci-gates"
 
 REQUIRED_CHECKS="${REQUIRED_CHECKS:-Build and Test All Modules,jclouds MinIO CRUD Gate,Sentinel Roadmap Gate,Sentinel Behavioral Gate,e2e-complete-suite}"
 IFS=',' read -r -a CHECK_ARRAY <<< "${REQUIRED_CHECKS}"

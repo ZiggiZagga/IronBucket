@@ -46,6 +46,15 @@ type Query {
     bucketName: String!
     requiredCapability: String!
   ): ProviderRoutingDecision!
+  getProviderCapabilityMatrix(jwtToken: String!): [ProviderCapabilityProfile!]!
+  providersSupportingCapabilities(jwtToken: String!, requiredCapabilities: [String!]!): [String!]!
+  getCapabilityAwareRoutingDecision(
+    jwtToken: String!
+    tenantId: String!
+    bucketName: String!
+    requiredCapabilities: [String!]!
+    deniedProviders: [String!]
+  ): ProviderRoutingDecision!
 }
 
 type Mutation {
@@ -182,6 +191,11 @@ type ProviderRoutingDecision {
   requiredCapability: String!
   selectedProvider: String!
   reason: String!
+}
+
+type ProviderCapabilityProfile {
+  provider: String!
+  capabilities: [String!]!
 }
 
 input PolicyInput {

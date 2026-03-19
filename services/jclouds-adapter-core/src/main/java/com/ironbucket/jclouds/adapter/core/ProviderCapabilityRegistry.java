@@ -2,8 +2,10 @@ package com.ironbucket.jclouds.adapter.core;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public final class ProviderCapabilityRegistry {
     private final Map<ProviderType, ProviderCapabilityProfile> profiles;
@@ -79,6 +81,24 @@ public final class ProviderCapabilityRegistry {
 
     public Optional<ProviderCapabilityProfile> profileOf(ProviderType providerType) {
         return Optional.ofNullable(profiles.get(providerType));
+    }
+
+    public Map<ProviderType, Set<ProviderCapability>> capabilityMatrix() {
+        Map<ProviderType, Set<ProviderCapability>> matrix = new LinkedHashMap<>();
+        for (ProviderType providerType : ProviderType.values()) {
+            Set<ProviderCapability> supported = profileOf(providerType)
+                .map(ProviderCapabilityProfile::supportedCapabilities)
+                .orElseGet(() -> EnumSet.noneOf(ProviderCapability.class));
+            matrix.put(providerType, Set.copyOf(supported));
+        }
+        return Map.copyOf(matrix);
+    }
+
+    public void registerProfile(ProviderCapabilityProfile profile) {
+        if (profile == null) {
+            throw new IllegalArgumentException("profile must not be null");
+        }
+        profiles.put(profile.providerType(), profile);
     }
 
     public boolean supports(ProviderType providerType, ProviderCapability capability) {

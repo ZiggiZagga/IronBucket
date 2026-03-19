@@ -3,7 +3,29 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT_DIR="$ROOT_DIR/test-results/all-projects-e2e-gate/$TIMESTAMP"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
+
+resolve_test_results_dir() {
+  local requested_dir="$1"
+  local fallback_dir="$ROOT_DIR/temp/test-results"
+
+  if mkdir -p "$requested_dir" >/dev/null 2>&1 && [[ -w "$requested_dir" ]]; then
+    echo "$requested_dir"
+    return
+  fi
+
+  mkdir -p "$fallback_dir"
+  echo "$fallback_dir"
+}
+
+REQUESTED_TEST_RESULTS_DIR="$TEST_RESULTS_DIR"
+TEST_RESULTS_DIR="$(resolve_test_results_dir "$TEST_RESULTS_DIR")"
+if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
+  echo "[all-projects-e2e-gate] Primary test-results directory not writable: $REQUESTED_TEST_RESULTS_DIR" >&2
+  echo "[all-projects-e2e-gate] Using fallback test-results directory: $TEST_RESULTS_DIR" >&2
+fi
+
+OUT_DIR="$TEST_RESULTS_DIR/all-projects-e2e-gate/$TIMESTAMP"
 LOG_FILE="$OUT_DIR/gate.log"
 REPORT_FILE="$OUT_DIR/ALL_PROJECTS_E2E_GATE_REPORT.md"
 

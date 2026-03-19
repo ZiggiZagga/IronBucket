@@ -6,10 +6,32 @@ STACK_DIR="$ROOT_DIR/steel-hammer"
 COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
 
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT_DIR="$ROOT_DIR/test-results/phase2-performance/$TIMESTAMP"
+TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
+
+resolve_test_results_dir() {
+  local requested_dir="$1"
+  local fallback_dir="$ROOT_DIR/temp/test-results"
+
+  if mkdir -p "$requested_dir" >/dev/null 2>&1 && [[ -w "$requested_dir" ]]; then
+    echo "$requested_dir"
+    return
+  fi
+
+  mkdir -p "$fallback_dir"
+  echo "$fallback_dir"
+}
+
+REQUESTED_TEST_RESULTS_DIR="$TEST_RESULTS_DIR"
+TEST_RESULTS_DIR="$(resolve_test_results_dir "$TEST_RESULTS_DIR")"
+if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
+  echo "[prove-phase2-performance] Primary test-results directory not writable: $REQUESTED_TEST_RESULTS_DIR" >&2
+  echo "[prove-phase2-performance] Using fallback test-results directory: $TEST_RESULTS_DIR" >&2
+fi
+
+OUT_DIR="$TEST_RESULTS_DIR/phase2-performance/$TIMESTAMP"
 EVIDENCE_DIR="$OUT_DIR/evidence"
 REPORT_FILE="$OUT_DIR/PHASE2_PERFORMANCE_REPORT.md"
-HISTORY_CSV="$ROOT_DIR/test-results/phase2-performance/performance-history.csv"
+HISTORY_CSV="$TEST_RESULTS_DIR/phase2-performance/performance-history.csv"
 
 KEEP_STACK="${KEEP_STACK:-false}"
 PERF_REUSE_STACK="${PERF_REUSE_STACK:-false}"
