@@ -1,0 +1,35 @@
+FROM node:20-bookworm
+
+WORKDIR /workspace/ironbucket-app-nextjs
+
+# Pre-install system dependencies for Playwright
+RUN apt-get update && apt-get install -y \
+    libasound2 \
+    libnspr4 \
+    libnss3 \
+    libgconf-2-4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libxcb1 \
+    libxkbcommon0 \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+VOLUME ["/workspace/ironbucket-app-nextjs"]
+
+ENV CI=true
+
+ENTRYPOINT ["/bin/bash", "-lc"]
+CMD ["npm ci --no-audit --no-fund && npx playwright install chromium && npm run build && npx playwright test --config playwright.config.ts tests/object-browser-baseline.spec.ts tests/ui-live-upload-persistence.spec.ts tests/ui-s3-methods-e2e.spec.ts tests/ui-s3-methods-performance.spec.ts tests/ui-governance-methods-e2e.spec.ts --workers=1"]
