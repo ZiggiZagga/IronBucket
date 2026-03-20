@@ -132,7 +132,7 @@ PostgreSQL (Metadata)
 ✅ **Core module test pathways passing** (latest comprehensive run)  
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
 ✅ **Graphite-Forge governance operation coverage validated in containerized Playwright** (`tests/ui-governance-methods-e2e.spec.ts`)
-✅ **Full containerized UI E2E suite green** (`npx playwright test tests` in `steel-hammer-ui-e2e`, 5/5 passing on 2026-03-18)
+🟡 **Containerized UI E2E suite currently unstable** (`npx playwright test tests` in `steel-hammer-ui-e2e`, 1/5 passing on 2026-03-20)
 🟡 **Latest full orchestrator** (2026-03-17): 204 total, 200 passed, 5 failed
 
 ### UI E2E Stability Update (2026-03-18)
@@ -147,6 +147,14 @@ Root-cause resolution completed for object-browser baseline instability and scre
 Latest containerized verification:
 - Command: `docker compose -f steel-hammer/docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e bash -lc 'cd /workspaces/IronBucket/ironbucket-app-nextjs && npx playwright test tests'`
 - Result: `5 passed (7.7s)`
+
+### UI E2E Runtime Update (2026-03-20)
+
+Current runtime status in the release-candidate environment:
+- Browser startup dependency issue fixed in UI E2E image by adding `libasound2` in `steel-hammer/DockerfileUIE2E`.
+- Current isolated run result: `1 passed, 4 failed`.
+- Failing scenarios are blocked by backend GraphQL errors: `Connection prematurely closed BEFORE response` on Graphite-Forge operations (`createBucket`, `uploadObject`).
+- Investigation notes are tracked in [E2E-TEST-STATUS-MARCH-2026.md](E2E-TEST-STATUS-MARCH-2026.md).
 
 Latest known failing suites:
 - `tools/Storage-Conductor` build failed in Maven phase

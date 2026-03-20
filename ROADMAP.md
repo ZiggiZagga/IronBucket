@@ -28,6 +28,13 @@
 - Screenshot-proof bucket provisioning made idempotent (list-before-create), eliminating expected warning-path log noise in healthy runs.
 - Current UI E2E baseline status: `object-browser-baseline`, `ui-governance-methods-e2e`, `ui-live-upload-persistence`, `ui-s3-methods-e2e`, `ui-s3-methods-performance` all passing.
 
+**Incremental Validation Snapshot (2026-03-20):**
+- UI E2E container runtime dependency issue fixed (`libasound.so.2` missing) by adding `libasound2` to `steel-hammer/DockerfileUIE2E`.
+- UI E2E image now uses preinstalled Playwright system dependencies for faster reruns.
+- Current isolated containerized UI result in release-candidate runtime: `1/5 passing`.
+- Remaining blocker is backend GraphQL runtime instability on Graphite-Forge operations (`createBucket`, `uploadObject`) with `Connection prematurely closed BEFORE response`.
+- Detailed investigation trail captured in `E2E-TEST-STATUS-MARCH-2026.md`.
+
 **Runtime Observability Audit Snapshot (2026-03-17):**
 - LGTM infrastructure is up and stable in Docker runtime (Loki, Mimir, Tempo, Promtail, Grafana, OTEL Collector)
 - Logs pipeline is healthy: Promtail -> Loki is active with sustained ingest and zero dropped-byte counters
