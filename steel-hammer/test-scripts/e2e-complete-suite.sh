@@ -16,16 +16,16 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
+GATEWAY_URL="${SENTINEL_GEAR_URL:-https://steel-hammer-sentinel-gear:8080}"
 KEYCLOAK_URL="${KEYCLOAK_URL:-https://steel-hammer-keycloak:7081}"
-EUREKA_URL="${EUREKA_URL:-http://steel-hammer-buzzle-vane:8083}"
+EUREKA_URL="${EUREKA_URL:-https://steel-hammer-buzzle-vane:8083}"
 MINIO_URL="${MINIO_URL:-https://steel-hammer-minio:9000}"
-LOKI_URL="${LOKI_URL:-http://steel-hammer-loki:3100}"
-TEMPO_URL="${TEMPO_URL:-http://steel-hammer-tempo:3200}"
-MIMIR_URL="${MIMIR_URL:-http://steel-hammer-mimir:9009}"
+LOKI_URL="${LOKI_URL:-https://steel-hammer-loki:3100}"
+TEMPO_URL="${TEMPO_URL:-https://steel-hammer-tempo:3200}"
+MIMIR_URL="${MIMIR_URL:-https://steel-hammer-mimir:9009}"
 KEYCLOAK_METRICS_URL="${KEYCLOAK_METRICS_URL:-$KEYCLOAK_URL/metrics}"
 MINIO_METRICS_URL="${MINIO_METRICS_URL:-$MINIO_URL/minio/v2/metrics/cluster}"
-POSTGRES_EXPORTER_URL="${POSTGRES_EXPORTER_URL:-http://steel-hammer-postgres-exporter:9187/metrics}"
+POSTGRES_EXPORTER_URL="${POSTGRES_EXPORTER_URL:-https://steel-hammer-postgres-exporter:9187/metrics}"
 
 OUTPUT_DIR="/tmp/ironbucket-e2e-reports"
 LOG_DIR="$OUTPUT_DIR/logs"
@@ -263,7 +263,7 @@ fi
 
 # Test 3.2: Brazz-Nossel Liveness
 log_test "Brazz-Nossel Liveness Probe" "3.2"
-BRAZZ_HEALTH=$(curl -s "http://steel-hammer-brazz-nossel:8082/actuator/health" 2>/dev/null || echo "{}")
+BRAZZ_HEALTH=$(curl -s "https://steel-hammer-brazz-nossel:8082/actuator/health" 2>/dev/null || echo "{}")
 if echo "$BRAZZ_HEALTH" | grep -q "UP"; then
     test_pass "Brazz-Nossel Liveness Probe"
 else
@@ -272,7 +272,7 @@ fi
 
 # Test 3.3: Claimspindel Liveness
 log_test "Claimspindel Liveness Probe" "3.3"
-CLAIM_HEALTH=$(curl -s "http://steel-hammer-claimspindel:8081/actuator/health" 2>/dev/null || echo "{}")
+CLAIM_HEALTH=$(curl -s "https://steel-hammer-claimspindel:8081/actuator/health" 2>/dev/null || echo "{}")
 if echo "$CLAIM_HEALTH" | grep -q "UP"; then
     test_pass "Claimspindel Liveness Probe"
 else

@@ -168,16 +168,16 @@ class BuzzleVaneDiscoveryLifecycleTest {
     void test_sentinelGear_discoversService() {
         // GIVEN: Multiple services in registry
         Map<String, String> registry = new HashMap<>();
-        registry.put("CLAIMSPINDEL", "http://steel-hammer-claimspindel:8081");
-        registry.put("BRAZZ-NOSSEL", "http://steel-hammer-brazz-nossel:8082");
-        registry.put("BUZZLE-VANE", "http://steel-hammer-buzzle-vane:8083");
+        registry.put("CLAIMSPINDEL", "https://steel-hammer-claimspindel:8081");
+        registry.put("BRAZZ-NOSSEL", "https://steel-hammer-brazz-nossel:8082");
+        registry.put("BUZZLE-VANE", "https://steel-hammer-buzzle-vane:8083");
 
         // WHEN: Sentinel-Gear discovers services
         String discoveredService = registry.get("CLAIMSPINDEL");
 
         // THEN: Service should be discovered
         assertNotNull(discoveredService, "Service should be discovered");
-        assertEquals("http://steel-hammer-claimspindel:8081", discoveredService);
+        assertEquals("https://steel-hammer-claimspindel:8081", discoveredService);
 
         // AND: All services should be discoverable
         assertTrue(registry.containsKey("CLAIMSPINDEL"), "Claimspindel should be discovered");

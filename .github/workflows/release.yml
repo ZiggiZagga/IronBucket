@@ -99,7 +99,7 @@ jobs:
           # Wait for MinIO to be ready
           echo "Waiting for MinIO to start..."
           for i in {1..30}; do
-            if curl -f http://localhost:9000/minio/health/live 2>/dev/null; then
+            if curl -f https://localhost:9000/minio/health/live 2>/dev/null; then
               echo "MinIO is ready!"
               break
             fi

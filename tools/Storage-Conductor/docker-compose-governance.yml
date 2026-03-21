@@ -46,7 +46,7 @@ services:
       storage-conductor-postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health", "||", "exit", "1"]
+      test: ["CMD", "curl", "-f", "https://localhost:8080/health", "||", "exit", "1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -67,7 +67,7 @@ services:
     volumes:
       - minio-data:/minio-data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "https://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -87,7 +87,7 @@ services:
     ports:
       - "8083:8083"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      test: ["CMD", "curl", "-f", "https://localhost:8083/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -104,15 +104,15 @@ services:
       - storage-test-network
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/dev
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://buzzle-vane:8083/eureka/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://keycloak:8080/realms/dev
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: https://buzzle-vane:8083/eureka/
     depends_on:
       buzzle-vane:
         condition: service_healthy
       storage-conductor-keycloak:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "https://localhost:8081/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -129,12 +129,12 @@ services:
       - storage-test-network
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      VAULT_SMITH_S3_ENDPOINT: http://minio:9000
+      VAULT_SMITH_S3_ENDPOINT: https://minio:9000
       VAULT_SMITH_S3_ACCESS_KEY: minioadmin
       VAULT_SMITH_S3_SECRET_KEY: minioadmin
       VAULT_SMITH_S3_REGION: us-east-1
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/dev
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://buzzle-vane:8083/eureka/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://keycloak:8080/realms/dev
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: https://buzzle-vane:8083/eureka/
     depends_on:
       storage-conductor-minio:
         condition: service_healthy
@@ -160,9 +160,9 @@ services:
       - storage-test-network
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/dev
-      KEYCLOAK_REALM_URL: http://keycloak:8080/realms/dev
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://buzzle-vane:8083/eureka/
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://keycloak:8080/realms/dev
+      KEYCLOAK_REALM_URL: https://keycloak:8080/realms/dev
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: https://buzzle-vane:8083/eureka/
     depends_on:
       storage-conductor-keycloak:
         condition: service_healthy
@@ -175,7 +175,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "https://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -202,12 +202,12 @@ services:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_REGION: us-east-1
-      S3_ENDPOINT: http://minio:9000
+      S3_ENDPOINT: https://minio:9000
       # Governance stack URLs
-      SENTINEL_GEAR_URL: http://sentinel-gear:8080
+      SENTINEL_GEAR_URL: https://sentinel-gear:8080
       VAULT_SMITH_URL: http://vault-smith:8090
-      CLAIMSPINDEL_URL: http://claimspindel:8081
-      KEYCLOAK_URL: http://keycloak:8080
+      CLAIMSPINDEL_URL: https://claimspindel:8081
+      KEYCLOAK_URL: https://keycloak:8080
       # Test configuration
       TEST_TENANT: test-org-001
       PROVE_GOVERNANCE: "true"

@@ -3,6 +3,15 @@ server:
   error:
     include-message: always
     include-binding-errors: always
+  ssl:
+    enabled: ${SERVER_SSL_ENABLED:false}
+    key-store: ${SERVER_SSL_KEYSTORE:}
+    key-store-password: ${SERVER_SSL_KEYSTORE_PASSWORD:}
+    key-password: ${SERVER_SSL_KEY_PASSWORD:${SERVER_SSL_KEYSTORE_PASSWORD:}}
+    key-store-type: ${SERVER_SSL_KEYSTORE_TYPE:PKCS12}
+    trust-store: ${SERVER_SSL_TRUSTSTORE:}
+    trust-store-password: ${SERVER_SSL_TRUSTSTORE_PASSWORD:}
+    trust-store-type: ${SERVER_SSL_TRUSTSTORE_TYPE:PKCS12}
 
 spring:
   config:
@@ -23,7 +32,17 @@ spring:
     vault:
       enabled: ${SPRING_CLOUD_VAULT_ENABLED:false}
       uri: ${SPRING_CLOUD_VAULT_URI:https://127.0.0.1:8200}
+      authentication: ${SPRING_CLOUD_VAULT_AUTHENTICATION:TOKEN}
       token: ${SPRING_CLOUD_VAULT_TOKEN:}
+      app-role:
+        role-id-file: ${SPRING_CLOUD_VAULT_APP_ROLE_ROLE_ID_FILE:}
+        secret-id-file: ${SPRING_CLOUD_VAULT_APP_ROLE_SECRET_ID_FILE:}
+        app-role-path: ${SPRING_CLOUD_VAULT_APP_ROLE_APP_ROLE_PATH:approle}
+      ssl:
+        verify-hostname: ${SPRING_CLOUD_VAULT_SSL_VERIFY_HOSTNAME:true}
+        trust-store: ${SPRING_CLOUD_VAULT_SSL_TRUST_STORE:}
+        trust-store-password: ${SPRING_CLOUD_VAULT_SSL_TRUST_STORE_PASSWORD:}
+        trust-store-type: ${SPRING_CLOUD_VAULT_SSL_TRUST_STORE_TYPE:PKCS12}
       kv:
         enabled: true
         backend: ${SPRING_CLOUD_VAULT_KV_BACKEND:secret}
@@ -32,7 +51,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URI:http://steel-hammer-buzzle-vane:8083/eureka}
+      defaultZone: ${EUREKA_URI:https://steel-hammer-buzzle-vane:8083/eureka}
     region: ${EUREKA_REGION:dev-region-1}
     healthcheck:
       enabled: true
@@ -62,7 +81,7 @@ management:
       probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
   otlp:
     tracing:
-      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://steel-hammer-otel-collector:4317}
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:https://steel-hammer-otel-collector:4317}
 
 logging:
   level:

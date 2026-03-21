@@ -45,16 +45,16 @@ Level 7 (E2E Testing)
 ### Phase 2: Identity & Discovery
 3. **Keycloak** starts (waits for PostgreSQL)
    - Provides OIDC/OAuth2 identity services
-   - Available at: `http://steel-hammer-keycloak:7081`
+   - Available at: `https://steel-hammer-keycloak:7081`
 
 4. **Buzzle-Vane (Eureka)** starts (waits for PostgreSQL + Keycloak)
    - Provides service discovery and registration
-   - Available at: `http://steel-hammer-buzzle-vane:8083/eureka`
+   - Available at: `https://steel-hammer-buzzle-vane:8083/eureka`
 
 ### Phase 3: API & Routing
 5. **Sentinel-Gear (Gateway)** starts (waits for PostgreSQL + Keycloak + Eureka)
    - Spring Cloud Gateway with OIDC integration
-   - Exposes: `http://localhost:8080` (external API)
+   - Exposes: `https://localhost:8080` (external API)
    - Discovers downstream services via Eureka
 
 ### Phase 4: Core Services

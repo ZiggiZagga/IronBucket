@@ -2,6 +2,14 @@ server:
   port: 8083
   error:
     include-message: always
+  ssl:
+    enabled: ${SERVER_SSL_ENABLED:true}
+    key-store: ${SERVER_SSL_KEYSTORE:/vault-pki-certs/services/buzzle-vane/keystore.p12}
+    key-store-password: ${SERVER_SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: ${SERVER_SSL_KEYSTORE_TYPE:PKCS12}
+    trust-store: ${SERVER_SSL_TRUSTSTORE:/vault-pki-certs/ca/ca-truststore.p12}
+    trust-store-password: ${SERVER_SSL_TRUSTSTORE_PASSWORD:changeit}
+    trust-store-type: ${SERVER_SSL_TRUSTSTORE_TYPE:PKCS12}
 
 spring:
   application:
@@ -26,7 +34,7 @@ management:
       probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
   otlp:
     tracing:
-      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://steel-hammer-otel-collector:4317}
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:https://steel-hammer-otel-collector:4317}
   metrics:
     export:
       prometheus:
@@ -48,13 +56,13 @@ app:
     enabled: true
     services:
       - name: sentinel-gear
-        url: http://sentinel-gear:8080
+        url: https://sentinel-gear:8080
         healthcheck: /actuator/health
       - name: claimspindel
-        url: http://claimspindel:8081
+        url: https://claimspindel:8081
         healthcheck: /actuator/health
       - name: brazz-nossel
-        url: http://brazz-nossel:8082
+        url: https://brazz-nossel:8082
         healthcheck: /actuator/health
   registry:
     location: /app/registry

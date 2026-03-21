@@ -154,7 +154,7 @@ All tests support configuration via system properties for flexibility:
 
 ```properties
 # Default configuration (local MinIO)
-s3.endpoint=http://localhost:9000
+s3.endpoint=https://localhost:9000
 s3.accessKey=minioadmin
 s3.secretKey=minioadmin
 s3.region=us-east-1

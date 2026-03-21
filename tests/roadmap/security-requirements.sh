@@ -80,7 +80,7 @@ test_network_isolation_enforced() {
     log_test_start "Network Isolation Enforced"
     
     # In Docker Compose, check if MinIO is accessible directly
-    if curl -s --max-time 2 http://localhost:9000 &> /dev/null; then
+    if curl -s --max-time 2 https://localhost:9000 &> /dev/null; then
         log_test_fail "MinIO directly accessible on localhost:9000" \
             "CRITICAL" \
             "Direct MinIO access possible, bypassing security layers. Deploy NetworkPolicies in Kubernetes."
@@ -281,7 +281,7 @@ test_security_headers_present() {
     log_test_start "Security Headers Present"
     
     # Check if security headers are set
-    local service_url="http://sentinel-gear:8081"
+    local service_url="https://sentinel-gear:8081"
     
     if command -v curl &> /dev/null; then
         local headers=$(curl -sI "$service_url/actuator/health" 2>/dev/null || echo "")

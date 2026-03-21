@@ -38,7 +38,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     private final Map<String, BackendProvider> bucketOverrides;
     
     public S3ProxyServiceImpl(
-            @Value("${app.s3.endpoint:http://localhost:9000}") String endpoint,
+            @Value("${app.s3.endpoint:https://localhost:9000}") String endpoint,
             @Value("${app.s3.access-key}") String accessKey,
             @Value("${app.s3.secret-key}") String secretKey,
             @Value("${app.s3.region:us-east-1}") String region,

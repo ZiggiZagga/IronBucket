@@ -8,7 +8,7 @@ describe('Keycloak WebAuthn/Passkey Support', () => {
     // This test assumes Keycloak admin API is accessible and admin credentials are set
     const adminUser = process.env.KC_ADMIN_USER || 'admin';
     const adminPass = process.env.KC_ADMIN_PASS || 'admin';
-    const baseUrl = 'http://localhost:7081';
+    const baseUrl = 'https://localhost:7081';
     let token;
     try {
       // Get admin token

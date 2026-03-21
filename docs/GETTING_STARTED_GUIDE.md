@@ -160,9 +160,9 @@ Use this verification pattern:
 NET=steel-hammer_steel-hammer-network
 docker run --rm --network "$NET" curlimages/curl:8.12.1 -k -sS https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration
 docker run --rm --network "$NET" curlimages/curl:8.12.1 -k -sS https://steel-hammer-minio:9000/minio/health/live
-docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-claimspindel:8081/actuator/health
-docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-brazz-nossel:8082/actuator/health
-docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-buzzle-vane:8083/actuator/health
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS https://steel-hammer-claimspindel:8081/actuator/health
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS https://steel-hammer-brazz-nossel:8082/actuator/health
+docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS https://steel-hammer-buzzle-vane:8083/actuator/health
 ```
 
 ### Step 5: Run Production Preflight (Recommended Before Release)
@@ -180,7 +180,7 @@ RUN_FULL_ORCHESTRATOR=true bash scripts/ci/release-preflight.sh
 All preflight test suites run in Docker containers only.
 
 Host-reachable endpoint:
-- Sentinel-Gear health: `http://localhost:8080/actuator/health`
+- Sentinel-Gear health: `https://localhost:8080/actuator/health`
 
 ---
 
@@ -354,7 +354,7 @@ cd /workspaces/IronBucket/steel-hammer
 docker-compose -f docker-compose-steel-hammer.yml up -d
 
 # Check health
-curl http://localhost:8080/actuator/health
+curl https://localhost:8080/actuator/health
 
 # View logs
 docker-compose logs -f sentinel-gear

@@ -37,7 +37,6 @@ spring:
         webflux:
           use-blocking-handler: false
           default-filters:
-            - TokenRelay
             - name: RequestRateLimiter
               args:
                 redis-rate-limiter.replenishRate: ${RATE_LIMIT_REPLENISH:100}

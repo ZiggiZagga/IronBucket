@@ -239,12 +239,12 @@ public class AuditLogService {
         if (configured != null && !configured.isBlank()) {
             return configured;
         }
-        return "http://steel-hammer-loki:3100";
+        return "https://steel-hammer-loki:3100";
     }
 
     private static String normalizeBaseUrl(String baseUrl) {
         if (baseUrl == null || baseUrl.isBlank()) {
-            return "http://steel-hammer-loki:3100";
+            return "https://steel-hammer-loki:3100";
         }
         if (baseUrl.endsWith("/")) {
             return baseUrl.substring(0, baseUrl.length() - 1);

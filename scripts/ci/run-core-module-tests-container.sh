@@ -21,7 +21,7 @@ trap cleanup EXIT
 wait_minio_ready() {
   local max_attempts="${1:-40}"
   for ((attempt=1; attempt<=max_attempts; attempt++)); do
-    if curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; then
+    if curl -fsS https://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; then
       return 0
     fi
     sleep 2
@@ -34,8 +34,8 @@ ensure_minio_for_s3_tests() {
     return 0
   fi
 
-  if curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; then
-    echo "[core-tests] MinIO already reachable at http://127.0.0.1:9000"
+  if curl -fsS https://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; then
+    echo "[core-tests] MinIO already reachable at https://127.0.0.1:9000"
     return 0
   fi
 

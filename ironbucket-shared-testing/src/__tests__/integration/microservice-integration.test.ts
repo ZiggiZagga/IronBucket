@@ -16,9 +16,9 @@ describe('Microservice Integration Tests - Phase 4', () => {
   let claimspindelClient: AxiosInstance;
   let brazzNosselClient: AxiosInstance;
   
-  const SENTINEL_GEAR_URL = process.env.SENTINEL_GEAR_URL || 'http://localhost:8080';
-  const CLAIMSPINDEL_URL = process.env.CLAIMSPINDEL_URL || 'http://localhost:8081';
-  const BRAZZ_NOSSEL_URL = process.env.BRAZZ_NOSSEL_URL || 'http://localhost:8082';
+  const SENTINEL_GEAR_URL = process.env.SENTINEL_GEAR_URL || 'https://localhost:8080';
+  const CLAIMSPINDEL_URL = process.env.CLAIMSPINDEL_URL || 'https://localhost:8081';
+  const BRAZZ_NOSSEL_URL = process.env.BRAZZ_NOSSEL_URL || 'https://localhost:8082';
   
   beforeAll(() => {
     sentinelGearClient = axios.create({

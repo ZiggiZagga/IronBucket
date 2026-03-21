@@ -12,7 +12,7 @@ class S3ProxyServiceImplRoutingTests {
     @Test
     void bucketOverrideIsPreferredWhenCapabilitySupported() {
         S3ProxyServiceImpl service = new S3ProxyServiceImpl(
-            "http://localhost:9000",
+            "https://localhost:9000",
             "minioadmin",
             "minioadmin",
             "us-east-1",
@@ -34,7 +34,7 @@ class S3ProxyServiceImplRoutingTests {
     @Test
     void tenantDefaultIsUsedWhenNoBucketOverrideExists() {
         S3ProxyServiceImpl service = new S3ProxyServiceImpl(
-            "http://localhost:9000",
+            "https://localhost:9000",
             "minioadmin",
             "minioadmin",
             "us-east-1",
@@ -56,7 +56,7 @@ class S3ProxyServiceImplRoutingTests {
     @Test
     void fallbackSkipsUnsupportedVersioningProvider() {
         S3ProxyServiceImpl service = new S3ProxyServiceImpl(
-            "http://localhost:9000",
+            "https://localhost:9000",
             "minioadmin",
             "minioadmin",
             "us-east-1",

@@ -35,7 +35,7 @@ require_docker                  # Verify docker + daemon ready (exits if fails)
 ### Docker & Services
 ```bash
 # Wait for HTTP endpoint (blocks until ready or timeout)
-wait_for_service "http://localhost:7081/health" "Keycloak" 120 5
+wait_for_service "https://localhost:7081/health" "Keycloak" 120 5
 # Args: URL, service_name (for log), timeout_seconds, check_interval_seconds
 # Returns: 0 on success, 1 on timeout
 ```
@@ -90,15 +90,15 @@ $SERVICES_DIR      # $PROJECT_ROOT/services
 
 ### Service URLs (container-aware)
 ```bash
-$KEYCLOAK_URL          # http://steel-hammer-keycloak:7081 (in container)
-                       # http://localhost:7081 (on host)
-$MINIO_URL             # http://steel-hammer-minio:9000 (in container)
-                       # http://localhost:9000 (on host)
+$KEYCLOAK_URL          # https://steel-hammer-keycloak:7081 (in container)
+                       # https://localhost:7081 (on host)
+$MINIO_URL             # https://steel-hammer-minio:9000 (in container)
+                       # https://localhost:9000 (on host)
 $POSTGRES_HOST         # steel-hammer-postgres (in container)
                        # localhost (on host)
-$SENTINEL_GEAR_URL     # http://steel-hammer-sentinel-gear:8080
-$BRAZZ_NOSSEL_URL      # http://steel-hammer-brazz-nossel:8082
-$BUZZLE_VANE_URL       # http://steel-hammer-buzzle-vane:8083
+$SENTINEL_GEAR_URL     # https://steel-hammer-sentinel-gear:8080
+$BRAZZ_NOSSEL_URL      # https://steel-hammer-brazz-nossel:8082
+$BUZZLE_VANE_URL       # https://steel-hammer-buzzle-vane:8083
 ```
 
 ### Logging

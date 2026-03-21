@@ -96,7 +96,7 @@ Phase 4: PRODUCTION DEPLOYMENT (P3 - Week 4-5)
 ```bash
 # Test: Direct MinIO access should be BLOCKED
 kubectl run -it test --image=alpine --rm \
-  -- wget http://minio-service:9000
+  -- wget https://minio-service:9000
 # Expected: Connection refused
 # Actual: ❌ SUCCESS (SECURITY ISSUE)
 ```
@@ -112,7 +112,7 @@ grep -r "minioadmin" steel-hammer/
 **TLS Everywhere**
 ```bash
 # Test: All inter-service communication uses TLS
-curl http://sentinel-gear:8081/actuator/health
+curl https://sentinel-gear:8081/actuator/health
 # Expected: TLS certificate error (force HTTPS)
 # Actual: ❌ HTTP 200 OK (SECURITY ISSUE)
 ```

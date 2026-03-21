@@ -91,12 +91,12 @@ TOTAL_TESTS=0
 TOTAL_FAILURES=0
 PROJECTS_PASSED=0
 PROJECTS_TOTAL=0
-S3_PROXY_ENDPOINT="http://steel-hammer-brazz-nossel:8082"
+S3_PROXY_ENDPOINT="https://steel-hammer-brazz-nossel:8082"
 
 if nc -z steel-hammer-brazz-nossel 8082 2>/dev/null; then
-    S3_PROXY_ENDPOINT="http://steel-hammer-brazz-nossel:8082"
+    S3_PROXY_ENDPOINT="https://steel-hammer-brazz-nossel:8082"
 elif nc -z localhost 8082 2>/dev/null; then
-    S3_PROXY_ENDPOINT="http://localhost:8082"
+    S3_PROXY_ENDPOINT="https://localhost:8082"
 fi
 
 for project in Brazz-Nossel Claimspindel Buzzle-Vane Sentinel-Gear Storage-Conductor Vault-Smith; do
@@ -199,7 +199,7 @@ from botocore.config import Config
 import sys
 import os
 
-endpoint = os.environ.get('E2E_S3_ENDPOINT', 'http://steel-hammer-brazz-nossel:8082')
+endpoint = os.environ.get('E2E_S3_ENDPOINT', 'https://steel-hammer-brazz-nossel:8082')
 
 # Upload through Brazz-Nossel proxy (port 8082)
 s3_proxy = boto3.client(
@@ -287,7 +287,7 @@ from botocore.config import Config
 import sys
 import os
 
-endpoint = os.environ.get('E2E_S3_ENDPOINT', 'http://steel-hammer-brazz-nossel:8082')
+endpoint = os.environ.get('E2E_S3_ENDPOINT', 'https://steel-hammer-brazz-nossel:8082')
 
 s3 = boto3.client(
     's3',

@@ -16,7 +16,7 @@ services:
     volumes:
       - minio-data:/minio-data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "https://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -93,9 +93,9 @@ services:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_REGION: us-east-1
-      S3_ENDPOINT: http://minio:9000
+      S3_ENDPOINT: https://minio:9000
       # Service URLs for testing
-      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_URL: https://keycloak:8080
       # Test configuration
       TEST_TENANT: test-org-001
     restart: "no"

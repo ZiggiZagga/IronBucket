@@ -111,11 +111,11 @@ check_service_health() {
 }
 
 # Check all services
-check_service_health "Keycloak" "http://localhost:7081/realms/dev/.well-known/openid-configuration" || TESTS_FAILED=$((TESTS_FAILED + 1))
+check_service_health "Keycloak" "https://localhost:7081/realms/dev/.well-known/openid-configuration" || TESTS_FAILED=$((TESTS_FAILED + 1))
 check_service_health "PostgreSQL" "http://localhost:5432" || TESTS_FAILED=$((TESTS_FAILED + 1))
-check_service_health "Brazz-Nossel (S3 Proxy)" "http://localhost:8082/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
-check_service_health "Sentinel-Gear (Gateway)" "http://localhost:8081/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
-check_service_health "Brazz-Nossel (S3 Proxy)" "http://localhost:8082/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
+check_service_health "Brazz-Nossel (S3 Proxy)" "https://localhost:8082/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
+check_service_health "Sentinel-Gear (Gateway)" "https://localhost:8081/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
+check_service_health "Brazz-Nossel (S3 Proxy)" "https://localhost:8082/actuator/health" || TESTS_FAILED=$((TESTS_FAILED + 1))
 
 echo ""
 
@@ -152,7 +152,7 @@ echo ""
 # Test 1: Keycloak Auth Flow
 echo "Test 1: Keycloak Authentication..."
 TRACE_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-AUTH_RESPONSE=$(curl -s -X POST http://localhost:7081/realms/dev/protocol/openid-connect/token \
+AUTH_RESPONSE=$(curl -s -X POST https://localhost:7081/realms/dev/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "client_id=test-client&client_secret=test-secret&grant_type=password&username=alice&password=alice" 2>/dev/null || echo "{}")
 
@@ -167,7 +167,7 @@ fi
 
 # Test 2: Service Discovery (Eureka/Buzzle-Vane)
 echo "Test 2: Service Discovery..."
-DISCOVERY_RESPONSE=$(curl -s http://localhost:8083/eureka/apps 2>/dev/null || echo "")
+DISCOVERY_RESPONSE=$(curl -s https://localhost:8083/eureka/apps 2>/dev/null || echo "")
 if [ -n "$DISCOVERY_RESPONSE" ]; then
     echo -e "${GREEN}✅ Service Discovery: PASS${NC}"
     TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -178,7 +178,7 @@ fi
 
 # Test 3: S3 Gateway Health
 echo "Test 3: S3 Gateway (Brazz-Nossel)..."
-S3_HEALTH=$(curl -s http://localhost:8082/actuator/health 2>/dev/null || echo "")
+S3_HEALTH=$(curl -s https://localhost:8082/actuator/health 2>/dev/null || echo "")
 if echo "$S3_HEALTH" | grep -q '"status":"UP"'; then
     echo -e "${GREEN}✅ S3 Gateway: PASS${NC}"
     TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -189,7 +189,7 @@ fi
 
 # Test 4: Policy Engine (Claimspindel)
 echo "Test 4: Policy Engine (Claimspindel)..."
-POLICY_HEALTH=$(curl -s http://localhost:8081/actuator/health 2>/dev/null || echo "")
+POLICY_HEALTH=$(curl -s https://localhost:8081/actuator/health 2>/dev/null || echo "")
 if echo "$POLICY_HEALTH" | grep -q '"status":"UP"'; then
     echo -e "${GREEN}✅ Policy Engine: PASS${NC}"
     TESTS_PASSED=$((TESTS_PASSED + 1))

@@ -212,7 +212,7 @@ log "Running explicit no-auth deny probe"
 set +e
 NOAUTH_CODE="$(dc run --rm --no-deps --entrypoint /bin/bash steel-hammer-test -lc '
 curl -s -o /tmp/noauth-probe.out -w "%{http_code}" \
-  "http://steel-hammer-sentinel-gear:8080/s3/object/default-alice-files/phase1-3-noauth-probe.txt"
+  "https://steel-hammer-sentinel-gear:8080/s3/object/default-alice-files/phase1-3-noauth-probe.txt"
 cat /tmp/noauth-probe.out > /tmp/noauth-probe-body.txt
 ' | tail -n1)"
 NOAUTH_EXIT=${PIPESTATUS[0]}

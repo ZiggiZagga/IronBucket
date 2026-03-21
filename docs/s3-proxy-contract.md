@@ -373,7 +373,7 @@ ironbucket:
     backends:
       minio:
         type: "minio"
-        endpoint: "http://minio:9000"
+        endpoint: "https://minio:9000"
         access_key: "${MINIO_ACCESS_KEY}"
         secret_key: "${MINIO_SECRET_KEY}"
         region: "us-east-1"

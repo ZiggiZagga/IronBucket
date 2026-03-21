@@ -24,13 +24,13 @@ export default defineConfig({
     reuseExistingServer: true,
     env: {
       NEXT_PUBLIC_GRAPHQL_ENDPOINT:
-        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://127.0.0.1:8080/graphql',
-      E2E_SENTINEL_URL: process.env.E2E_SENTINEL_URL ?? 'http://127.0.0.1:8080',
+        process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://127.0.0.1:8080/graphql',
+      E2E_SENTINEL_URL: process.env.E2E_SENTINEL_URL ?? 'https://127.0.0.1:8080',
       E2E_GATEWAY_GRAPHQL_URL:
-        process.env.E2E_GATEWAY_GRAPHQL_URL ?? 'http://127.0.0.1:8080/graphql',
+        process.env.E2E_GATEWAY_GRAPHQL_URL ?? 'https://127.0.0.1:8080/graphql',
       E2E_KEYCLOAK_TOKEN_URL:
         process.env.E2E_KEYCLOAK_TOKEN_URL ??
-        'http://127.0.0.1:7081/realms/dev/protocol/openid-connect/token',
+        'https://127.0.0.1:7081/realms/dev/protocol/openid-connect/token',
       OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME ?? 'ironbucket-app-nextjs',
       OTEL_EXPORTER_OTLP_ENDPOINT:
         process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://127.0.0.1:4318'

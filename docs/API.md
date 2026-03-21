@@ -13,7 +13,7 @@ Authorization: Bearer <JWT_TOKEN>
 ### Get JWT Token
 
 ```bash
-curl -X POST http://localhost:8080/auth/token \
+curl -X POST https://localhost:8080/auth/token \
   -H "Content-Type: application/json" \
   -d '{
     "username": "bob",
@@ -27,14 +27,14 @@ curl -X POST http://localhost:8080/auth/token \
 
 ```bash
 aws s3 mb s3://my-bucket \
-  --endpoint-url http://localhost:8082 \
+  --endpoint-url https://localhost:8082 \
   --region us-east-1
 ```
 
 Or with curl:
 
 ```bash
-curl -X PUT http://localhost:8082/my-bucket \
+curl -X PUT https://localhost:8082/my-bucket \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "Host: localhost:8082"
 ```
@@ -43,13 +43,13 @@ curl -X PUT http://localhost:8082/my-bucket \
 
 ```bash
 aws s3 ls \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 Or with curl:
 
 ```bash
-curl http://localhost:8082/ \
+curl https://localhost:8082/ \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
@@ -57,14 +57,14 @@ curl http://localhost:8082/ \
 
 ```bash
 aws s3 ls s3://my-bucket \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ### Delete Bucket
 
 ```bash
 aws s3 rb s3://my-bucket \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ## Object Operations
@@ -73,13 +73,13 @@ aws s3 rb s3://my-bucket \
 
 ```bash
 aws s3 cp myfile.txt s3://my-bucket/path/to/object \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 Or with curl:
 
 ```bash
-curl -X PUT http://localhost:8082/my-bucket/path/to/object \
+curl -X PUT https://localhost:8082/my-bucket/path/to/object \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   --data-binary @myfile.txt
 ```
@@ -88,13 +88,13 @@ curl -X PUT http://localhost:8082/my-bucket/path/to/object \
 
 ```bash
 aws s3 cp s3://my-bucket/path/to/object myfile.txt \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 Or with curl:
 
 ```bash
-curl http://localhost:8082/my-bucket/path/to/object \
+curl https://localhost:8082/my-bucket/path/to/object \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -o myfile.txt
 ```
@@ -103,14 +103,14 @@ curl http://localhost:8082/my-bucket/path/to/object \
 
 ```bash
 aws s3 ls s3://my-bucket/path/ \
-  --endpoint-url http://localhost:8082 \
+  --endpoint-url https://localhost:8082 \
   --recursive
 ```
 
 Or with curl:
 
 ```bash
-curl "http://localhost:8082/my-bucket?prefix=path/&max-keys=100" \
+curl "https://localhost:8082/my-bucket?prefix=path/&max-keys=100" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
@@ -118,13 +118,13 @@ curl "http://localhost:8082/my-bucket?prefix=path/&max-keys=100" \
 
 ```bash
 aws s3 rm s3://my-bucket/path/to/object \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 Or with curl:
 
 ```bash
-curl -X DELETE http://localhost:8082/my-bucket/path/to/object \
+curl -X DELETE https://localhost:8082/my-bucket/path/to/object \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
@@ -136,7 +136,7 @@ curl -X DELETE http://localhost:8082/my-bucket/path/to/object \
 aws s3api create-multipart-upload \
   --bucket my-bucket \
   --key large-file.bin \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ### Upload Parts
@@ -148,7 +148,7 @@ aws s3api upload-part \
   --part-number 1 \
   --body part1.bin \
   --upload-id <UPLOAD_ID> \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ### Complete
@@ -159,7 +159,7 @@ aws s3api complete-multipart-upload \
   --key large-file.bin \
   --upload-id <UPLOAD_ID> \
   --multipart-upload file://parts.json \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ## Object Metadata
@@ -172,7 +172,7 @@ aws s3api put-object \
   --key myfile.txt \
   --body myfile.txt \
   --metadata "author=alice,project=demo" \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ### Get Object Metadata
@@ -181,7 +181,7 @@ aws s3api put-object \
 aws s3api head-object \
   --bucket my-bucket \
   --key myfile.txt \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ### List Object Tags
@@ -190,7 +190,7 @@ aws s3api head-object \
 aws s3api get-object-tagging \
   --bucket my-bucket \
   --key myfile.txt \
-  --endpoint-url http://localhost:8082
+  --endpoint-url https://localhost:8082
 ```
 
 ## Error Responses
@@ -240,7 +240,7 @@ import boto3
 # Create client
 s3 = boto3.client(
     's3',
-    endpoint_url='http://localhost:8082',
+    endpoint_url='https://localhost:8082',
     aws_access_key_id='<JWT_TOKEN>',
     aws_secret_access_key='<JWT_TOKEN>'
 )
@@ -269,7 +269,7 @@ s3.delete_object(Bucket='my-bucket', Key='path/to/object')
 const AWS = require('aws-sdk');
 
 const s3 = new AWS.S3({
-  endpoint: 'http://localhost:8082',
+  endpoint: 'https://localhost:8082',
   accessKeyId: '<JWT_TOKEN>',
   secretAccessKey: '<JWT_TOKEN>',
   s3ForcePathStyle: true
@@ -308,7 +308,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 S3Client s3Client = S3Client.builder()
-  .endpointOverride(URI.create("http://localhost:8082"))
+  .endpointOverride(URI.create("https://localhost:8082"))
   .region(Region.US_EAST_1)
   .credentialsProvider(StaticCredentialsProvider.create(
     AwsBasicCredentials.create("<JWT_TOKEN>", "<JWT_TOKEN>")
@@ -352,14 +352,14 @@ Default region: us-east-1
 Default output: json
 
 # Use profile
-aws s3 ls --profile ironbucket --endpoint-url http://localhost:8082
+aws s3 ls --profile ironbucket --endpoint-url https://localhost:8082
 ```
 
 ### MinIO Client (mc)
 
 ```bash
 # Configure alias
-mc alias set ironbucket http://localhost:8082 <ACCESS_KEY> <SECRET_KEY>
+mc alias set ironbucket https://localhost:8082 <ACCESS_KEY> <SECRET_KEY>
 
 # Use alias
 mc ls ironbucket/

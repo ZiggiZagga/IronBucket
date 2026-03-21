@@ -13,12 +13,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  * when running in a containerized environment with all services deployed.
  * 
  * These tests are meant to be run AFTER containers are started:
- * - Sentinel-Gear (gateway): http://localhost:8080
+ * - Sentinel-Gear (gateway): https://localhost:8080
  * - Claimspindel (claims router): internal service
  * - Brazz-Nossel (S3 proxy): internal service  
- * - MinIO (S3 storage): http://localhost:9000
+ * - MinIO (S3 storage): https://localhost:9000
  * - PostgreSQL: localhost:5432
- * - Keycloak (auth): http://localhost:7081
+ * - Keycloak (auth): https://localhost:7081
  * 
  * ⚠️  All tests FAIL with "NOT IMPLEMENTED" to show missing implementation.
  * ⚠️  These tests run in containerized environment and produce RED test report.
@@ -73,7 +73,7 @@ public class IntegrationTestSpecifications {
         @Test
         @DisplayName("CRITICAL: MinIO is not accessible directly from outside")
         void testMinIONotAccessibleDirectly() {
-            // When: Client tries to access http://localhost:9000
+            // When: Client tries to access https://localhost:9000
             // Then: Connection is refused (network isolation)
             fail("❌ NOT IMPLEMENTED - Network isolation missing");
         }

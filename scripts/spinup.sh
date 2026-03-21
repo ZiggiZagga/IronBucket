@@ -257,7 +257,7 @@ wait_for_services() {
     
     while [ $KEYCLOAK_WAIT -lt $KEYCLOAK_MAX_WAIT ]; do
         # Check inside the container - this is the reliable way
-        if docker exec steel-hammer-keycloak curl -sf http://localhost:7081/realms/dev/.well-known/openid-configuration > /dev/null 2>&1; then
+        if docker exec steel-hammer-keycloak curl -sf https://localhost:7081/realms/dev/.well-known/openid-configuration > /dev/null 2>&1; then
             keycloak_ready=true
             print_success "Keycloak is ready (took ${KEYCLOAK_WAIT}s)"
             break
@@ -274,7 +274,7 @@ wait_for_services() {
         echo "  Container status: $(docker ps | grep steel-hammer-keycloak | awk '{print $NF}')"
         echo "  Check logs: docker logs steel-hammer-keycloak | tail -30"
         echo "  Try checking health manually:"
-        echo "  docker exec steel-hammer-keycloak curl http://localhost:7081/realms/dev/.well-known/openid-configuration"
+        echo "  docker exec steel-hammer-keycloak curl https://localhost:7081/realms/dev/.well-known/openid-configuration"
         return 1
     fi
     
@@ -293,7 +293,7 @@ wait_for_services() {
     
     # Check MinIO
     echo "Checking MinIO..."
-    if curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1; then
+    if curl -sf https://localhost:9000/minio/health/live > /dev/null 2>&1; then
         print_success "MinIO is ready"
     else
         print_warning "MinIO not responding"
@@ -304,10 +304,10 @@ wait_for_services() {
     echo "Checking Spring Boot service health endpoints..."
     
     local services=(
-        "http://localhost:8080/actuator/health:Sentinel-Gear"
-        "http://localhost:8081/actuator/health:Claimspindel"
-        "http://localhost:8082/actuator/health:Brazz-Nossel"
-        "http://localhost:8083/actuator/health:Buzzle-Vane"
+        "https://localhost:8080/actuator/health:Sentinel-Gear"
+        "https://localhost:8081/actuator/health:Claimspindel"
+        "https://localhost:8082/actuator/health:Brazz-Nossel"
+        "https://localhost:8083/actuator/health:Buzzle-Vane"
     )
     
     for service in "${services[@]}"; do
@@ -366,12 +366,12 @@ print_final_summary() {
         echo "  ✅ E2E Integration Tests: COMPLETED"
         echo ""
         echo "Services Ready:"
-        echo "  • Keycloak (OIDC): http://localhost:7081"
-        echo "  • Sentinel-Gear (Gateway): http://localhost:8080"
-        echo "  • Claimspindel (Policy): http://localhost:8081"
-        echo "  • Brazz-Nossel (S3 Proxy): http://localhost:8082"
-        echo "  • Buzzle-Vane (Discovery): http://localhost:8083"
-        echo "  • MinIO (Storage): http://localhost:9000"
+        echo "  • Keycloak (OIDC): https://localhost:7081"
+        echo "  • Sentinel-Gear (Gateway): https://localhost:8080"
+        echo "  • Claimspindel (Policy): https://localhost:8081"
+        echo "  • Brazz-Nossel (S3 Proxy): https://localhost:8082"
+        echo "  • Buzzle-Vane (Discovery): https://localhost:8083"
+        echo "  • MinIO (Storage): https://localhost:9000"
         echo ""
         echo "Management:"
         echo "  • View logs: docker-compose -f steel-hammer/docker-compose-steel-hammer.yml logs -f"

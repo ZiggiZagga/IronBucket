@@ -26,9 +26,9 @@ Diese Refaktorierung vereinheitlicht alle Bash- und Python-Skripte im Projekt un
 ```bash
 # Automatisch gesetzt basierend auf IS_CONTAINER flag:
 if [[ "$IS_CONTAINER" == "true" ]]; then
-    KEYCLOAK_URL="http://keycloak:8080"  # Container DNS
+    KEYCLOAK_URL="https://keycloak:8080"  # Container DNS
 else
-    KEYCLOAK_URL="http://localhost:7081" # Host ports
+    KEYCLOAK_URL="https://localhost:7081" # Host ports
 fi
 ```
 
@@ -87,7 +87,7 @@ echo "data" > "$TEMP_DIR/ironbucket-test/file.txt"
 
 **VOR:**
 ```bash
-KEYCLOAK_URL="http://localhost:7081"  # Funktioniert nur auf Host!
+KEYCLOAK_URL="https://localhost:7081"  # Funktioniert nur auf Host!
 POSTGRES_HOST="localhost"             # Funktioniert nicht im Container!
 ```
 

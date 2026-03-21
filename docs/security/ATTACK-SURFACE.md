@@ -722,7 +722,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
+  CMD curl -f https://localhost:8080/health || exit 1
 
 # Readonly root filesystem where possible
 RUN chmod 444 /app/app.jar
@@ -1012,7 +1012,7 @@ done
 # Should handle gracefully (not crash)
 
 # 7. Direct S3 Access Test
-S3_DIRECT_URL="http://minio:9000/bucket/file.txt"
+S3_DIRECT_URL="https://minio:9000/bucket/file.txt"
 curl $S3_DIRECT_URL  # Should fail (network isolated)
 
 # 8. SQL Injection Test

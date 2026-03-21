@@ -332,7 +332,7 @@ test_prometheus_metrics_exposed() {
     log_test_start "Prometheus Metrics Exposed"
     
     # Check if services expose /actuator/prometheus
-    local service_url="http://sentinel-gear:8081"
+    local service_url="https://sentinel-gear:8081"
     
     if curl -s --max-time 5 "${service_url}/actuator/prometheus" 2>/dev/null | grep -q "^# TYPE"; then
         log_test_pass "Prometheus metrics are exposed"

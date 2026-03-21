@@ -235,7 +235,7 @@ jobs:
 
           echo "Waiting for MinIO readiness..."
           for i in {1..30}; do
-            if curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null; then
+            if curl -fsS https://127.0.0.1:9000/minio/health/live >/dev/null; then
               echo "MinIO is ready"
               break
             fi
@@ -249,7 +249,7 @@ jobs:
 
       - name: Run jclouds MinIO CRUD integration gate
         env:
-          IRONBUCKET_MINIO_ENDPOINT: http://127.0.0.1:9000
+          IRONBUCKET_MINIO_ENDPOINT: https://127.0.0.1:9000
           IRONBUCKET_MINIO_ACCESS_KEY: minioadmin
           IRONBUCKET_MINIO_SECRET_KEY: minioadmin
           IRONBUCKET_MINIO_REGION: us-east-1
@@ -491,7 +491,7 @@ jobs:
           # Wait for MinIO to be ready
           echo "Waiting for MinIO to start..."
           for i in {1..30}; do
-            if curl -f http://localhost:9000/minio/health/live 2>/dev/null; then
+            if curl -f https://localhost:9000/minio/health/live 2>/dev/null; then
               echo "MinIO is ready!"
               break
             fi

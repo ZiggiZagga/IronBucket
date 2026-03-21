@@ -16,11 +16,11 @@ export type SupportedActor = keyof typeof ACTOR_CREDENTIALS;
 export const E2E_RUNTIME = {
   tokenUrl:
     process.env.E2E_KEYCLOAK_TOKEN_URL ??
-    'http://127.0.0.1:7081/realms/dev/protocol/openid-connect/token',
-  sentinelUrl: process.env.E2E_SENTINEL_URL ?? 'http://127.0.0.1:8080',
+    'https://127.0.0.1:7081/realms/dev/protocol/openid-connect/token',
+  sentinelUrl: process.env.E2E_SENTINEL_URL ?? 'https://127.0.0.1:8080',
   gatewayGraphqlUrl:
     process.env.E2E_GATEWAY_GRAPHQL_URL
-    ?? `${process.env.E2E_SENTINEL_URL ?? 'http://127.0.0.1:8080'}/graphql`,
+    ?? `${process.env.E2E_SENTINEL_URL ?? 'https://127.0.0.1:8080'}/graphql`,
   clientId: process.env.E2E_OIDC_CLIENT_ID ?? 'dev-client',
   clientSecret: process.env.E2E_OIDC_CLIENT_SECRET ?? 'dev-secret'
 };

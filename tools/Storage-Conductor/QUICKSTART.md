@@ -29,9 +29,9 @@ This will:
 
 [INFO] Test Configuration
 ────────────────────────────────────────────────────────────────
-  S3 Endpoint:          http://minio:9000
+  S3 Endpoint:          https://minio:9000
   S3 Region:            us-east-1
-  Identity Gateway:     http://sentinel-gear:8080
+  Identity Gateway:     https://sentinel-gear:8080
   JWT Audience:         ironfaucet
   Test Tenant:          test-org-001
 

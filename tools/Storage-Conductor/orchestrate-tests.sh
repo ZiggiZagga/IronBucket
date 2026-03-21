@@ -40,7 +40,7 @@ case "${1:-up}" in
         
         # List results in MinIO
         docker-compose -f "$COMPOSE_FILE" exec -T storage-conductor-tests \
-            aws s3 ls s3://test-results/ --endpoint-url http://minio:9000 --region us-east-1
+            aws s3 ls s3://test-results/ --endpoint-url https://minio:9000 --region us-east-1
         
         echo ""
         echo -e "${GREEN}✅ Test execution complete!${NC}"
@@ -73,11 +73,11 @@ case "${1:-up}" in
         
         # Get latest test results
         docker-compose -f "$COMPOSE_FILE" exec -T storage-conductor-tests \
-            bash -c 'aws s3 ls s3://test-results/ --endpoint-url http://minio:9000 --region us-east-1 --recursive | tail -5'
+            bash -c 'aws s3 ls s3://test-results/ --endpoint-url https://minio:9000 --region us-east-1 --recursive | tail -5'
         
         echo ""
         echo "To download results, use:"
-        echo "  aws s3 cp s3://test-results/ ./test-results --endpoint-url http://minio:9000 --recursive"
+        echo "  aws s3 cp s3://test-results/ ./test-results --endpoint-url https://minio:9000 --recursive"
         ;;
         
     status)

@@ -1,6 +1,6 @@
-/workspaces/IronBucket/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/adapter/S3StorageBackend.java
-/workspaces/IronBucket/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/config/S3BackendConfig.java
-/workspaces/IronBucket/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/impl/AwsS3Backend.java
-/workspaces/IronBucket/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/model/S3CopyResult.java
-/workspaces/IronBucket/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/model/S3ObjectMetadata.java
-/workspaces/IronBucket/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/model/S3UploadResult.java
+/workspace/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/adapter/S3StorageBackend.java
+/workspace/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/config/S3BackendConfig.java
+/workspace/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/impl/AwsS3Backend.java
+/workspace/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/model/S3CopyResult.java
+/workspace/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/model/S3ObjectMetadata.java
+/workspace/tools/Vault-Smith/src/main/java/com/ironbucket/vaultsmith/model/S3UploadResult.java

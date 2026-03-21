@@ -35,7 +35,7 @@ HISTORY_CSV="$TEST_RESULTS_DIR/phase2-performance/performance-history.csv"
 
 KEEP_STACK="${KEEP_STACK:-false}"
 PERF_REUSE_STACK="${PERF_REUSE_STACK:-false}"
-PERF_TARGET_URL="${PERF_TARGET_URL:-http://steel-hammer-graphite-forge:8084/actuator/health}"
+PERF_TARGET_URL="${PERF_TARGET_URL:-https://steel-hammer-graphite-forge:8084/actuator/health}"
 PERF_REQUESTS="${PERF_REQUESTS:-120}"
 PERF_CONCURRENCY="${PERF_CONCURRENCY:-12}"
 PERF_SERVICE_REQUESTS="${PERF_SERVICE_REQUESTS:-60}"
@@ -176,10 +176,10 @@ fi
 log "Discovered network: $NETWORK_NAME"
 
 STACK_OK=true
-wait_internal_http "Graphite-Forge" "http://steel-hammer-graphite-forge:8084/actuator/health" || STACK_OK=false
-wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
-wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
-wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
+wait_internal_http "Graphite-Forge" "https://steel-hammer-graphite-forge:8084/actuator/health" || STACK_OK=false
+wait_internal_http "Tempo" "https://steel-hammer-tempo:3200/ready" || STACK_OK=false
+wait_internal_http "Loki" "https://steel-hammer-loki:3100/ready" || STACK_OK=false
+wait_internal_http "Mimir" "https://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
 
 if [[ "$STACK_OK" != "true" ]]; then
   echo "Stack not ready for performance proof" >&2
@@ -250,16 +250,16 @@ for service in graphite-forge buzzle-vane claimspindel brazz-nossel minio keyclo
 
   case "$service" in
     graphite-forge)
-      target="http://steel-hammer-graphite-forge:8084/actuator/health"
+      target="https://steel-hammer-graphite-forge:8084/actuator/health"
       ;;
     buzzle-vane)
-      target="http://steel-hammer-buzzle-vane:8083/actuator/health"
+      target="https://steel-hammer-buzzle-vane:8083/actuator/health"
       ;;
     claimspindel)
-      target="http://steel-hammer-claimspindel:8081/actuator/health"
+      target="https://steel-hammer-claimspindel:8081/actuator/health"
       ;;
     brazz-nossel)
-      target="http://steel-hammer-brazz-nossel:8082/actuator/health"
+      target="https://steel-hammer-brazz-nossel:8082/actuator/health"
       ;;
     minio)
       target="https://steel-hammer-minio:9000/minio/health/live"
@@ -270,7 +270,7 @@ for service in graphite-forge buzzle-vane claimspindel brazz-nossel minio keyclo
     sentinel-gear-mgmt)
       mode="container"
       container_name="steel-hammer-sentinel-gear"
-      target="http://localhost:8081/actuator/health-check"
+      target="https://localhost:8081/actuator/health-check"
       ;;
   esac
 

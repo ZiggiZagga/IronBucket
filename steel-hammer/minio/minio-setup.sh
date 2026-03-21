@@ -5,7 +5,7 @@ LOGFILE="/opt/minio/minio-setup.log"
 
 # MinIO configuration
 MINIO_ALIAS="dev"
-MINIO_URL="http://localhost:9000"
+MINIO_URL="https://localhost:9000"
 ACCESS_KEY="MINIO_ROOT_USER"
 SECRET_KEY="MINIO_ROOT_PASSWORD"
 # Setup log

@@ -57,9 +57,9 @@ DIRECTORIES:
     $STEEL_HAMMER_DIR      - Services: $PROJECT_ROOT/steel-hammer
 
 SERVICE ENDPOINTS (Container-Aware):
-    $KEYCLOAK_URL          - http://keycloak:8080 (container) or localhost:7081 (host)
-    $MINIO_URL             - http://minio:9000 (container) or localhost:9000 (host)
-    $SENTINEL_GEAR_URL     - http://sentinel-gear:8080 (container) or localhost:8080 (host)
+    $KEYCLOAK_URL          - https://keycloak:8080 (container) or localhost:7081 (host)
+    $MINIO_URL             - https://minio:9000 (container) or localhost:9000 (host)
+    $SENTINEL_GEAR_URL     - https://sentinel-gear:8080 (container) or localhost:8080 (host)
     $POSTGRES_HOST         - postgres (container) or localhost (host)
 
 CONTEXT:
@@ -115,7 +115,7 @@ Available functions (automatically logging to $LOG_FILE):
 ═════════════════════════════════════════════════════════════════════════════════
 
 ❌ WRONG:
-    curl -s http://localhost:8080/health || exit 1
+    curl -s https://localhost:8080/health || exit 1
 
 ✅ CORRECT:
     check_service_health "$SENTINEL_GEAR_URL/health" "Sentinel-Gear" 5 2
@@ -135,12 +135,12 @@ Scripts automatically work in both contexts:
 
 IN CONTAINER:
     $IS_CONTAINER = true
-    $KEYCLOAK_URL = http://keycloak:8080
+    $KEYCLOAK_URL = https://keycloak:8080
     Services accessible via container DNS
 
 ON HOST:
     $IS_CONTAINER = false
-    $KEYCLOAK_URL = http://localhost:7081
+    $KEYCLOAK_URL = https://localhost:7081
     Services accessible via localhost + mapped ports
 
 Your script just uses $KEYCLOAK_URL and it works everywhere!
@@ -300,7 +300,7 @@ BEFORE (OLD WAY):
     set -e
     PROJECT_ROOT="/workspaces/IronBucket"
     RED='\033[0;31m'
-    KEYCLOAK_URL="http://localhost:7081"
+    KEYCLOAK_URL="https://localhost:7081"
     
     echo -e "${RED}Testing...${NC}"
     mkdir -p /tmp/tests

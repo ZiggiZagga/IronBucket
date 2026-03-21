@@ -33,13 +33,13 @@ DATA_DIR="$OUTPUT_DIR/test-data"
 mkdir -p "$REPORT_DIR" "$LOG_DIR" "$TRACE_DIR" "$METRIC_DIR" "$DATA_DIR"
 
 # Internal URLs
-GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
+GATEWAY_URL="${SENTINEL_GEAR_URL:-https://steel-hammer-sentinel-gear:8080}"
 KEYCLOAK_URL="https://steel-hammer-keycloak:7081"
-EUREKA_URL="http://steel-hammer-buzzle-vane:8083"
-MINIO_URL="http://steel-hammer-brazz-nossel:8082"
-LOKI_URL="http://steel-hammer-loki:3100"
-TEMPO_URL="http://steel-hammer-tempo:3200"
-MIMIR_URL="http://steel-hammer-mimir:9009"
+EUREKA_URL="https://steel-hammer-buzzle-vane:8083"
+MINIO_URL="https://steel-hammer-brazz-nossel:8082"
+LOKI_URL="https://steel-hammer-loki:3100"
+TEMPO_URL="https://steel-hammer-tempo:3200"
+MIMIR_URL="https://steel-hammer-mimir:9009"
 
 # Test counters
 TOTAL_TESTS=0
@@ -170,11 +170,11 @@ run_test "3.1" "Sentinel-Gear Health" \
     "HealthCheck"
 
 run_test "3.2" "Brazz-Nossel Health" \
-    "curl -sf http://steel-hammer-brazz-nossel:8082/actuator/health" \
+    "curl -sf https://steel-hammer-brazz-nossel:8082/actuator/health" \
     "HealthCheck"
 
 run_test "3.3" "Claimspindel Health" \
-    "curl -sf http://steel-hammer-claimspindel:8081/actuator/health" \
+    "curl -sf https://steel-hammer-claimspindel:8081/actuator/health" \
     "HealthCheck"
 
 echo ""

@@ -67,17 +67,17 @@ retry_check() {
 }
 
 touch "$OUT_DIR/readiness.txt"
-retry_check "loki" "http://steel-hammer-loki:3100/ready" false || true
-retry_check "tempo" "http://steel-hammer-tempo:3200/ready" false || true
-retry_check "mimir" "http://steel-hammer-mimir:9009/ready" false || true
+retry_check "loki" "https://steel-hammer-loki:3100/ready" false || true
+retry_check "tempo" "https://steel-hammer-tempo:3200/ready" false || true
+retry_check "mimir" "https://steel-hammer-mimir:9009/ready" false || true
 retry_check "keycloak" "https://steel-hammer-keycloak:7081/health/ready" true || true
 retry_check "minio" "https://steel-hammer-minio:9000/minio/health/live" true || true
 
 docker run --rm --network "$NET_NAME" curlimages/curl:8.7.1 -sS \
-  'http://steel-hammer-mimir:9009/prometheus/api/v1/query?query=up' > "$OUT_DIR/mimir-up.json" || true
+  'https://steel-hammer-mimir:9009/prometheus/api/v1/query?query=up' > "$OUT_DIR/mimir-up.json" || true
 
 docker run --rm --network "$NET_NAME" curlimages/curl:8.7.1 -sS \
-  'http://steel-hammer-loki:3100/loki/api/v1/label/service_name/values' > "$OUT_DIR/loki-service-names.json" || true
+  'https://steel-hammer-loki:3100/loki/api/v1/label/service_name/values' > "$OUT_DIR/loki-service-names.json" || true
 
 echo "[diag] done"
 echo "[diag] key files:"

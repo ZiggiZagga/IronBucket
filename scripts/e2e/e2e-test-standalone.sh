@@ -49,7 +49,7 @@ KEYCLOAK_MAX_WAIT=${KEYCLOAK_MAX_WAIT:-180}  # Allow full Keycloak startup time
 SERVICE_CHECK_TIMEOUT=${SERVICE_CHECK_TIMEOUT:-120}
 KEYCLOAK_URL="${KEYCLOAK_URL:-https://localhost:7081}"
 MINIO_URL="${MINIO_URL:-https://localhost:9000}"
-SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-http://localhost:8080}"
+SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-https://localhost:8080}"
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
 PROOF_DIR="${TEMP_DIR:-/tmp}/ironbucket-proof/jwt-gateway-${RUN_ID}"
@@ -102,7 +102,7 @@ fi
 check_service "PostgreSQL" "http://$POSTGRES_HOST:5432" && TESTS_PASSED=$((TESTS_PASSED + 1)) || { TESTS_FAILED=$((TESTS_FAILED + 1)); TESTS_SKIPPED=$((TESTS_SKIPPED + 1)); }
 check_service "MinIO" "${MINIO_URL}/minio/health/live" && TESTS_PASSED=$((TESTS_PASSED + 1)) || { TESTS_FAILED=$((TESTS_FAILED + 1)); TESTS_SKIPPED=$((TESTS_SKIPPED + 1)); }
 check_service "Sentinel-Gear" "${SENTINEL_GEAR_URL}/actuator/health" && TESTS_PASSED=$((TESTS_PASSED + 1)) || { TESTS_FAILED=$((TESTS_FAILED + 1)); TESTS_SKIPPED=$((TESTS_SKIPPED + 1)); }
-check_service "Brazz-Nossel" "${BRAZZ_NOSSEL_URL:-http://localhost:8082}/actuator/health" && TESTS_PASSED=$((TESTS_PASSED + 1)) || { TESTS_FAILED=$((TESTS_FAILED + 1)); TESTS_SKIPPED=$((TESTS_SKIPPED + 1)); }
+check_service "Brazz-Nossel" "${BRAZZ_NOSSEL_URL:-https://localhost:8082}/actuator/health" && TESTS_PASSED=$((TESTS_PASSED + 1)) || { TESTS_FAILED=$((TESTS_FAILED + 1)); TESTS_SKIPPED=$((TESTS_SKIPPED + 1)); }
 
 echo ""
 

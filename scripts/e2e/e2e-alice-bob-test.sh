@@ -453,9 +453,9 @@ check_http_with_retry() {
 }
 
 check_http_with_retry "Sentinel-Gear" "${SENTINEL_GEAR_URL}/actuator/health" 90 2
-check_http_with_retry "Claimspindel" "${CLAIMSPINDEL_URL:-http://steel-hammer-claimspindel:8081}/actuator/health" 90 2
+check_http_with_retry "Claimspindel" "${CLAIMSPINDEL_URL:-https://steel-hammer-claimspindel:8081}/actuator/health" 90 2
 check_http_with_retry "Brazz-Nossel" "${BRAZZ_NOSSEL_URL}/actuator/health" 90 2
-check_http_with_retry "Buzzle-Vane" "${BUZZLE_VANE_URL:-http://steel-hammer-buzzle-vane:8083}/eureka/apps" 90 2
+check_http_with_retry "Buzzle-Vane" "${BUZZLE_VANE_URL:-https://steel-hammer-buzzle-vane:8083}/eureka/apps" 90 2
 
 # ============================================================================
 # PHASE 2: Alice's Authentication & File Upload

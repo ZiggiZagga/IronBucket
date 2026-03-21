@@ -81,7 +81,7 @@ docker logs steel-hammer-postgres
    ```bash
    # Request must include Authorization header
    curl -H "Authorization: Bearer <JWT_TOKEN>" \
-        http://localhost:8082/
+        https://localhost:8082/
    ```
 
 2. **Invalid Signature**
@@ -160,7 +160,7 @@ docker logs steel-hammer-postgres
 docker ps | grep minio
 
 # Access MinIO Console
-# URL: http://localhost:9001
+# URL: https://localhost:9001
 # Username: minioadmin
 # Password: minioadmin
 
@@ -179,12 +179,12 @@ docker port steel-hammer-minio
 docker ps | grep keycloak
 
 # Access Keycloak Admin Console
-# URL: http://localhost:8080
+# URL: https://localhost:8080
 # Username: admin
 # Password: admin
 
 # Check user exists
-docker exec steel-hammer-keycloak /opt/keycloak/bin/kcadm.sh list-users -r dev --admin-server-url http://localhost:8080
+docker exec steel-hammer-keycloak /opt/keycloak/bin/kcadm.sh list-users -r dev --admin-server-url https://localhost:8080
 ```
 
 ### Keycloak mTLS Browser Flow Returns No Authorization Redirect
@@ -226,7 +226,7 @@ docker logs --tail 200 steel-hammer-keycloak | grep -Ei 'import|flow|x509|realm|
 docker ps | grep buzzle
 
 # Access Eureka Dashboard
-# URL: http://localhost:8083/eureka/web
+# URL: https://localhost:8083/eureka/web
 
 # Check service registration
 # Should see all 6 services registered
@@ -259,9 +259,9 @@ bash scripts/e2e/diagnose-lgtm.sh
 docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E 'steel-hammer-(loki|tempo|mimir|grafana|promtail|otel-collector)'
 
 # Run checks from inside the compose network instead of host localhost
-docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS http://steel-hammer-loki:3100/ready
-docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS http://steel-hammer-tempo:3200/ready
-docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS http://steel-hammer-mimir:9009/ready
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS https://steel-hammer-loki:3100/ready
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS https://steel-hammer-tempo:3200/ready
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS https://steel-hammer-mimir:9009/ready
 ```
 
 ### LGTM Readiness Returns 503 During Startup
@@ -275,7 +275,7 @@ docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.
 ```bash
 # Retry readiness checks before declaring failure
 for i in {1..8}; do
-   code=$(docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS -o /dev/null -w '%{http_code}' http://steel-hammer-mimir:9009/ready || true)
+   code=$(docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS -o /dev/null -w '%{http_code}' https://steel-hammer-mimir:9009/ready || true)
    echo "mimir:$code attempt:$i"
    [ "$code" = "200" ] && break
    sleep 2
@@ -309,7 +309,7 @@ docker ps --format '{{.Names}}\t{{.Status}}' | grep -E 'steel-hammer-(keycloak|m
 ```bash
 # Use label discovery for quick smoke checks
 docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS \
-   'http://steel-hammer-loki:3100/loki/api/v1/label/service_name/values'
+   'https://steel-hammer-loki:3100/loki/api/v1/label/service_name/values'
 
 # Use query_range for log content retrieval
 docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -G -sS \
@@ -317,7 +317,7 @@ docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.
    --data-urlencode 'limit=100' \
    --data-urlencode "start=$(date -u -d '5 minutes ago' +%s%N)" \
    --data-urlencode "end=$(date -u +%s%N)" \
-   'http://steel-hammer-loki:3100/loki/api/v1/query_range'
+   'https://steel-hammer-loki:3100/loki/api/v1/query_range'
 ```
 
 ### Fast LGTM API Smoke Test
@@ -325,7 +325,7 @@ docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.
 ```bash
 # Mimir API status and sample count
 docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sS \
-   'http://steel-hammer-mimir:9009/prometheus/api/v1/query?query=up' | jq '.status, (.data.result|length)'
+   'https://steel-hammer-mimir:9009/prometheus/api/v1/query?query=up' | jq '.status, (.data.result|length)'
 
 # Grafana logs for provisioning hints (datasources/dashboards)
 docker logs --tail 200 steel-hammer-grafana 2>&1 | grep -Ei 'error|warn|provision|datasource'
@@ -337,10 +337,10 @@ docker logs --tail 200 steel-hammer-grafana 2>&1 | grep -Ei 'error|warn|provisio
 
 ```bash
 # Test from test container
-docker exec steel-hammer-test curl http://brazz-nossel:8082/health
+docker exec steel-hammer-test curl https://brazz-nossel:8082/health
 
 # Test MinIO connectivity
-docker exec steel-hammer-test curl http://minio:9000/minio/health/live
+docker exec steel-hammer-test curl https://minio:9000/minio/health/live
 ```
 
 ### Check Network
@@ -430,16 +430,16 @@ docker-compose logs > all-services.log
 
 ```bash
 # Brazz-Nossel
-curl http://localhost:8082/actuator/health
+curl https://localhost:8082/actuator/health
 
 # Sentinel-Gear
-curl http://localhost:8080/actuator/health
+curl https://localhost:8080/actuator/health
 
 # Claimspindel
-curl http://localhost:8081/actuator/health
+curl https://localhost:8081/actuator/health
 
 # Buzzle-Vane
-curl http://localhost:8083/actuator/health
+curl https://localhost:8083/actuator/health
 ```
 
 ### Verify All Services

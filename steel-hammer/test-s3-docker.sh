@@ -30,7 +30,7 @@ echo "Uploading to S3 proxy..."
 curl "${curl_opts[@]}" -X PUT \
   -H "Content-Type: text/plain" \
   --data-binary @"$TEMP_DIR/test-doc.txt" \
-  http://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt \
+  https://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n"
 
 sleep 1
@@ -38,7 +38,7 @@ sleep 1
 echo ""
 echo "TEST 2: VERIFY UPLOAD"
 echo "Downloading and checking uploaded file..."
-curl "${curl_opts[@]}" http://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt
+curl "${curl_opts[@]}" https://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt
 
 sleep 1
 
@@ -54,7 +54,7 @@ echo "Uploading updated file..."
 curl "${curl_opts[@]}" -X PUT \
   -H "Content-Type: text/plain" \
   --data-binary @"$TEMP_DIR/test-doc-updated.txt" \
-  http://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt \
+  https://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n"
 
 sleep 1
@@ -62,7 +62,7 @@ sleep 1
 echo ""
 echo "TEST 4: VERIFY UPDATE"
 echo "Confirming updated content..."
-curl "${curl_opts[@]}" http://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt
+curl "${curl_opts[@]}" https://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt
 
 sleep 1
 
@@ -70,7 +70,7 @@ echo ""
 echo ""
 echo "TEST 5: DELETE"
 echo "Removing file..."
-curl "${curl_opts[@]}" -X DELETE http://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt \
+curl "${curl_opts[@]}" -X DELETE https://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n"
 
 sleep 1
@@ -78,7 +78,7 @@ sleep 1
 echo ""
 echo "TEST 6: VERIFY DELETION"
 echo "Confirming file is deleted (should get 404)..."
-curl "${curl_opts[@]}" -w "\nHTTP Status: %{http_code}\n" http://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt || true
+curl "${curl_opts[@]}" -w "\nHTTP Status: %{http_code}\n" https://steel-hammer-brazz-nossel:8082/ironbucket/test-document.txt || true
 
 echo ""
 echo "=================================="

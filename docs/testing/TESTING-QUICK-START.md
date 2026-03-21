@@ -55,7 +55,7 @@ bash /workspaces/IronBucket/scripts/e2e/e2e-test-standalone.sh
 ╚════════════════════════════════════════════════════════════════════╝
 
 [STEP 1] Infrastructure Verification
-  ✅ Keycloak available at http://steel-hammer-keycloak:7081
+  ✅ Keycloak available at https://steel-hammer-keycloak:7081
   ✅ PostgreSQL available at steel-hammer-postgres:5432
   ✅ Network communication OK
 
@@ -263,7 +263,7 @@ docker network inspect steel-hammer_steel-hammer-network
 docker exec -it steel-hammer-test /bin/bash
 
 # Test Keycloak connectivity
-curl http://steel-hammer-keycloak:7081/realms/dev
+curl https://steel-hammer-keycloak:7081/realms/dev
 
 # Test PostgreSQL connectivity
 psql -h steel-hammer-postgres -U postgres -d ironbucket -c "SELECT 1"

@@ -30,7 +30,7 @@ echo "Uploading test-document.txt to MinIO S3..."
 curl -X PUT \
   -H "Content-Type: text/plain" \
   --data-binary @/data/test-doc.txt \
-  http://steel-hammer-minio:9000/ironbucket/test-document.txt \
+  https://steel-hammer-minio:9000/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n" 2>&1 | tail -5
 '
 
@@ -43,7 +43,7 @@ echo "------------------------------------"
 echo "Retrieving file from S3..."
 
 docker run --rm --network "$NETWORK" alpine/curl:latest sh -c '
-curl -s http://steel-hammer-minio:9000/ironbucket/test-document.txt 2>&1
+curl -s https://steel-hammer-minio:9000/ironbucket/test-document.txt 2>&1
 '
 
 sleep 2
@@ -62,7 +62,7 @@ echo "Uploading updated version..."
 curl -X PUT \
   -H "Content-Type: text/plain" \
   --data-binary @/data/test-doc-v2.txt \
-  http://steel-hammer-minio:9000/ironbucket/test-document.txt \
+  https://steel-hammer-minio:9000/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n" 2>&1 | tail -5
 '
 
@@ -75,7 +75,7 @@ echo "------------------------------------"
 echo "Retrieving updated file..."
 
 docker run --rm --network "$NETWORK" alpine/curl:latest sh -c '
-curl -s http://steel-hammer-minio:9000/ironbucket/test-document.txt 2>&1
+curl -s https://steel-hammer-minio:9000/ironbucket/test-document.txt 2>&1
 '
 
 sleep 2
@@ -88,7 +88,7 @@ echo "------------------------------------"
 echo "Removing test-document.txt..."
 
 docker run --rm --network "$NETWORK" alpine/curl:latest sh -c '
-curl -X DELETE http://steel-hammer-minio:9000/ironbucket/test-document.txt \
+curl -X DELETE https://steel-hammer-minio:9000/ironbucket/test-document.txt \
   -w "\nHTTP Status: %{http_code}\n" 2>&1 | tail -5
 '
 
@@ -101,7 +101,7 @@ echo "------------------------------------"
 echo "Attempting to retrieve deleted file (should get 404 Not Found)..."
 
 docker run --rm --network "$NETWORK" alpine/curl:latest sh -c '
-curl -s -w "\nHTTP Status: %{http_code}\n" http://steel-hammer-minio:9000/ironbucket/test-document.txt 2>&1 | tail -3 || echo "File successfully deleted"
+curl -s -w "\nHTTP Status: %{http_code}\n" https://steel-hammer-minio:9000/ironbucket/test-document.txt 2>&1 | tail -3 || echo "File successfully deleted"
 '
 
 echo ""

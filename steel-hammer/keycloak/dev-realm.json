@@ -42,7 +42,7 @@
       "redirectUris": [
         "https://steel-hammer-minio:9001/oauth_callback",
         "https://localhost:9001/oauth_callback",
-        "http://localhost:9001/oauth_callback"
+        "https://localhost:9001/oauth_callback"
       ],
       "webOrigins": ["+"]
     }

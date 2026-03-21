@@ -21,7 +21,7 @@ class CapabilityEnforcingObjectStorageAdapterTest {
             policyEnforcer
         );
 
-        ProviderConnectionConfig config = ProviderConnectionConfig.of(ProviderType.AWS_S3, "http://localhost:9000", "a", "b");
+        ProviderConnectionConfig config = ProviderConnectionConfig.of(ProviderType.AWS_S3, "https://localhost:9000", "a", "b");
         PutObjectCommand command = new PutObjectCommand(new ObjectKey("bucket", "key"), "hello".getBytes(), "text/plain", Map.of());
         adapter.putObject(config, command);
 

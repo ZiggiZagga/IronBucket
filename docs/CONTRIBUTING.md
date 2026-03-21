@@ -66,10 +66,10 @@ docker-compose -f docker-compose-steel-hammer.yml up -d
 docker-compose ps
 
 # Check service health
-curl http://localhost:8080/actuator/health  # Gateway
-curl http://localhost:8081/actuator/health  # Policy Engine
-curl http://localhost:8082/actuator/health  # S3 Proxy
-curl http://localhost:8083/actuator/health  # Audit Logger
+curl https://localhost:8080/actuator/health  # Gateway
+curl https://localhost:8081/actuator/health  # Policy Engine
+curl https://localhost:8082/actuator/health  # S3 Proxy
+curl https://localhost:8083/actuator/health  # Audit Logger
 
 # Run tests
 cd ../ironbucket-shared-testing
@@ -652,7 +652,7 @@ mvn spring-boot:run
 
 # Terminal 3: Run tests or interact
 # Make requests with curl/Postman
-curl http://localhost:8081/actuator/health
+curl https://localhost:8081/actuator/health
 ```
 
 ### Viewing Logs

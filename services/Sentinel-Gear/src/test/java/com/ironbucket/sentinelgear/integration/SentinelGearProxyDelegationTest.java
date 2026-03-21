@@ -39,12 +39,12 @@ class SentinelGearProxyDelegationTest {
     @Test
     @DisplayName("✗ test_proxyRequest_forwardsToBackend")
     void test_proxyRequest_forwardsToBackend() {
-        String backendUrl = "http://brazz-nossel:8082";
+        String backendUrl = "https://brazz-nossel:8082";
         String originalPath = "acme-corp-bucket/documents/file.pdf";
 
         String proxyTarget = buildProxyTarget(backendUrl, originalPath);
 
-        assertEquals("http://brazz-nossel:8082/acme-corp-bucket/documents/file.pdf", proxyTarget);
+        assertEquals("https://brazz-nossel:8082/acme-corp-bucket/documents/file.pdf", proxyTarget);
         assertTrue(proxyTarget.contains("brazz-nossel"), "Should proxy to brazz-nossel");
         assertFalse(proxyTarget.contains("//acme-corp"), "Target path should be normalized");
     }

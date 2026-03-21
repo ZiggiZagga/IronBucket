@@ -42,10 +42,10 @@ PHASE 2: ENVIRONMENT VARIABLES
   ❌ /workspaces/IronBucket/steel-hammer → ✅ $STEEL_HAMMER_DIR
 
 □ Replace service URLs with environment variables:
-  ❌ http://localhost:7081 → ✅ $KEYCLOAK_URL
-  ❌ http://localhost:9000 → ✅ $MINIO_URL
+  ❌ https://localhost:7081 → ✅ $KEYCLOAK_URL
+  ❌ https://localhost:9000 → ✅ $MINIO_URL
   ❌ localhost → ✅ $POSTGRES_HOST
-  ❌ http://keycloak:8080 (for containers) → ✅ $KEYCLOAK_URL
+  ❌ https://keycloak:8080 (for containers) → ✅ $KEYCLOAK_URL
 
 □ Check script works in BOTH contexts:
   ✓ IS_CONTAINER=false ./script.sh (host mode)
@@ -99,7 +99,7 @@ PHASE 6: SERVICE HEALTH CHECKS
 ════════════════════════════════════════════════════════════════════════════════
 
 □ Replace manual curl checks:
-  ❌ curl -s http://localhost:8080/health || exit 1
+  ❌ curl -s https://localhost:8080/health || exit 1
   ✅ check_service_health "$SENTINEL_GEAR_URL/health" "Sentinel-Gear" 5 2
 
 □ Use container-aware URLs:
@@ -139,7 +139,7 @@ AFTER:
 PATTERN 2: Service Checks
 ────────────────────────────
 BEFORE:
-    KEYCLOAK_URL="http://localhost:7081"
+    KEYCLOAK_URL="https://localhost:7081"
     if ! curl -s "$KEYCLOAK_URL/health" > /dev/null; then
         echo "ERROR: Keycloak not responding"
         exit 1

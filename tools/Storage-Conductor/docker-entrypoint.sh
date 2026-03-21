@@ -15,15 +15,15 @@ echo "╚═══════════════════════�
 echo ""
 
 # Test configuration from environment variables
-S3_ENDPOINT="${S3_ENDPOINT:-http://minio:9000}"
+S3_ENDPOINT="${S3_ENDPOINT:-https://minio:9000}"
 S3_ACCESS_KEY="${S3_ACCESS_KEY:-minioadmin}"
 S3_SECRET_KEY="${S3_SECRET_KEY:-minioadmin}"
 S3_REGION="${S3_REGION:-us-east-1}"
 
 # Sentinel-Gear configuration for identity gateway
-IDENTITY_GATEWAY="${IDENTITY_GATEWAY:-http://sentinel-gear:8080}"
+IDENTITY_GATEWAY="${IDENTITY_GATEWAY:-https://sentinel-gear:8080}"
 VAULT_SMITH_URL="${VAULT_SMITH_URL:-http://vault-smith:8090}"
-KEYCLOAK_URL="${KEYCLOAK_URL:-http://keycloak:8080}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-https://keycloak:8080}"
 JWT_AUDIENCE="${JWT_AUDIENCE:-ironfaucet}"
 TEST_TENANT="${TEST_TENANT:-test-org-001}"
 

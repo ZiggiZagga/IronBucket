@@ -22,7 +22,7 @@ docker run --rm --network "$NETWORK" \
   -e AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY" \
   -e AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY" \
   amazon/aws-cli:latest s3 cp - s3://ironbucket/test-document.txt \
-  --endpoint-url http://steel-hammer-minio:9000 \
+  --endpoint-url https://steel-hammer-minio:9000 \
   <<< "Original S3 Document - Test File v1 - Created $(date)" 2>&1 | grep -E "Completed|Error|test-document" || echo "Upload initiated"
 
 sleep 2
@@ -37,7 +37,7 @@ docker run --rm --network "$NETWORK" \
   -e AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY" \
   -e AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY" \
   amazon/aws-cli:latest s3 cp s3://ironbucket/test-document.txt - \
-  --endpoint-url http://steel-hammer-minio:9000 2>&1 | grep -v "upload:"
+  --endpoint-url https://steel-hammer-minio:9000 2>&1 | grep -v "upload:"
 
 sleep 2
 
@@ -51,7 +51,7 @@ docker run --rm --network "$NETWORK" \
   -e AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY" \
   -e AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY" \
   amazon/aws-cli:latest s3 cp - s3://ironbucket/test-document.txt \
-  --endpoint-url http://steel-hammer-minio:9000 \
+  --endpoint-url https://steel-hammer-minio:9000 \
   <<< "Updated S3 Document - Test File v2 - Modified $(date)" 2>&1 | grep -E "Completed|Error" || echo "Update completed"
 
 sleep 2
@@ -66,7 +66,7 @@ docker run --rm --network "$NETWORK" \
   -e AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY" \
   -e AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY" \
   amazon/aws-cli:latest s3 cp s3://ironbucket/test-document.txt - \
-  --endpoint-url http://steel-hammer-minio:9000 2>&1 | grep -v "upload:"
+  --endpoint-url https://steel-hammer-minio:9000 2>&1 | grep -v "upload:"
 
 sleep 2
 
@@ -80,7 +80,7 @@ docker run --rm --network "$NETWORK" \
   -e AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY" \
   -e AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY" \
   amazon/aws-cli:latest s3 rm s3://ironbucket/test-document.txt \
-  --endpoint-url http://steel-hammer-minio:9000 2>&1
+  --endpoint-url https://steel-hammer-minio:9000 2>&1
 
 sleep 2
 
@@ -94,7 +94,7 @@ docker run --rm --network "$NETWORK" \
   -e AWS_ACCESS_KEY_ID="$MINIO_ACCESS_KEY" \
   -e AWS_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY" \
   amazon/aws-cli:latest s3 cp s3://ironbucket/test-document.txt - \
-  --endpoint-url http://steel-hammer-minio:9000 2>&1 || echo "File successfully deleted (operation failed as expected)"
+  --endpoint-url https://steel-hammer-minio:9000 2>&1 || echo "File successfully deleted (operation failed as expected)"
 
 echo ""
 echo "=========================================="

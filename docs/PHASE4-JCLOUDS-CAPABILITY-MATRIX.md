@@ -47,7 +47,7 @@ export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_REGION=us-east-1
 # optional, for S3-compatible endpoint test targets:
-export AWS_S3_ENDPOINT=http://localhost:9000
+export AWS_S3_ENDPOINT=https://localhost:9000
 
 cd services/jclouds-adapter-core
 mvn test -B -V
@@ -80,7 +80,7 @@ docker run -d --name jclouds-minio-it -p 9000:9000 \
 	minio/minio:latest server /data
 
 cd services/jclouds-adapter-core
-IRONBUCKET_MINIO_ENDPOINT=http://127.0.0.1:9000 \
+IRONBUCKET_MINIO_ENDPOINT=https://127.0.0.1:9000 \
 IRONBUCKET_MINIO_ACCESS_KEY=minioadmin \
 IRONBUCKET_MINIO_SECRET_KEY=minioadmin \
 IRONBUCKET_MINIO_REGION=us-east-1 \

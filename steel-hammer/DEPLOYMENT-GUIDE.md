@@ -172,7 +172,7 @@ Each service responds to these environment variables:
 ```yaml
 SPRING_PROFILES_ACTIVE=docker           # Enables docker profile
 SPRING_APPLICATION_NAME=<service-name>  # Service identification
-EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://buzzle-vane:8083/eureka  # Service discovery
+EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=https://buzzle-vane:8083/eureka  # Service discovery
 MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4317  # Trace exporter
 MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker                     # Metrics tagging
 OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317        # OTEL endpoint
@@ -243,7 +243,7 @@ The containerized test client ([run-e2e-tests.sh](test-scripts/run-e2e-tests.sh)
 docker exec steel-hammer-test /scripts/run-e2e-tests.sh
 
 # Run specific test phases
-docker exec steel-hammer-test bash -c "curl -s http://steel-hammer-sentinel-gear:8080/actuator/health | jq"
+docker exec steel-hammer-test bash -c "curl -s https://steel-hammer-sentinel-gear:8080/actuator/health | jq"
 
 # Check test client logs with timestamps
 docker logs --timestamps steel-hammer-test-client
@@ -309,13 +309,13 @@ docker logs steel-hammer-test-client 2>&1 | grep "PASS\|FAIL"
 docker-compose -f docker-compose-steel-hammer.yml ps
 
 # Service health via curl
-curl -s http://localhost:8080/actuator/health | jq
+curl -s https://localhost:8080/actuator/health | jq
 
 # Eureka service registry
-curl -s http://localhost:8083/eureka/apps | jq
+curl -s https://localhost:8083/eureka/apps | jq
 
 # Prometheus metrics (if exposed)
-curl -s http://localhost:8081/actuator/prometheus | head -20
+curl -s https://localhost:8081/actuator/prometheus | head -20
 ```
 
 ## Observability Stack (LGTM)
@@ -404,13 +404,13 @@ netstat -tlnp | grep -E '8080|8081|8082|8083|5432|7081|9000'
 
 ```bash
 # Check service health
-curl -v http://localhost:8080/actuator/health
+curl -v https://localhost:8080/actuator/health
 
 # Check Eureka registration
-curl -s http://localhost:8083/eureka/apps | jq '.applications.application[] | {name: .name, instance: .instance[].instanceId}'
+curl -s https://localhost:8083/eureka/apps | jq '.applications.application[] | {name: .name, instance: .instance[].instanceId}'
 
 # Check specific service
-curl -s http://localhost:8081/actuator/health | jq '.status'
+curl -s https://localhost:8081/actuator/health | jq '.status'
 ```
 
 ### Test Client Issues
@@ -423,7 +423,7 @@ docker logs steel-hammer-test
 docker exec steel-hammer-test env | grep URL
 
 # Test connectivity manually
-docker exec steel-hammer-test curl -v http://steel-hammer-sentinel-gear:8080/actuator/health
+docker exec steel-hammer-test curl -v https://steel-hammer-sentinel-gear:8080/actuator/health
 
 # Check test script
 cat test-scripts/run-e2e-tests.sh
@@ -436,7 +436,7 @@ cat test-scripts/run-e2e-tests.sh
 docker stats steel-hammer-sentinel-gear
 
 # Check JVM metrics
-curl -s http://localhost:8081/actuator/metrics/jvm.memory.used | jq
+curl -s https://localhost:8081/actuator/metrics/jvm.memory.used | jq
 
 # Analyze logs for errors
 docker logs steel-hammer-sentinel-gear 2>&1 | grep -i error

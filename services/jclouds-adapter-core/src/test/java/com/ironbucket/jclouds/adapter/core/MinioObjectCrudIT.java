@@ -19,7 +19,7 @@ class MinioObjectCrudIT {
     private final ObjectStorageAdapter adapter = new JcloudsObjectStorageAdapter(contextProvider);
     private final ProviderConnectionConfig config = new ProviderConnectionConfig(
         ProviderType.AWS_S3,
-        propertyOrDefault("ironbucket.minio.endpoint", "http://127.0.0.1:9000"),
+        propertyOrDefault("ironbucket.minio.endpoint", "https://127.0.0.1:9000"),
         propertyOrDefault("ironbucket.minio.accessKey", "minioadmin"),
         propertyOrDefault("ironbucket.minio.secretKey", "minioadmin"),
         Map.of(

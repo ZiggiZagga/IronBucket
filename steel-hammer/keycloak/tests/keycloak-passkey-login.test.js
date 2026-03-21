@@ -5,7 +5,7 @@ const axios = require('axios');
 
 describe('Keycloak Passkey Login Page', () => {
   it('should expose WebAuthn login option on login page', async () => {
-    const baseUrl = 'http://localhost:7081';
+    const baseUrl = 'https://localhost:7081';
     const realm = 'ironbucket-lab';
     const clientId = 'sentinel-gear-app';
     try {

@@ -187,27 +187,27 @@ fi
 log "Discovered network: $NETWORK_NAME"
 
 STACK_OK=true
-wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
-wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
-wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
+wait_internal_http "Loki" "https://steel-hammer-loki:3100/ready" || STACK_OK=false
+wait_internal_http "Tempo" "https://steel-hammer-tempo:3200/ready" || STACK_OK=false
+wait_internal_http "Mimir" "https://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
 wait_internal_http "Keycloak" "https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" 90 3 || STACK_OK=false
 INFRA_ENDPOINTS_READY=true
 wait_internal_http "Keycloak metrics" "https://steel-hammer-keycloak:7081/metrics" 90 3 || INFRA_ENDPOINTS_READY=false
 wait_internal_http "MinIO metrics" "https://steel-hammer-minio:9000/minio/v2/metrics/cluster" || INFRA_ENDPOINTS_READY=false
-wait_internal_http "Postgres exporter metrics" "http://steel-hammer-postgres-exporter:9187/metrics" || INFRA_ENDPOINTS_READY=false
-wait_internal_http "Buzzle-Vane" "http://steel-hammer-buzzle-vane:8083/actuator/health" || STACK_OK=false
-wait_internal_http "Claimspindel" "http://steel-hammer-claimspindel:8081/actuator/health" || STACK_OK=false
-wait_internal_http "Brazz-Nossel" "http://steel-hammer-brazz-nossel:8082/actuator/health" || STACK_OK=false
-wait_container_local_http "Sentinel-Gear mgmt" "steel-hammer-sentinel-gear" "http://localhost:8081/actuator/health-check" || STACK_OK=false
+wait_internal_http "Postgres exporter metrics" "https://steel-hammer-postgres-exporter:9187/metrics" || INFRA_ENDPOINTS_READY=false
+wait_internal_http "Buzzle-Vane" "https://steel-hammer-buzzle-vane:8083/actuator/health" || STACK_OK=false
+wait_internal_http "Claimspindel" "https://steel-hammer-claimspindel:8081/actuator/health" || STACK_OK=false
+wait_internal_http "Brazz-Nossel" "https://steel-hammer-brazz-nossel:8082/actuator/health" || STACK_OK=false
+wait_container_local_http "Sentinel-Gear mgmt" "steel-hammer-sentinel-gear" "https://localhost:8081/actuator/health-check" || STACK_OK=false
 
 log "Collecting service Prometheus endpoints"
-run_internal_curl "http://steel-hammer-buzzle-vane:8083/actuator/prometheus" "$EVIDENCE_DIR/buzzle-prometheus.txt" || true
-run_internal_curl "http://steel-hammer-claimspindel:8081/actuator/prometheus" "$EVIDENCE_DIR/claimspindel-prometheus.txt" || true
-run_internal_curl "http://steel-hammer-brazz-nossel:8082/actuator/prometheus" "$EVIDENCE_DIR/brazz-prometheus.txt" || true
-run_container_local_curl "steel-hammer-sentinel-gear" "http://localhost:8081/actuator/prometheus" "$EVIDENCE_DIR/sentinel-prometheus.txt" || true
+run_internal_curl "https://steel-hammer-buzzle-vane:8083/actuator/prometheus" "$EVIDENCE_DIR/buzzle-prometheus.txt" || true
+run_internal_curl "https://steel-hammer-claimspindel:8081/actuator/prometheus" "$EVIDENCE_DIR/claimspindel-prometheus.txt" || true
+run_internal_curl "https://steel-hammer-brazz-nossel:8082/actuator/prometheus" "$EVIDENCE_DIR/brazz-prometheus.txt" || true
+run_container_local_curl "steel-hammer-sentinel-gear" "https://localhost:8081/actuator/prometheus" "$EVIDENCE_DIR/sentinel-prometheus.txt" || true
 run_internal_curl "https://steel-hammer-keycloak:7081/metrics" "$EVIDENCE_DIR/keycloak-metrics.txt" || true
 run_internal_curl "https://steel-hammer-minio:9000/minio/v2/metrics/cluster" "$EVIDENCE_DIR/minio-metrics.txt" || true
-run_internal_curl "http://steel-hammer-postgres-exporter:9187/metrics" "$EVIDENCE_DIR/postgres-exporter-metrics.txt" || true
+run_internal_curl "https://steel-hammer-postgres-exporter:9187/metrics" "$EVIDENCE_DIR/postgres-exporter-metrics.txt" || true
 
 log "Generating synthetic OTLP trace"
 OTLP_TRACE_JSON="$EVIDENCE_DIR/synthetic-trace.json"
@@ -244,7 +244,7 @@ PY
 OTLP_POST_RAW="$EVIDENCE_DIR/otlp-trace-post-raw.txt"
 docker run --rm --network "$NETWORK_NAME" -v "$EVIDENCE_DIR:/evidence:rw" curlimages/curl:8.12.1 \
   -sS -w "\n%{http_code}" \
-  -X POST "http://steel-hammer-otel-collector:4318/v1/traces" \
+  -X POST "https://steel-hammer-otel-collector:4318/v1/traces" \
   -H "Content-Type: application/json" \
   --data @/evidence/synthetic-trace.json > "$OTLP_POST_RAW"
 
@@ -257,7 +257,7 @@ log "Collecting backend evidence"
 QUERY_END_NS="$(date +%s%N)"
 QUERY_START_NS="$((QUERY_END_NS - 3600000000000))"
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "http://steel-hammer-loki:3100/loki/api/v1/query_range" \
+  "https://steel-hammer-loki:3100/loki/api/v1/query_range" \
   --data-urlencode 'query={container="steel-hammer-brazz-nossel"}' \
   --data-urlencode "start=${QUERY_START_NS}" \
   --data-urlencode "end=${QUERY_END_NS}" \
@@ -265,15 +265,15 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
   > "$EVIDENCE_DIR/loki-query-brazz.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "http://steel-hammer-loki:3100/loki/api/v1/query_range" \
+  "https://steel-hammer-loki:3100/loki/api/v1/query_range" \
   --data-urlencode 'query={service_name=~".+"}' \
   --data-urlencode "start=${QUERY_START_NS}" \
   --data-urlencode "end=${QUERY_END_NS}" \
   --data-urlencode 'limit=200' \
   > "$EVIDENCE_DIR/loki-query-services.json" || true
 
-run_internal_curl "http://steel-hammer-loki:3100/loki/api/v1/labels" "$EVIDENCE_DIR/loki-labels.json" || true
-run_internal_curl "http://steel-hammer-tempo:3200/metrics" "$EVIDENCE_DIR/tempo-metrics.txt" || true
+run_internal_curl "https://steel-hammer-loki:3100/loki/api/v1/labels" "$EVIDENCE_DIR/loki-labels.json" || true
+run_internal_curl "https://steel-hammer-tempo:3200/metrics" "$EVIDENCE_DIR/tempo-metrics.txt" || true
 # Collector telemetry endpoint is frequently bound to localhost inside container.
 run_container_local_curl "steel-hammer-otel-collector" "http://localhost:8888/metrics" "$EVIDENCE_DIR/otel-collector-metrics.txt" || true
 
@@ -296,19 +296,19 @@ UI_TRACEPARENT="00-${UI_TRACE_ID}-${UI_SPAN_ID}-01"
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
   -H "X-Correlation-ID: ${ERROR_CORR_ID}" \
-  "http://steel-hammer-graphite-forge:8084/non-existent-endpoint" \
+  "https://steel-hammer-graphite-forge:8084/non-existent-endpoint" \
   > "$EVIDENCE_DIR/graphite-404-response.txt" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: ${GRAPHQL_CORR_ID}" \
   --data '{"query":"{"}' \
-  "http://steel-hammer-graphite-forge:8084/graphql" \
+  "https://steel-hammer-graphite-forge:8084/graphql" \
   > "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
   -H "X-Correlation-ID: ${PROTECTED_UNAUTH_CORR_ID}" \
-  "http://steel-hammer-brazz-nossel:8082/s3/buckets" \
+  "https://steel-hammer-brazz-nossel:8082/s3/buckets" \
   > "$EVIDENCE_DIR/brazz-protected-unauth-response.txt" || true
 
 # Semantic correlation assertion stimulus: same correlation id through gateway and direct management plane.
@@ -316,14 +316,14 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: ${SEMANTIC_CORR_ID}" \
   --data '{"query":"{"}' \
-  "http://steel-hammer-sentinel-gear:8080/graphql" \
+  "https://steel-hammer-sentinel-gear:8080/graphql" \
   > "$EVIDENCE_DIR/sentinel-graphql-parse-error-response.txt" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: ${SEMANTIC_CORR_ID}" \
   --data '{"query":"{"}' \
-  "http://steel-hammer-graphite-forge:8084/graphql" \
+  "https://steel-hammer-graphite-forge:8084/graphql" \
   > "$EVIDENCE_DIR/graphite-graphql-semantic-correlation-response.txt" || true
 
 # P6-2 stimulus: UI-style traceparent propagated through gateway so we can look up the exact trace in Tempo.
@@ -332,7 +332,7 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
   -H "traceparent: ${UI_TRACEPARENT}" \
   -H "X-Correlation-ID: ${SEMANTIC_CORR_ID}" \
   --data '{"query":"{ __typename }"}' \
-  "http://steel-hammer-sentinel-gear:8080/graphql" \
+  "https://steel-hammer-sentinel-gear:8080/graphql" \
   > "$EVIDENCE_DIR/ui-traceparent-stimulus-response.txt" || true
 
 sleep 5
@@ -373,7 +373,7 @@ PY
 UI_TRACE_BRIDGE_POST_RAW="$EVIDENCE_DIR/ui-trace-bridge-post-raw.txt"
 docker run --rm --network "$NETWORK_NAME" -v "$EVIDENCE_DIR:/evidence:rw" curlimages/curl:8.12.1 \
   -sS -w "\n%{http_code}" \
-  -X POST "http://steel-hammer-otel-collector:4318/v1/traces" \
+  -X POST "https://steel-hammer-otel-collector:4318/v1/traces" \
   -H "Content-Type: application/json" \
   --data @/evidence/ui-trace-bridge.json > "$UI_TRACE_BRIDGE_POST_RAW" || true
 
@@ -385,7 +385,7 @@ for attempt in {1..8}; do
   TEMPO_TRACE_LOOKUP_RAW="$EVIDENCE_DIR/tempo-trace-lookup-raw-attempt-${attempt}.txt"
   docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 \
     -sS -w "\n%{http_code}" \
-    "http://steel-hammer-tempo:3200/api/traces/${UI_TRACE_ID}" > "$TEMPO_TRACE_LOOKUP_RAW" || true
+    "https://steel-hammer-tempo:3200/api/traces/${UI_TRACE_ID}" > "$TEMPO_TRACE_LOOKUP_RAW" || true
 
   TEMPO_TRACE_LOOKUP_STATUS="$(tail -n1 "$TEMPO_TRACE_LOOKUP_RAW" 2>/dev/null || echo 000)"
   sed '$d' "$TEMPO_TRACE_LOOKUP_RAW" > "$EVIDENCE_DIR/tempo-trace-lookup.json"
@@ -400,7 +400,7 @@ for attempt in {1..8}; do
 done
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "http://steel-hammer-loki:3100/loki/api/v1/query_range" \
+  "https://steel-hammer-loki:3100/loki/api/v1/query_range" \
   --data-urlencode 'query={service_name=~"steel-hammer-(sentinel-gear|graphite-forge)"}' \
   --data-urlencode "start=${QUERY_START_NS}" \
   --data-urlencode "end=${QUERY_END_NS}" \
@@ -408,22 +408,22 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
   > "$EVIDENCE_DIR/loki-query-correlation-semantic.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=up' \
   > "$EVIDENCE_DIR/mimir-query-up.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=max_over_time(up{job="steel-hammer-keycloak"}[10m])' \
   > "$EVIDENCE_DIR/mimir-query-keycloak-up.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=max_over_time(up{job="steel-hammer-minio"}[10m])' \
   > "$EVIDENCE_DIR/mimir-query-minio-up.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=max_over_time(up{job="steel-hammer-postgres-exporter"}[10m])' \
   > "$EVIDENCE_DIR/mimir-query-postgres-exporter-up.json" || true
 

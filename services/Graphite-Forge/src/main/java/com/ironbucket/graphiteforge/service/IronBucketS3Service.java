@@ -390,12 +390,12 @@ public class IronBucketS3Service {
             return legacyFromEnv;
         }
 
-        return "http://steel-hammer-sentinel-gear:8080";
+        return "https://steel-hammer-sentinel-gear:8080";
     }
 
     private static String normalizeBaseUrl(String baseUrl) {
         if (baseUrl == null || baseUrl.isBlank()) {
-            return "http://steel-hammer-sentinel-gear:8080";
+            return "https://steel-hammer-sentinel-gear:8080";
         }
         if (baseUrl.endsWith("/")) {
             return baseUrl.substring(0, baseUrl.length() - 1);

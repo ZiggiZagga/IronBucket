@@ -27,7 +27,7 @@ fi
 echo -e "${GREEN}✓ Confirmed: Running inside Docker container${NC}"
 
 # Source environment variables
-SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
+SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-https://steel-hammer-sentinel-gear:8080}"
 MINIO_BUCKET="${MINIO_BUCKET:-test-results}"
 TEST_RESULTS_DIR="/tmp/ironbucket-test-results"
 SENTINEL_GEAR_API="${SENTINEL_GEAR_URL}/api/s3"

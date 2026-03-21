@@ -17,7 +17,7 @@
                            ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │ 2. REQUEST GOES TO SENTINEL-GEAR (Identity Gateway)             │
-│    http://sentinel-gear:8080                                    │
+│    https://sentinel-gear:8080                                    │
 │    - No direct S3 access allowed                                │
 │    - Must go through identity normalization                     │
 │    - Headers: Authorization: Bearer <JWT_TOKEN>                 │
@@ -120,19 +120,19 @@ When all 11 tests pass, you have **concrete evidence** of:
 
 ```bash
 # See all buckets
-aws s3 ls --endpoint-url http://minio:9000
+aws s3 ls --endpoint-url https://minio:9000
 
 # See test bucket contents
-aws s3 ls s3://test-bucket-1234567890 --endpoint-url http://minio:9000
+aws s3 ls s3://test-bucket-1234567890 --endpoint-url https://minio:9000
 
 # See test results (test reports uploaded)
-aws s3 ls s3://test-results/ --endpoint-url http://minio:9000 --recursive
+aws s3 ls s3://test-results/ --endpoint-url https://minio:9000 --recursive
 ```
 
 ### View MinIO Console (during container runtime):
 
 ```
-URL: http://minio:9000/minio/
+URL: https://minio:9000/minio/
 Username: minioadmin
 Password: minioadmin
 ```

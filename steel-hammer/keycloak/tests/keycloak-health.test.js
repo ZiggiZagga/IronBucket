@@ -6,7 +6,7 @@ const axios = require('axios');
 describe('Keycloak Container Health', () => {
   it('should respond on HTTP port', async () => {
     try {
-      const res = await axios.get('http://localhost:7081/health');
+      const res = await axios.get('https://localhost:7081/health');
       expect(res.status).toBe(200);
     } catch (err) {
       throw new Error('Keycloak is not healthy or not running on port 7081');
@@ -15,7 +15,7 @@ describe('Keycloak Container Health', () => {
 
   it('should NOT allow HTTP if HTTPS is enforced', async () => {
     try {
-      await axios.get('http://localhost:7081');
+      await axios.get('https://localhost:7081');
       throw new Error('HTTP should not be allowed when HTTPS is enforced');
     } catch (err) {
       expect(err.response).toBeUndefined();

@@ -157,7 +157,7 @@ ironbucket:
       mode: ${TENANT_MODE:multi}
       default-tenant: ${DEFAULT_TENANT:default}
     policy:
-      engine-url: ${POLICY_ENGINE_URL:http://localhost:8081}
+      engine-url: ${POLICY_ENGINE_URL:https://localhost:8081}
       cache:
         ttl-seconds: 300
         max-size: 5000

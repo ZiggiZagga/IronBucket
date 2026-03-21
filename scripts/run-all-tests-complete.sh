@@ -190,13 +190,13 @@ run_test_suite "Infrastructure_Tests" \
                 }
                 check_with_retry keycloak https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration 180 2 &&
                 check_with_retry vault https://steel-hammer-vault:8200/v1/sys/health?standbyok=true 180 2 &&
-                check_with_retry gateway http://steel-hammer-sentinel-gear:8080/actuator/health 60 2 &&
-                check_with_retry claimspindel http://steel-hammer-claimspindel:8081/actuator/health 60 2 &&
-                check_with_retry brazz http://steel-hammer-brazz-nossel:8082/actuator/health 60 2 &&
-                check_with_retry eureka http://steel-hammer-buzzle-vane:8083/eureka/apps 60 2 &&
-                check_with_retry loki http://steel-hammer-loki:3100/ready 60 2 &&
-                check_with_retry tempo http://steel-hammer-tempo:3200/ready 60 2 &&
-                check_with_retry mimir http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo 60 2
+                check_with_retry gateway https://steel-hammer-sentinel-gear:8080/actuator/health 60 2 &&
+                check_with_retry claimspindel https://steel-hammer-claimspindel:8081/actuator/health 60 2 &&
+                check_with_retry brazz https://steel-hammer-brazz-nossel:8082/actuator/health 60 2 &&
+                check_with_retry eureka https://steel-hammer-buzzle-vane:8083/eureka/apps 60 2 &&
+                check_with_retry loki https://steel-hammer-loki:3100/ready 60 2 &&
+                check_with_retry tempo https://steel-hammer-tempo:3200/ready 60 2 &&
+                check_with_retry mimir https://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo 60 2
         '"
 
 run_test_suite "Vault_Enabled_In_All_Services" \
@@ -215,10 +215,10 @@ run_test_suite "SpringBoot_Vault_Health_Endpoints" \
             grep -q \"\\\"status\\\":\\\"UP\\\"\" /tmp/health.json || { echo \"FAIL: \$name vault status not UP\"; cat /tmp/health.json; return 1; }
             echo \"OK: \$name\"
         }
-        check_vault_health sentinel http://steel-hammer-sentinel-gear:8080/actuator/health/vault &&
-        check_vault_health claimspindel http://steel-hammer-claimspindel:8081/actuator/health/vault &&
-        check_vault_health brazz http://steel-hammer-brazz-nossel:8082/actuator/health/vault &&
-        check_vault_health buzzle http://steel-hammer-buzzle-vane:8083/actuator/health/vault
+        check_vault_health sentinel https://steel-hammer-sentinel-gear:8080/actuator/health/vault &&
+        check_vault_health claimspindel https://steel-hammer-claimspindel:8081/actuator/health/vault &&
+        check_vault_health brazz https://steel-hammer-brazz-nossel:8082/actuator/health/vault &&
+        check_vault_health buzzle https://steel-hammer-buzzle-vane:8083/actuator/health/vault
     '"
 
 run_test_suite "Vault_Secrets_Baseline" \
@@ -255,8 +255,8 @@ run_test_suite "E2E_Alice_Bob_Scenario" \
         -e KEYCLOAK_URL=https://steel-hammer-keycloak:7081 \
         -e MINIO_URL=https://steel-hammer-minio:9000 \
         -e POSTGRES_HOST=steel-hammer-postgres \
-        -e SENTINEL_GEAR_URL=http://steel-hammer-sentinel-gear:8080 \
-        -e BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082 \
+        -e SENTINEL_GEAR_URL=https://steel-hammer-sentinel-gear:8080 \
+        -e BRAZZ_NOSSEL_URL=https://steel-hammer-brazz-nossel:8082 \
         debian:bookworm-slim sh -lc 'apt-get update -qq && apt-get install -y -qq bash curl jq postgresql-client >/dev/null && bash ./e2e-alice-bob-test.sh'"
 
 if has_failed_suite "E2E_Alice_Bob_Scenario"; then
@@ -325,16 +325,16 @@ run_test_suite "Performance_Phase2_Proof" \
 log_section "PHASE 6: Observability Stack Validation"
 
 run_test_suite "Observability_Loki" \
-    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 sh -ec 'i=1; while [ \$i -le 60 ]; do if curl -fsS http://steel-hammer-loki:3100/ready >/dev/null 2>&1; then exit 0; fi; i=\$((i+1)); sleep 2; done; exit 1'"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 sh -ec 'i=1; while [ \$i -le 60 ]; do if curl -fsS https://steel-hammer-loki:3100/ready >/dev/null 2>&1; then exit 0; fi; i=\$((i+1)); sleep 2; done; exit 1'"
 
 run_test_suite "Observability_Tempo" \
-    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf http://steel-hammer-tempo:3200/ready"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf https://steel-hammer-tempo:3200/ready"
 
 run_test_suite "Observability_Grafana" \
-    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf http://steel-hammer-grafana:3000/api/health"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf https://steel-hammer-grafana:3000/api/health"
 
 run_test_suite "Observability_Loki_Labels" \
-    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf http://steel-hammer-loki:3100/loki/api/v1/labels | grep -q 'container'"
+    "docker run --rm --network $STACK_NETWORK curlimages/curl:8.12.1 -sf https://steel-hammer-loki:3100/loki/api/v1/labels | grep -q 'container'"
 
 run_test_suite "Observability_Phase2_Proof" \
     "KEEP_STACK=true $PROJECT_ROOT/scripts/e2e/prove-phase2-observability.sh"
@@ -346,13 +346,13 @@ run_test_suite "Observability_Phase2_Proof" \
 log_section "PHASE 7: Collect Observability Artifacts"
 
 echo "Collecting Loki logs..."
-docker exec steel-hammer-sentinel-gear curl -s http://steel-hammer-loki:3100/loki/api/v1/labels > "$ARTIFACT_DIR/loki-labels.json" 2>&1 || true
+docker exec steel-hammer-sentinel-gear curl -s https://steel-hammer-loki:3100/loki/api/v1/labels > "$ARTIFACT_DIR/loki-labels.json" 2>&1 || true
 
 echo "Collecting Tempo traces..."
-docker exec steel-hammer-sentinel-gear curl -s http://steel-hammer-tempo:3200/api/traces > "$ARTIFACT_DIR/tempo-traces.json" 2>&1 || true
+docker exec steel-hammer-sentinel-gear curl -s https://steel-hammer-tempo:3200/api/traces > "$ARTIFACT_DIR/tempo-traces.json" 2>&1 || true
 
 echo "Collecting Gateway metrics..."
-docker exec steel-hammer-sentinel-gear curl -s http://localhost:8080/actuator/metrics > "$ARTIFACT_DIR/gateway-metrics.json" 2>&1 || true
+docker exec steel-hammer-sentinel-gear curl -s https://localhost:8080/actuator/metrics > "$ARTIFACT_DIR/gateway-metrics.json" 2>&1 || true
 
 echo "Collecting service logs..."
 for SERVICE in sentinel-gear brazz-nossel claimspindel buzzle-vane; do

@@ -119,10 +119,10 @@ Tests follow the proven alice-bob e2e pattern:
 
 ### Phase 1: Infrastructure Verification
 ```bash
-✓ Check MinIO is running (http://minio:9000/minio/health/live)
-✓ Check Keycloak is running (http://keycloak:8080/health)
+✓ Check MinIO is running (https://minio:9000/minio/health/live)
+✓ Check Keycloak is running (https://keycloak:8080/health)
 ✓ Check Vault-Smith is running (http://vault-smith:8090/actuator/health)
-✓ Check Sentinel-Gear is running (http://sentinel-gear:8080/actuator/health)
+✓ Check Sentinel-Gear is running (https://sentinel-gear:8080/actuator/health)
 ```
 
 ### Phase 2: Test User Authentication
@@ -179,13 +179,13 @@ s3://test-results/
 ```bash
 # Inside container, list test results
 aws s3 ls s3://test-results/ \
-  --endpoint-url http://minio:9000 \
+  --endpoint-url https://minio:9000 \
   --region us-east-1 \
   --recursive
 
 # Download specific result
 aws s3 cp s3://test-results/integration-tests-1706000000.json . \
-  --endpoint-url http://minio:9000 \
+  --endpoint-url https://minio:9000 \
   --region us-east-1
 ```
 
@@ -246,10 +246,10 @@ docker-compose -f docker-compose-tests.yml logs storage-conductor-minio
   "timestamp": "2024-01-16T19:30:00Z",
   "test_framework": "Bash/curl with Sentinel-Gear integration",
   "infrastructure": {
-    "gateway": "http://sentinel-gear:8080",
+    "gateway": "https://sentinel-gear:8080",
     "backend": "http://vault-smith:8090",
-    "storage": "http://minio:9000",
-    "identity_provider": "http://keycloak:8080"
+    "storage": "https://minio:9000",
+    "identity_provider": "https://keycloak:8080"
   },
   "tests": [
     {
@@ -278,9 +278,9 @@ docker-compose -f docker-compose-tests.yml logs storage-conductor-minio
 
 Execution Time: Wed Jan 16 19:30:00 UTC 2024
 Test Tenant: test-org-001
-Gateway: http://sentinel-gear:8080
+Gateway: https://sentinel-gear:8080
 Backend: http://vault-smith:8090
-Storage: http://minio:9000
+Storage: https://minio:9000
 
 ════════════════════════════════════════════════════════════════
 
@@ -365,7 +365,7 @@ docker-compose -f docker-compose-tests.yml build --no-cache
 **Solution**: Increase timeouts in `docker-compose-tests.yml`
 ```yaml
 healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  test: ["CMD", "curl", "-f", "https://localhost:9000/minio/health/live"]
   interval: 10s
   timeout: 15s  # Increase from 5s
   retries: 5    # Increase from 3

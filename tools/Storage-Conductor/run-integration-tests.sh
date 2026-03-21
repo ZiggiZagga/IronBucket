@@ -34,9 +34,9 @@ MINIO_REGION="us-east-1"
 
 # Use environment-aware URLs (from .env.defaults)
 # If in container, these are container DNS names; if host, they're localhost
-MINIO_ENDPOINT="${MINIO_URL:-http://minio:9000}"
-KEYCLOAK_URL="${KEYCLOAK_URL:-http://keycloak:8080}"
-SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-http://sentinel-gear:8080}"
+MINIO_ENDPOINT="${MINIO_URL:-https://minio:9000}"
+KEYCLOAK_URL="${KEYCLOAK_URL:-https://keycloak:8080}"
+SENTINEL_GEAR_URL="${SENTINEL_GEAR_URL:-https://sentinel-gear:8080}"
 
 # Test user configuration
 TEST_USER="test-user"

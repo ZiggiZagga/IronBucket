@@ -46,7 +46,7 @@ steel-hammer-minio:
 
 | Script | Issue | Severity |
 |--------|-------|----------|
-| `test-s3-authenticated.sh` | Uses `http://steel-hammer-minio:9000` | HIGH |
+| `test-s3-authenticated.sh` | Uses `https://steel-hammer-minio:9000` | HIGH |
 | `test-s3-operations.sh` | Direct curl to MinIO | HIGH |
 | `run-e2e-complete.sh` | boto3 to minio:9000 | HIGH |
 | `e2e-verification.sh` | Direct S3 client | HIGH |
@@ -57,7 +57,7 @@ steel-hammer-minio:
 # FROM: steel-hammer/test-scripts/e2e-verification.sh
 s3_direct = boto3.client(
     's3',
-    endpoint_url='http://steel-hammer-minio:9000',  # ❌ BYPASSES SECURITY
+    endpoint_url='https://steel-hammer-minio:9000',  # ❌ BYPASSES SECURITY
     aws_access_key_id='minioadmin',
     aws_secret_access_key='minioadmin'
 )
@@ -109,7 +109,7 @@ MinIO is isolated, but test containers should only access via Brazz-Nossel.
 ```yaml
 # Update test scripts to use Brazz-Nossel endpoint
 environment:
-  - "S3_ENDPOINT=http://steel-hammer-brazz-nossel:8082"  # Not minio:9000
+  - "S3_ENDPOINT=https://steel-hammer-brazz-nossel:8082"  # Not minio:9000
 ```
 
 ### 4.2 Kubernetes NetworkPolicies (Production)
@@ -193,7 +193,7 @@ MINIO_SERVICE_SECRET=${VAULT_MINIO_SECRET}  # From Vault
 ```bash
 # Test directly hits MinIO
 aws s3 cp file.txt s3://bucket/ \
-  --endpoint-url http://steel-hammer-minio:9000
+  --endpoint-url https://steel-hammer-minio:9000
 ```
 
 ### Corrected (Via IronBucket)
@@ -202,7 +202,7 @@ aws s3 cp file.txt s3://bucket/ \
 # Test goes through proper security flow
 export JWT_TOKEN=$(get_test_jwt)
 
-curl -X PUT http://steel-hammer-brazz-nossel:8082/bucket/file.txt \
+curl -X PUT https://steel-hammer-brazz-nossel:8082/bucket/file.txt \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Content-Type: application/octet-stream" \
   --data-binary @file.txt
@@ -261,7 +261,7 @@ curl -X PUT http://steel-hammer-brazz-nossel:8082/bucket/file.txt \
 
 ```bash
 # Should FAIL (good)
-curl http://localhost:9000
+curl https://localhost:9000
 # Expected: Connection refused
 ```
 
@@ -272,7 +272,7 @@ curl http://localhost:9000
 ```bash
 # From arbitrary container
 docker run --network steel-hammer-network alpine \
-  curl http://steel-hammer-minio:9000/minio/health/live
+  curl https://steel-hammer-minio:9000/minio/health/live
 # Expected: SUCCESS (bad - no NetworkPolicy)
 ```
 
@@ -282,7 +282,7 @@ docker run --network steel-hammer-network alpine \
 
 ```bash
 # Attempt direct S3 operation
-aws s3 ls --endpoint-url http://localhost:9000
+aws s3 ls --endpoint-url https://localhost:9000
 # Expected: Connection refused
 ```
 

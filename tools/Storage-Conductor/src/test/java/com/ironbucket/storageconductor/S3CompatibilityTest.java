@@ -34,7 +34,7 @@ public class S3CompatibilityTest {
     @BeforeEach
     public void setup() {
         // Configure for local MinIO or S3-compatible service
-        String endpoint = System.getProperty("s3.endpoint", "http://localhost:9000");
+        String endpoint = System.getProperty("s3.endpoint", "https://localhost:9000");
         String accessKey = System.getProperty("s3.accessKey", "minioadmin");
         String secretKey = System.getProperty("s3.secretKey", "minioadmin");
         String region = System.getProperty("s3.region", "us-east-1");

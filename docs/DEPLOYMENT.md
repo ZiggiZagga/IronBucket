@@ -45,9 +45,9 @@ docker ps
 
 | Service | URL |
 |---------|-----|
-| MinIO Console | http://localhost:9001 |
-| Keycloak | http://localhost:8080 |
-| S3 Proxy | http://localhost:8082 |
+| MinIO Console | https://localhost:9001 |
+| Keycloak | https://localhost:8080 |
+| S3 Proxy | https://localhost:8082 |
 
 ### 5. Stop Services
 ```bash
@@ -398,7 +398,7 @@ kubectl run -it --rm psql \
 ```bash
 # Check MinIO status
 kubectl port-forward -n ironbucket svc/minio 9001:9001
-# Visit http://localhost:9001
+# Visit https://localhost:9001
 ```
 
 ## Production Checklist

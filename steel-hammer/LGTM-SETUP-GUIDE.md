@@ -62,7 +62,7 @@ docker-compose -f docker-compose-lgtm.yml up -d
 docker-compose -f docker-compose-lgtm.yml ps
 
 # Check health status
-curl -s http://localhost:8080/actuator/health | jq .
+curl -s https://localhost:8080/actuator/health | jq .
 ```
 
 ### 3. **Run E2E Tests**
@@ -161,8 +161,8 @@ Also scrapes Prometheus-compatible metrics for:
 
 Each microservice sends telemetry to the collector via environment variable:
 ```yaml
-MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317
-OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317
+MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317
+OTEL_EXPORTER_OTLP_ENDPOINT=https://steel-hammer-otel-collector:4317
 ```
 
 ### Structured Logging

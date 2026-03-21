@@ -233,12 +233,12 @@ services:
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/buzzle-vane}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=true"
       - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      test: ["CMD", "curl", "-f", "https://localhost:8083/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -284,17 +284,17 @@ services:
       - "IRONBUCKET_SECURITY_VAULT_TOKEN=${IRONBUCKET_SECURITY_VAULT_TOKEN:-dev-root-token}"
       - "IRONBUCKET_SECURITY_VAULT_KV_PATH=${IRONBUCKET_SECURITY_VAULT_KV_PATH:-secret/data/ironbucket/sentinel-gear}"
       - "IRONBUCKET_SECURITY_VAULT_SECRET_KEY=${IRONBUCKET_SECURITY_VAULT_SECRET_KEY:-presignedSecret}"
-      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
       - "LOGGING_LEVEL_COM_IRONBUCKET=DEBUG"
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health-check"]
+      test: ["CMD", "curl", "-f", "https://localhost:8081/actuator/health-check"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -325,13 +325,13 @@ services:
       - "SPRING_CLOUD_VAULT_TOKEN=${SPRING_CLOUD_VAULT_TOKEN:-dev-root-token}"
       - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/graphite-forge}"
-      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=https://steel-hammer-otel-collector:4317"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      test: ["CMD", "curl", "-f", "https://localhost:8084/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -368,14 +368,14 @@ services:
       - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/claimspindel}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=true"
-      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      test: ["CMD", "curl", "-f", "https://localhost:8081/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -413,14 +413,14 @@ services:
       - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/brazz-nossel}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=true"
-      - "EUREKA_URI=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=http://steel-hammer-buzzle-vane:8083/eureka"
-      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
-      - "OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4317"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "OTEL_EXPORTER_OTLP_PROTOCOL=grpc"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "curl", "-f", "https://localhost:8082/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -445,10 +445,10 @@ services:
       - KEYCLOAK_URL=https://steel-hammer-keycloak:7081
       - MINIO_URL=https://steel-hammer-minio:9000
       - POSTGRES_HOST=steel-hammer-postgres
-      - SENTINEL_GEAR_URL=http://steel-hammer-sentinel-gear:8080
-      - CLAIMSPINDEL_URL=http://steel-hammer-claimspindel:8081
-      - BRAZZ_NOSSEL_URL=http://steel-hammer-brazz-nossel:8082
-      - BUZZLE_VANE_URL=http://steel-hammer-buzzle-vane:8083
+      - SENTINEL_GEAR_URL=https://steel-hammer-sentinel-gear:8080
+      - CLAIMSPINDEL_URL=https://steel-hammer-claimspindel:8081
+      - BRAZZ_NOSSEL_URL=https://steel-hammer-brazz-nossel:8082
+      - BUZZLE_VANE_URL=https://steel-hammer-buzzle-vane:8083
       - CURL_CA_BUNDLE=/certs/ca/ca.crt
     volumes:
       - ./test-scripts:/scripts:ro

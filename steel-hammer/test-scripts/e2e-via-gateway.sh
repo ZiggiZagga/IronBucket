@@ -18,13 +18,13 @@ NC='\033[0m'
 # Configuration - Internal URLs (this runs inside the container network)
 # ============================================================================
 
-GATEWAY_URL="${SENTINEL_GEAR_URL:-http://steel-hammer-sentinel-gear:8080}"
+GATEWAY_URL="${SENTINEL_GEAR_URL:-https://steel-hammer-sentinel-gear:8080}"
 KEYCLOAK_INTERNAL="https://steel-hammer-keycloak:7081"
-MINIO_INTERNAL="http://steel-hammer-brazz-nossel:8082"
-LOKI_INTERNAL="http://steel-hammer-loki:3100"
-TEMPO_INTERNAL="http://steel-hammer-tempo:3200"
-MIMIR_INTERNAL="http://steel-hammer-mimir:9009"
-GRAFANA_INTERNAL="http://steel-hammer-grafana:3000"
+MINIO_INTERNAL="https://steel-hammer-brazz-nossel:8082"
+LOKI_INTERNAL="https://steel-hammer-loki:3100"
+TEMPO_INTERNAL="https://steel-hammer-tempo:3200"
+MIMIR_INTERNAL="https://steel-hammer-mimir:9009"
+GRAFANA_INTERNAL="https://steel-hammer-grafana:3000"
 
 OUTPUT_DIR="/tmp/ironbucket-e2e-reports"
 LOG_DIR="$OUTPUT_DIR/logs"
@@ -116,7 +116,7 @@ fi
 
 # Test 2: Service Registry (Eureka via gateway)
 echo "Test 2: Service Registry Check..."
-REGISTRY_URL="http://steel-hammer-buzzle-vane:8083/eureka/apps"
+REGISTRY_URL="https://steel-hammer-buzzle-vane:8083/eureka/apps"
 REGISTRY_RESPONSE=$(curl -s -H "Accept: application/json" "$REGISTRY_URL" 2>/dev/null || echo "")
 if echo "$REGISTRY_RESPONSE" | grep -q "SENTINEL-GEAR"; then
     echo -e "${GREEN}✅ Service Registry: PASS${NC}"

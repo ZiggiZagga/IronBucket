@@ -172,7 +172,7 @@ Summary:
 
 Services Ready:
   • Keycloak (OIDC): internal-only by default (https://steel-hammer-keycloak:7081 from Docker network)
-  • Sentinel-Gear (Gateway): http://localhost:8080
+  • Sentinel-Gear (Gateway): https://localhost:8080
   • Claimspindel (Policy): internal-only by default
   • Brazz-Nossel (S3 Proxy): internal-only by default
   • Buzzle-Vane (Discovery): internal-only by default
@@ -307,18 +307,18 @@ After successful spinup:
      | jq -r .access_token)
    
    # List buckets
-  docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS -H "Authorization: Bearer $TOKEN" http://steel-hammer-brazz-nossel:8082/s3/buckets
+  docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS -H "Authorization: Bearer $TOKEN" https://steel-hammer-brazz-nossel:8082/s3/buckets
    ```
 
 3. **View Service Discovery**:
    ```bash
   NET=steel-hammer_steel-hammer-network
-  docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS http://steel-hammer-buzzle-vane:8083/eureka/apps
+  docker run --rm --network "$NET" curlimages/curl:8.12.1 -sS https://steel-hammer-buzzle-vane:8083/eureka/apps
    ```
 
 4. **Check Gateway Routes**:
    ```bash
-   curl http://localhost:8080/actuator/gateway/routes
+   curl https://localhost:8080/actuator/gateway/routes
    ```
 
 ## Architecture

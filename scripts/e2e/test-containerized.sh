@@ -285,11 +285,11 @@ main() {
     echo ""
 
     echo "Access points:"
-    echo -e "  ${BLUE}Keycloak Admin:${NC} http://localhost:7081"
+    echo -e "  ${BLUE}Keycloak Admin:${NC} https://localhost:7081"
     echo -e "    ${YELLOW}Username:${NC} admin"
     echo -e "    ${YELLOW}Password:${NC} admin"
     echo ""
-    echo -e "  ${BLUE}MinIO Console:${NC} http://localhost:9000"
+    echo -e "  ${BLUE}MinIO Console:${NC} https://localhost:9000"
     echo -e "    ${YELLOW}Access Key:${NC} minioadmin"
     echo -e "    ${YELLOW}Secret Key:${NC} minioadmin"
     echo ""

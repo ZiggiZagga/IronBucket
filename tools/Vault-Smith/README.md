@@ -103,7 +103,7 @@ config.setSocketTimeoutMs(30000);          // Connection timeout
 ```java
 S3BackendConfig config = new S3BackendConfig(
     "aws-s3", "us-east-1", 
-    "http://minio:9000",  // MinIO local endpoint
+    "https://minio:9000",  // MinIO local endpoint
     "minioadmin", "minioadmin"
 );
 config.setPathStyleAccess(true);
@@ -177,7 +177,7 @@ backend.completeMultipartUpload("data-vault", "large-file.zip", uploadId, partET
 | Backend | Endpoint | Credentials | Notes |
 |---------|----------|-------------|-------|
 | **AWS S3** | `https://s3.amazonaws.com` | IAM Access Key/Secret | Native S3 support, full feature parity |
-| **MinIO** | `http://minio:9000` | minioadmin/minioadmin | Drop-in S3-compatible local storage |
+| **MinIO** | `https://minio:9000` | minioadmin/minioadmin | Drop-in S3-compatible local storage |
 | **Ceph RGW** | `http://ceph-rgw:7480` | Ceph S3 credentials | Enterprise on-premises storage |
 | **DigitalOcean Spaces** | `https://nyc3.digitaloceanspaces.com` | API Key/Secret | S3-compatible cloud storage |
 | **Backblaze B2** | Custom endpoint | B2 credentials | S3-compatible API |
@@ -215,7 +215,7 @@ mvn clean install
 docker-compose -f ../../steel-hammer/docker-compose-steel-hammer.yml up minio
 
 mvn clean test \
-  -Ds3.endpoint=http://localhost:9000 \
+  -Ds3.endpoint=https://localhost:9000 \
   -Ds3.accessKey=minioadmin \
   -Ds3.secretKey=minioadmin \
   -Ds3.region=us-east-1

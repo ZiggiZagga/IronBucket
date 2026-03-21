@@ -1,7 +1,13 @@
 #!/usr/bin/env sh
+# =============================================================================
+# IronBucket – Vault Bootstrap
+# Starts Vault, initialises KV + PKI engines, seeds AppRole auth.
+# =============================================================================
 set -eu
 
 export VAULT_ADDR="${VAULT_ADDR:-https://127.0.0.1:8200}"
+# Vault starts with the bootstrap cert (under /certs/).
+# After PKI init, /vault/pki-certs/ca/ca.crt is used by app services.
 export VAULT_CACERT="${VAULT_CACERT:-/certs/ca/ca.crt}"
 
 INIT_MARKER="/vault/file/.initialized"
@@ -52,13 +58,23 @@ fi
 
 if [ -f "$ROOT_FILE" ]; then
   export VAULT_TOKEN="$(cat "$ROOT_FILE")"
+
+  # Create well-known static alias token for backward-compat dev tooling
   vault token create -id=dev-root-token -policy=root -orphan >/dev/null 2>&1 || true
+
+  # Ensure KV v2 is enabled
   if ! vault secrets list -format=json | grep -q '"secret/"'; then
     vault secrets enable -path=secret -version=2 kv >/dev/null 2>&1 || true
   fi
 
+  # Seed application KV secrets
   if [ -f /vault/local/init-dev-secrets.sh ]; then
-    /bin/sh /vault/local/init-dev-secrets.sh >/dev/null 2>&1 || true
+    /bin/sh /vault/local/init-dev-secrets.sh 2>&1 || true
+  fi
+
+  # Bootstrap PKI engine, issue service certs, configure AppRole auth
+  if [ -f /vault/local/init-vault-pki.sh ]; then
+    /bin/sh /vault/local/init-vault-pki.sh 2>&1 || true
   fi
 fi
 
