@@ -283,7 +283,9 @@ Latest release details: [Release Notes v1.2.12](docs/RELEASE-NOTES-v1.2.12.md)
 
 ## License
 
-Project licensing details are currently documented through repository governance and release policy documents.
+This repository is licensed under the Apache License 2.0.
+
+See [LICENSE](LICENSE).
 
 ## Contributing
 
