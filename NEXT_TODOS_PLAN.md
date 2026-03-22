@@ -1,184 +1,138 @@
 # Next TODOs Plan
 
 ## Goal
-Stable, fully-containerized end-to-end run with green status for GraphQL + UI + Observability.
+Reach a stable, fully containerized branch-tip run where GraphQL, UI, observability, and performance evidence are all green and reported from one canonical flow.
 
-## Session Summary (2026-03-22)
-This session completed the Sentinel -> Graphite GraphQL proxy fix and re-ran the full all-projects E2E gate.
+## Current State
 
-### Additional Runtime Findings (2026-03-22, follow-up)
-- Certificate bootstrap is now part of the compose flow via `steel-hammer-cert-bootstrap`.
-   Missing bootstrap certs in `certs/` no longer require a manual `generate-certificates.sh` pre-step.
-- Graphite-Forge had a second runtime blocker unrelated to TLS:
-   duplicate DGS registrations from `GovernanceDataFetcher` overlapped the dedicated fetchers and
-   caused `Duplicate data fetchers registered for Query.getPolicyStatistics` during startup.
-- Graphite-Forge also required PEM mode to be internally consistent at startup:
-   `SERVER_SSL_TRUSTSTORE`, `SERVER_SSL_TRUSTSTORE_PASSWORD`, and `SERVER_SSL_TRUSTSTORE_TYPE`
-   must be empty when no server truststore is used, otherwise Spring Boot still attempts to
-   materialize a PKCS12 truststore from an empty location.
-- Keycloak `dev` realm authentication was verified from inside the compose network using the realm file:
-   client `dev-client` + secret `dev-secret` with password grant for user `bob` / `bobP@ss`.
-   `client_credentials` does not work for `dev-client` because service accounts are not enabled.
-- Verified runtime path again from inside the network:
-   `POST https://steel-hammer-sentinel-gear:8080/graphql` with the `bob` token returns `HTTP 200`
-   and `{"data":{"__typename":"Query"}}`.
-- Verified actual object operations through Sentinel Gear to MinIO using the existing UI E2E flows,
-    not just GraphQL reachability:
-    - `tests/ui-live-upload-persistence.spec.ts` passed and wrote
-       `test-results/ui-e2e-traces/ui-live-upload-persistence.json` with `verified: true` for
-       bucket `default-alice-files`.
-    - `tests/ui-s3-methods-e2e.spec.ts` passed and wrote
-       `test-results/ui-e2e-traces/ui-s3-methods-e2e.json` proving `createBucket`, `listBuckets`,
-       `getBucket`, `uploadObject`, `listObjects`, `getObject`, `getBucketRoutingDecision`,
-       `downloadObject`, `deleteObject`, and `deleteBucket` all succeeded through Sentinel.
-    - Concrete proof artifact values from the passing run:
-       bucket `default-alice-methods-1774212707180`,
-       key `alice-all-methods-1774212707180.txt`,
-       traceId `8cc1832ff9cecfcdc374e20456b3cf80`.
-- Observability gap still remains:
-    the request path is proven functionally, but the propagated trace id was not easily recoverable
-    from plain `docker logs` on Sentinel/Graphite/Claimspindel/Brazz during this run. Log/trace
-    correlation still needs a dedicated observability follow-up.
+### What is proven
+- Application-path TLS is proven end to end for:
+   - Keycloak
+   - Sentinel-Gear
+   - Graphite-Forge
+   - Claimspindel
+   - Brazz-Nossel
+   - MinIO
+   - Next.js E2E backend path
+- Sentinel to Graphite GraphQL routing is working over HTTPS.
+- Real object operations through Sentinel to MinIO are proven by the UI E2E path.
+- `scripts/ci/run-observability-infra-gate.sh` is green.
+- `scripts/e2e/prove-phase2-performance.sh` is green.
+- Mixed-user observability/performance proof is green for Alice and Bob.
+- Certificate generation is integrated into the compose flow via `steel-hammer-cert-bootstrap`.
+- LGTM and application stacks are now correctly separated:
+   - `steel-hammer/docker-compose-lgtm.yml` = LGTM only
+   - `steel-hammer/docker-compose-steel-hammer.yml` = application stack
 
-### Root Cause Found (TLS Handshake): PKCS12 + Disabled RSA Cipher Suites
-The JVM policy (`jdk.tls.disabledAlgorithms`) disables `TLS_RSA_*` cipher suites. Graphite-Forge was
-configured with a PKCS12 keystore. When JSSE attempted TLS, it tried RSA key-exchange ciphers (disabled)
-and found no common cipher suite → `HANDSHAKE_FAILURE (alert 40)`.
+### What is not yet proven or finalized
+- LGTM services themselves are not running under TLS in Docker.
+   Current design is internal HTTP for:
+   - Loki
+   - Tempo
+   - Mimir
+   - OTEL Collector HTTP ingest
+   - postgres-exporter
+- The mixed-user proof is green, but it is not yet part of the canonical shell-based gate flow.
+- The complete wrapper should still be rerun from the latest branch tip if a fresh all-in-one report is required.
+- Historical test failures in the larger wrapper flow still need final reconciliation where they are outside the now-green observability and mixed-user proof path.
 
-### Fix Applied (Step 1): PEM-Based TLS for Graphite-Forge
-Switched Graphite from PKCS12 to PEM-based SSL. Spring Boot 3.x supports `server.ssl.certificate` +
-`server.ssl.certificate-private-key`. PEM mode allows JSSE to use `ECDHE_RSA` ciphers (not disabled).
+## Current TODOs
 
-**Graphite-forge state in `docker-compose-steel-hammer.yml`:**
-```yaml
-- "SERVER_SSL_ENABLED=true"
-- "SERVER_SSL_CERTIFICATE=file:/vault-pki-certs/services/graphite-forge/fullchain.crt"
-- "SERVER_SSL_CERTIFICATE_PRIVATE_KEY=file:/vault-pki-certs/services/graphite-forge/tls.key"
-- "SERVER_SSL_KEYSTORE="            # explicitly cleared
-- "SERVER_SSL_KEYSTORE_PASSWORD="   # explicitly cleared
-- "SERVER_SSL_KEYSTORE_TYPE="       # explicitly cleared
-- "SERVER_HTTP2_ENABLED=true"
-```
+### Priority 1: Promote mixed-user proof into the canonical gates
+- Integrate `ironbucket-app-nextjs/tests/ui-mixed-actor-observability-performance.spec.ts` into a formal gate path.
+- Preferred integration points:
+   - `scripts/e2e/prove-phase2-performance.sh`
+   - or `scripts/ci/run-observability-infra-gate.sh`
+- Expected outcome:
+   - mixed-user throughput
+   - Tempo trace lookup
+   - Loki ingestion confirmation
+   - metrics deltas
+   become part of release-grade evidence, not just a standalone Playwright proof.
 
-### Fix Applied (Step 2): Gateway Route Forced to HTTPS
-The remaining `/graphql` proxy failure was not a cipher issue anymore; Sentinel was still routing with
-`http://steel-hammer-graphite-forge:8084` for the GraphQL route at runtime.
+### Priority 2: Surface the mixed-user artifact in complete-run reporting
+- Include `test-results/ui-e2e-traces/ui-mixed-actor-observability-performance.json` in complete-run summaries.
+- Include a short summary of:
+   - total operations
+   - throughput
+   - successful trace lookups
+   - Loki ingestion check
+   - metric deltas
 
-Fixes applied in `docker-compose-steel-hammer.yml`:
-```yaml
-- "GRAPHITE_FORGE_URI=https://steel-hammer-graphite-forge:8084"
-- "SPRING_CLOUD_GATEWAY_HTTPCLIENT_SSL_TRUSTEDX509CERTIFICATES[0]=/vault-pki-certs/ca/ca-chain.pem"
-```
+### Priority 3: Make the LGTM TLS posture explicit
+- Decide whether the supported model is:
+   - application stack on HTTPS, LGTM internal HTTP
+   - or full internal TLS including LGTM
+- Once decided:
+   - document it consistently
+   - align proof scripts and readiness probes to that decision
 
-### Verification: GraphQL via Sentinel is Green
-Verified from inside the compose network with Keycloak realm `dev` token (`dev-client` + secret):
-`POST https://steel-hammer-sentinel-gear:8080/graphql` returns `HTTP 200` and:
-```json
-{"data":{"__typename":"Query"}}
-```
-
-Verified authentication detail:
-- `dev-client` is usable with password grant for seeded realm users.
-- Example confirmed credential: `bob` / `bobP@ss`.
-- `client_credentials` for `dev-client` returns `unauthorized_client` because service-account access
-   is not enabled in `steel-hammer/keycloak/dev-realm.json`.
-
-### Also Fixed: PKI Init Script Naming Contract
-`steel-hammer/vault/init-vault-pki.sh` patched to also write `intermediate-ca.crt` and `root-ca.crt`
-as compatibility copies alongside the existing `issuing-ca.crt` / `ca-chain.crt`.
-
-### Current Gate Status (All Projects E2E)
-Latest run report:
-- `test-results/all-projects-e2e-gate/20260322T190853Z/ALL_PROJECTS_E2E_GATE_REPORT.md`
-
-Result summary:
-- Java projects: `11/11` passed
-- UI projects: `1/2` passed
-- Overall: `FAILED`
-
-Historical failing item in that full gate run:
-- `ironbucket-app-nextjs` (Playwright E2E)
-
-Targeted rerun status from this session:
-- `tests/ui-live-upload-persistence.spec.ts`: `PASS`
-- `tests/ui-s3-methods-e2e.spec.ts`: `PASS`
-- Playwright report: `test-results/ui-playwright-report.json`
-- Proof artifacts: `test-results/ui-e2e-traces/`
-
----
-
-## Priority 1: Re-run the Full UI Gate with the Proven Fix Path
-
-### Step 1 — Re-run the canonical containerized UI gate
-The targeted proof specs are green. Re-run the broader gate to replace the stale historical failure:
+### Priority 4: Re-run the canonical branch-tip wrapper
+- Re-run:
 ```bash
 bash steel-hammer/test-scripts/run-e2e-complete.sh
 ```
+- Goal:
+   - produce one fresh branch-tip report after the latest observability, performance, and mixed-user proof work.
 
-### Step 2 — Preserve the passing proof artifacts
-Collect and inspect:
-- `test-results/ui-playwright-report.json`
-- `test-results/ui-playwright-report.xml`
-- `test-results/ui-e2e-traces/`
+### Priority 5: Resolve remaining wider-suite failures outside the now-green proof path
+- `Vault_Minio_SSE_Encryption`
+   - review MinIO SSE/KMS expectations versus current deployment mode
+- `Jclouds_Minio_CRUD_Via_Vault`
+   - complete TLS truststore handling for the jclouds integration path
+- `tools/Storage-Conductor` Maven build
+   - resolve `com.ironbucket:vault-smith:4.0.1` dependency ordering / bootstrap installation
+- lockfile consistency
+   - align `package-lock.json` with `package.json` so CI can use strict `npm ci`
 
-### Step 3 — Validate environment + endpoints in test runtime
-Confirm the UI test container still sees expected URLs and healthy dependencies:
+## Key Learnings From Troubleshooting
+
+### TLS and routing learnings
+- Graphite-Forge PEM mode is the correct runtime path here; PKCS12 plus disabled RSA cipher suites caused handshake failure.
+- In PEM mode, Graphite must explicitly clear keystore and truststore environment variables that would otherwise trigger empty PKCS12 handling.
+- Sentinel routing must point to Graphite over HTTPS in the Docker runtime path.
+
+### Build and compose learnings
+- Certificate bootstrapping must be part of compose startup, not a manual pre-step.
+- Cross-module Java image builds need `services/Pactum-Scroll` installed inside the image build path or bootstrapped before dependent modules run.
+- The LGTM compose file must remain observability-only; mixing application services into it causes proof-script drift and confusion.
+
+### Observability learnings
+- Application-path traceability is now strong enough when using deterministic OTLP bridge spans for returned trace IDs.
+- Loki actor-specific logs from the ephemeral UI E2E container are less reliable than Tempo trace lookup plus workload-window log-ingestion checks.
+- Internal protocol assumptions matter:
+   - application services use HTTPS
+   - LGTM internals currently use HTTP
+
+### Authentication learnings
+- Keycloak `dev-client` is valid for password grant with seeded users such as `bob` / `bobP@ss`.
+- `client_credentials` is not valid for `dev-client` because service-account access is not enabled in the dev realm.
+
+## Current Proof References
+- GraphQL via Sentinel:
+   - `POST https://steel-hammer-sentinel-gear:8080/graphql` returns `HTTP 200`
+- UI E2E object-path proof:
+   - `test-results/ui-e2e-traces/ui-live-upload-persistence.json`
+   - `test-results/ui-e2e-traces/ui-s3-methods-e2e.json`
+- Mixed-user observability/performance proof:
+   - `test-results/ui-e2e-traces/ui-mixed-actor-observability-performance.json`
+- Latest observability proof:
+   - `test-results/phase2-observability/20260322T221104Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
+- Latest performance proof:
+   - `test-results/phase2-performance/20260322T221139Z/PHASE2_PERFORMANCE_REPORT.md`
+
+## Verification Commands
 ```bash
-docker compose -f steel-hammer/docker-compose-steel-hammer.yml ps
-docker compose -f steel-hammer/docker-compose-steel-hammer.yml exec steel-hammer-sentinel-gear curl -sk https://steel-hammer-sentinel-gear:8080/graphql
-```
-
-### Step 4 — Close the observability correlation gap
-Functional proof is complete, but tracing evidence is weaker than it should be. Ensure the same request
-can be found cleanly in logs/traces across Sentinel, Graphite, Claimspindel, and Brazz.
-
-### Step 5 — Re-run the aggregate gate
-```bash
-bash scripts/ci/run-all-projects-e2e-gate.sh
-```
-Expected target: UI `2/2`, Overall `PASS`.
-
----
-
-## Priority 2: Remaining Failing Test Suites
-
-### `Vault_Minio_SSE_Encryption`
-Review SSE/KMS configuration for MinIO or adapt the test to the available SSE mode.
-
-### `Jclouds_Minio_CRUD_Via_Vault`
-Complete TLS truststore configuration for the jclouds integration-test run to eliminate PKIX errors.
-
-### `Observability_Phase2_Proof`
-Add missing correlation-header and Graphite negative-path assertions until the report shows
-`Conclusion: complete`.
-
-### `tools/Storage-Conductor` Maven Build
-Resolve `com.ironbucket:vault-smith:4.0.1` dependency via reactor/BOM/install order.
-
-### Lockfile Drift
-`npm ci` is currently not lockfile-consistent and falls back to `npm install`.
-Goal: synchronize `package-lock.json` with `package.json` so CI runs strictly with `npm ci`.
-
----
-
-## Priority 3: Runner Consistency
-
-1. Document canonical roles:
-   - `steel-hammer/test-scripts/run-e2e-complete.sh` = canonical containerized E2E gate runner.
-   - `scripts/run-all-tests-complete.sh` = superset orchestrator.
-2. Keep phase labels and report text permanently in sync.
-
----
-
-## Verification After Fixes
-```bash
-bash scripts/run-all-tests-complete.sh
+bash scripts/ci/run-observability-infra-gate.sh
+bash scripts/e2e/prove-phase2-performance.sh
 bash steel-hammer/test-scripts/run-e2e-complete.sh
 ```
-Expected: 0 failing suites, green reports in `test-results/`.
 
-## Artifacts
-- Reports: `test-results/reports/`
-- Logs: `test-results/logs/`
-- Observability Evidence: `test-results/phase2-observability/`
-- Playwright Artifacts: `test-results/playwright-artifacts/`
+## Success Condition
+- One branch-tip run produces green evidence for:
+   - GraphQL path
+   - UI object path
+   - observability infra
+   - performance proof
+   - mixed-user proof
+- The documented TLS scope is explicit and matches runtime reality.
