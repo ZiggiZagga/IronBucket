@@ -33,7 +33,9 @@ export default defineConfig({
         'https://127.0.0.1:7081/realms/dev/protocol/openid-connect/token',
       OTEL_SERVICE_NAME: process.env.OTEL_SERVICE_NAME ?? 'ironbucket-app-nextjs',
       OTEL_EXPORTER_OTLP_ENDPOINT:
-        process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://127.0.0.1:4318'
+        process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://127.0.0.1:4318',
+      NODE_EXTRA_CA_CERTS:
+        process.env.NODE_EXTRA_CA_CERTS ?? '/vault-pki-certs/ca/ca.crt'
     }
   }
 });

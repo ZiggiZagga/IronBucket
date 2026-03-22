@@ -180,25 +180,17 @@ prepare_docker_environment() {
     
     export DOCKER_FILES_HOMEDIR="."
     print_success "Set DOCKER_FILES_HOMEDIR=$DOCKER_FILES_HOMEDIR"
+
+    print_step "3a" "Certificate Preflight"
+    if [[ "${AUTO_GENERATE_CERTS:-true}" == "true" ]]; then
+        ensure_cert_artifacts
+    else
+        print_warning "AUTO_GENERATE_CERTS=false - expecting existing cert artifacts"
+    fi
     
     # Configure mTLS if requested
     if [ "$WITH_MTLS" = true ]; then
-        print_step "3a" "Configuring mTLS Mode"
-        
-        # Check if certificates exist
-        if [ ! -d "../certs/services/sentinel-gear" ]; then
-            echo "Generating mTLS certificates..."
-            cd "$PROJECT_ROOT/certs"
-            if bash generate-certificates.sh >> "$LOG_FILE" 2>&1; then
-                print_success "Certificates generated"
-            else
-                print_error "Failed to generate certificates"
-                exit 1
-            fi
-            cd "$STEEL_HAMMER_DIR"
-        else
-            print_success "Certificates already exist"
-        fi
+        print_step "3b" "Configuring mTLS Mode"
         
         # Set environment variables for Docker Compose
         export MTLS_PROFILE=",mtls"

@@ -5,6 +5,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STACK_DIR="$ROOT_DIR/steel-hammer"
 COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
 
+source "$ROOT_DIR/scripts/.env.defaults"
+source "$ROOT_DIR/scripts/lib/common.sh"
+register_error_trap
+ensure_cert_artifacts
+
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
 

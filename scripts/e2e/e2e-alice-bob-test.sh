@@ -17,7 +17,11 @@ source "$E2E_SCRIPT_DIR/../lib/common.sh"
 register_error_trap
 
 # Ensure TLS cert artifacts exist before infrastructure verification.
-ensure_cert_artifacts
+if [[ "${IS_CONTAINER:-false}" != "true" ]]; then
+    ensure_cert_artifacts
+else
+    log_info "Running in container; certificate generation preflight is handled on host-side proof runners"
+fi
 
 # Override service URLs if needed for this script
 # (They are already set from .env.defaults based on IS_CONTAINER)

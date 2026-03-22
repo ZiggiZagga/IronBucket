@@ -4,7 +4,7 @@ Production-ready S3-compatible microservices platform with JWT authentication, m
 
 ## 🚨 Production Readiness Status
 
-**Current Status**: 🟢 **Core Build/Test + E2E Gates Green** | 🟢 **Phase 2 Governance Coverage Validated in Containers** | 🟡 **Release Hardening Active**
+**Current Status**: 🟢 **Core Build/Test + UI E2E Gates Green** | 🟢 **Browser Screenshot Evidence Automated** | 🟡 **Release Hardening Active**
 
 IronBucket has validated Java test baselines and roadmap/behavioral gates, with ongoing hardening focused on release governance and production operations.
 
@@ -132,8 +132,9 @@ PostgreSQL (Metadata)
 ✅ **Core module test pathways passing** (latest comprehensive run)  
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
 ✅ **Graphite-Forge governance operation coverage validated in containerized Playwright** (`tests/ui-governance-methods-e2e.spec.ts`)
-🟡 **Containerized UI E2E suite currently unstable** (`npx playwright test tests` in `steel-hammer-ui-e2e`, 1/5 passing on 2026-03-20)
-🟡 **Latest full orchestrator** (2026-03-17): 204 total, 200 passed, 5 failed
+✅ **Containerized UI E2E baseline green** (`object-browser-baseline`, `ui-governance-methods-e2e`, `ui-live-upload-persistence`, `ui-s3-methods-e2e`, `ui-s3-methods-performance`)
+✅ **Screenshot proof artifacts generated automatically for complete runs** (`test-results/e2e-complete/<timestamp>/browser-screenshots`)
+🟡 **Observability gate warm-up can delay full-run completion** when Loki/Tempo/Mimir report transient `NOT READY`
 
 ### UI E2E Stability Update (2026-03-18)
 
@@ -148,20 +149,13 @@ Latest containerized verification:
 - Command: `docker compose -f steel-hammer/docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e bash -lc 'cd /workspaces/IronBucket/ironbucket-app-nextjs && npx playwright test tests'`
 - Result: `5 passed (7.7s)`
 
-### UI E2E Runtime Update (2026-03-20)
+### UI E2E Runtime Update (2026-03-22)
 
 Current runtime status in the release-candidate environment:
 - Browser startup dependency issue fixed in UI E2E image by adding `libasound2` in `steel-hammer/DockerfileUIE2E`.
-- Current isolated run result: `1 passed, 4 failed`.
-- Failing scenarios are blocked by backend GraphQL errors: `Connection prematurely closed BEFORE response` on Graphite-Forge operations (`createBucket`, `uploadObject`).
-- Investigation notes are tracked in [E2E-TEST-STATUS-MARCH-2026.md](E2E-TEST-STATUS-MARCH-2026.md).
-
-Latest known failing suites:
-- `tools/Storage-Conductor` build failed in Maven phase
-- `SpringBoot_Vault_Health_Endpoints` failed in infrastructure phase
-- `Vault_Minio_SSE_Encryption` failed in Vault + MinIO encryption phase
-- `Jclouds_Minio_CRUD_Via_Vault` failed in jclouds Vault integration phase
-- `Observability_Phase2_Proof` failed in observability phase
+- TLS trust propagation into Next.js Playwright web-server runtime fixed via `NODE_EXTRA_CA_CERTS` in `ironbucket-app-nextjs/playwright.config.ts`.
+- Current isolated and gate-driven containerized UI baseline result: `5/5 passing`.
+- Complete-run screenshot evidence is now copied into `test-results/e2e-complete/<timestamp>/browser-screenshots` for documentation-grade proof packaging.
 
 Validation note:
 - Complete run was executed after deleting generated certificates; cert bootstrap regeneration path worked as expected.
@@ -257,8 +251,14 @@ Continuous performance tracking:
 Latest UI evidence artifacts:
 - `test-results/ui-e2e-traces/ui-live-upload-persistence.json`
 - `test-results/ui-e2e-traces/ui-live-upload-proof.png`
+- `test-results/ui-e2e-traces/ui-governance-methods-e2e.json`
+- `test-results/ui-e2e-traces/ui-governance-methods-proof.png`
 - `test-results/ui-e2e-traces/ui-s3-methods-e2e.json`
 - `test-results/ui-e2e-traces/ui-s3-methods-proof.png`
+- `test-results/ui-e2e-traces/ui-s3-methods-performance.json`
+- `test-results/ui-e2e-traces/ui-s3-methods-performance-proof.png`
+- `test-results/ui-e2e-traces/object-browser-baseline-e2e.json`
+- `test-results/ui-e2e-traces/object-browser-baseline-proof.png`
 
 Screenshot proofs (live UI E2E):
 

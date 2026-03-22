@@ -7,6 +7,11 @@ COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
 
+source "$ROOT_DIR/scripts/.env.defaults"
+source "$ROOT_DIR/scripts/lib/common.sh"
+register_error_trap
+ensure_cert_artifacts
+
 resolve_test_results_dir() {
   local requested_dir="$1"
   local fallback_dir="$ROOT_DIR/temp/test-results"

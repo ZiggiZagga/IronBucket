@@ -282,6 +282,46 @@ for i in {1..8}; do
 done
 ```
 
+### Full `run-e2e-complete.sh` Stops On `NOT READY: Loki|Tempo|Mimir`
+
+**Problem:** The complete E2E runner progresses through Java and UI gates but pauses/fails in Phase 2 with lines such as `NOT READY: Loki`, `NOT READY: Tempo`, or `NOT READY: Mimir`.
+
+**Diagnosis:** This is usually a readiness warm-up race in the LGTM stack, not an application regression in Sentinel/Graphite/MinIO flows.
+
+**Solutions:**
+
+```bash
+# 1) Verify core app services are already healthy
+docker ps --format '{{.Names}} {{.Status}}' | grep 'steel-hammer-' | sort
+
+# 2) Check LGTM readiness endpoints from the compose network
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sk https://steel-hammer-loki:3100/ready
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sk https://steel-hammer-tempo:3200/ready
+docker run --rm --network steel-hammer_steel-hammer-network curlimages/curl:8.7.1 -sk https://steel-hammer-mimir:9009/ready
+
+# 3) Re-run only the observability gate once readiness is stable
+bash scripts/ci/run-observability-infra-gate.sh
+```
+
+If you need complete-run evidence with screenshots and logs, run:
+
+```bash
+bash steel-hammer/test-scripts/run-e2e-complete.sh
+```
+
+Then verify the screenshot bundle:
+
+```bash
+find test-results/e2e-complete -maxdepth 3 -type d -name browser-screenshots | sort | tail -1
+```
+
+Expected files in that folder:
+- `object-browser-baseline-proof.png`
+- `ui-governance-methods-proof.png`
+- `ui-live-upload-proof.png`
+- `ui-s3-methods-proof.png`
+- `ui-s3-methods-performance-proof.png`
+
 ### Collector Shows "Failed to Scrape Prometheus Endpoint"
 
 **Problem:** `steel-hammer-otel-collector` logs show warnings like `Failed to scrape Prometheus endpoint` for some jobs.

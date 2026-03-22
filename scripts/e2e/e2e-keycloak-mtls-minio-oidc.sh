@@ -9,6 +9,11 @@ source "$E2E_SCRIPT_DIR/../.env.defaults"
 source "$E2E_SCRIPT_DIR/../lib/common.sh"
 
 register_error_trap
+if [[ "${IS_CONTAINER:-false}" != "true" ]]; then
+	ensure_cert_artifacts
+else
+	log_info "Running in container; certificate generation preflight is handled on host-side proof runners"
+fi
 
 OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-minio-console}"
 OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-minio-console-secret}"
@@ -24,8 +29,9 @@ fi
 REALM_IMPORT_FILE="${REALM_IMPORT_FILE:-$DEFAULT_REALM_IMPORT_FILE}"
 
 DEFAULT_CERTS_ROOT="$REPO_ROOT/certs"
-if [[ -d "/certs/client" ]]; then
-	DEFAULT_CERTS_ROOT="/certs"
+if [[ -d "/vault-pki-certs/client" ]]; then
+        DEFAULT_CERTS_ROOT="/vault-pki-certs"
+elif [[ -d "/certs/client" ]]; then
 fi
 CERTS_ROOT="${CERTS_ROOT:-$DEFAULT_CERTS_ROOT}"
 BOB_CERT="${BOB_CERT:-$CERTS_ROOT/client/bob.crt}"

@@ -1,6 +1,6 @@
 # IronBucket Roadmap: Journey to Graphite Forge
 
-**Last Updated:** March 17, 2026 (11:20 UTC)  
+**Last Updated:** March 22, 2026 (02:45 UTC)  
 **Current Phase:** Phase E closeout + Vault-first hardening on develop (with full governance operation coverage validation)  
 **Overall Status:** 🟢 **Core roadmap gates validated** | 🟡 **Observability productization hardening active (trace ingestion and Grafana provisioning)**
 
@@ -34,6 +34,13 @@
 - Current isolated containerized UI result in release-candidate runtime: `1/5 passing`.
 - Remaining blocker is backend GraphQL runtime instability on Graphite-Forge operations (`createBucket`, `uploadObject`) with `Connection prematurely closed BEFORE response`.
 - Detailed investigation trail captured in `E2E-TEST-STATUS-MARCH-2026.md`.
+
+**Incremental Validation Snapshot (2026-03-22):**
+- UI E2E runtime recovered to stable baseline: `5/5 passing` in containerized Playwright (`object-browser-baseline`, `ui-governance-methods-e2e`, `ui-live-upload-persistence`, `ui-s3-methods-e2e`, `ui-s3-methods-performance`).
+- Next.js E2E web-server runtime now receives CA trust material through `NODE_EXTRA_CA_CERTS` in `ironbucket-app-nextjs/playwright.config.ts`.
+- Browser screenshot evidence was expanded and standardized for all UI baseline scenarios, with artifacts copied into complete-run evidence bundles: `test-results/e2e-complete/<timestamp>/browser-screenshots`.
+- Auto-certificate generation is now enforced for spin-up and E2E script paths (`AUTO_GENERATE_CERTS=true` default + shared cert preflight), reducing cold-start failures.
+- Full complete-run still depends on LGTM warm-up behavior in some environments (transient `NOT READY` on Loki/Tempo/Mimir during early readiness window).
 
 **Runtime Observability Audit Snapshot (2026-03-17):**
 - LGTM infrastructure is up and stable in Docker runtime (Loki, Mimir, Tempo, Promtail, Grafana, OTEL Collector)

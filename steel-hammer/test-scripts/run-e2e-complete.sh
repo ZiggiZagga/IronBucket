@@ -47,6 +47,67 @@ print(str(value))
 PY
 }
 
+prepare_ui_proof_artifacts() {
+  local trace_dir="$ROOT_DIR/test-results/ui-e2e-traces"
+
+  mkdir -p "$trace_dir"
+  rm -f \
+    "$trace_dir/object-browser-baseline-proof.png" \
+    "$trace_dir/ui-governance-methods-proof.png" \
+    "$trace_dir/ui-live-upload-proof.png" \
+    "$trace_dir/ui-s3-methods-proof.png" \
+    "$trace_dir/ui-s3-methods-performance-proof.png" \
+    "$trace_dir/object-browser-baseline-e2e.json" \
+    "$trace_dir/ui-governance-methods-e2e.json" \
+    "$trace_dir/ui-live-upload-persistence.json" \
+    "$trace_dir/ui-s3-methods-e2e.json" \
+    "$trace_dir/ui-s3-methods-performance.json"
+}
+
+collect_ui_screenshot_artifacts() {
+  local trace_dir="$ROOT_DIR/test-results/ui-e2e-traces"
+  local target_dir="$OUT_DIR/browser-screenshots"
+  local copied=0
+  local -a proof_files=(
+    "object-browser-baseline-proof.png"
+    "ui-governance-methods-proof.png"
+    "ui-live-upload-proof.png"
+    "ui-s3-methods-proof.png"
+    "ui-s3-methods-performance-proof.png"
+  )
+
+  mkdir -p "$target_dir"
+
+  for proof_file in "${proof_files[@]}"; do
+    if [[ -f "$trace_dir/$proof_file" ]]; then
+      cp "$trace_dir/$proof_file" "$target_dir/$proof_file"
+      copied=$((copied + 1))
+    fi
+  done
+
+  echo "$copied"
+}
+
+list_ui_screenshot_artifacts() {
+  local target_dir="$OUT_DIR/browser-screenshots"
+
+  if [[ ! -d "$target_dir" ]]; then
+    echo "- none"
+    return
+  fi
+
+  local files
+  files="$(find "$target_dir" -maxdepth 1 -type f -name '*.png' | sort)"
+  if [[ -z "$files" ]]; then
+    echo "- none"
+    return
+  fi
+
+  while IFS= read -r file; do
+    [[ -n "$file" ]] && printf -- '- %s\n' "$file"
+  done <<< "$files"
+}
+
 capture_lgtm_logs() {
   local captured=0
   local containers=(
@@ -98,6 +159,9 @@ fi
 
 docker rm -f jclouds-minio-phase4-proof jclouds-minio-it minio >/dev/null 2>&1 || true
 
+log "Preparing fresh UI screenshot proof artifacts"
+prepare_ui_proof_artifacts
+
 log "Step 1/4: all-projects gate (includes UI E2E)"
 bash "$ROOT_DIR/scripts/ci/run-all-projects-e2e-gate.sh" | tee "$LOG_DIR/all-projects-e2e-gate.log"
 
@@ -121,9 +185,9 @@ ALICE_OBJECT="$(extract_alice_object "$ALICE_BOB_LOG")"
 
 log "Step 3/4: live UI upload persistence proof"
 (
-  cd "$ROOT_DIR/ironbucket-app-nextjs"
-  npm run build
-  npm run test:e2e:ui:live
+  cd "$ROOT_DIR/steel-hammer"
+  $DC -f docker-compose-steel-hammer.yml run --rm steel-hammer-ui-e2e \
+    "npm ci --no-audit --no-fund && npx playwright install chromium && npm run build && npm run test:e2e:ui:live"
 ) | tee "$LOG_DIR/ui-live-persistence.log"
 
 UI_LIVE_ARTIFACT="$(latest_file '*/test-results/ui-e2e-traces/ui-live-upload-persistence.json')"
@@ -138,6 +202,9 @@ if [[ "$UI_LIVE_VERIFIED" != "True" && "$UI_LIVE_VERIFIED" != "true" ]]; then
   log "ERROR: Live UI persistence artifact reports unverified upload"
   exit 1
 fi
+
+UI_SCREENSHOTS_CAPTURED="$(collect_ui_screenshot_artifacts)"
+UI_SCREENSHOT_LIST="$(list_ui_screenshot_artifacts)"
 
 MINIO_UI_LOG_FILE="$LOG_DIR/steel-hammer-minio-ui-upload.log"
 docker logs --since 20m steel-hammer-minio > "$MINIO_UI_LOG_FILE" 2>&1 || true
@@ -187,6 +254,13 @@ cat > "$REPORT_FILE" <<EOF
 - UI live verified flag: ${UI_LIVE_VERIFIED:-n/a}
 - MinIO log contains UI key: ${UI_LIVE_MINIO_LOG_HIT}
 - MinIO UI log evidence: $MINIO_UI_LOG_FILE
+
+## Browser Screenshot Evidence
+
+- Browser screenshots captured: ${UI_SCREENSHOTS_CAPTURED}
+- Screenshot artifact directory: $OUT_DIR/browser-screenshots
+
+${UI_SCREENSHOT_LIST}
 
 ## Observability Evidence
 

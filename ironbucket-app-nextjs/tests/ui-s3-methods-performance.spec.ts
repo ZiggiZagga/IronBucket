@@ -53,6 +53,11 @@ test('ui captures MinIO operation latency and throughput for full S3 method flow
     operationLatencies[op] = value;
   }
 
+  const screenshotBuffer = await page.screenshot({
+    fullPage: true,
+    animations: 'disabled'
+  });
+
   const preferredOutDir = '/workspaces/IronBucket/test-results/ui-e2e-traces';
   const fallbackOutDir = path.resolve(process.cwd(), '../test-results/ui-e2e-traces');
   const outDir = await fs
@@ -61,6 +66,7 @@ test('ui captures MinIO operation latency and throughput for full S3 method flow
     .catch(() => fallbackOutDir);
 
   await fs.mkdir(outDir, { recursive: true });
+  await fs.writeFile(path.join(outDir, 'ui-s3-methods-performance-proof.png'), screenshotBuffer);
   await fs.writeFile(
     path.join(outDir, 'ui-s3-methods-performance.json'),
     JSON.stringify(
@@ -70,7 +76,8 @@ test('ui captures MinIO operation latency and throughput for full S3 method flow
         minioOperationCount,
         minioTotalOperationTimeMs,
         minioOperationsPerSecond,
-        operationLatenciesMs: operationLatencies
+        operationLatenciesMs: operationLatencies,
+        screenshotProof: 'ui-s3-methods-performance-proof.png'
       },
       null,
       2
