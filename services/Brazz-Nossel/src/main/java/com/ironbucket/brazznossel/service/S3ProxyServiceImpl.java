@@ -1,6 +1,6 @@
 package com.ironbucket.brazznossel.service;
 
-import com.ironbucket.brazznossel.model.NormalizedIdentity;
+import com.ironbucket.pactumscroll.identity.NormalizedIdentity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -142,14 +142,14 @@ public class S3ProxyServiceImpl implements S3ProxyService {
 
     BackendProvider resolveProviderForRequest(NormalizedIdentity identity, String bucket, RequiredCapability capability) {
         List<BackendProvider> candidates = new ArrayList<>();
-        String tenantBucketKey = identity.getTenantId() + "/" + bucket;
+        String tenantBucketKey = identity.getTenant() + "/" + bucket;
 
         BackendProvider bucketOverride = bucketOverrides.get(tenantBucketKey);
         if (bucketOverride != null) {
             candidates.add(bucketOverride);
         }
 
-        BackendProvider tenantDefault = tenantDefaultProviders.get(identity.getTenantId());
+        BackendProvider tenantDefault = tenantDefaultProviders.get(identity.getTenant());
         if (tenantDefault != null) {
             candidates.add(tenantDefault);
         }
@@ -165,7 +165,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                 logger.debug(
                     "Resolved provider '{}' for tenant='{}', bucket='{}', capability='{}'",
                     candidate,
-                    identity.getTenantId(),
+                    identity.getTenant(),
                     bucket,
                     capability
                 );
@@ -174,7 +174,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
         }
 
         throw new IllegalStateException(
-            "No provider supports capability " + capability + " for tenant " + identity.getTenantId() + " and bucket " + bucket
+            "No provider supports capability " + capability + " for tenant " + identity.getTenant() + " and bucket " + bucket
         );
     }
 
@@ -184,8 +184,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     }
 
     private void assertTenantBucketAccess(String bucket, NormalizedIdentity identity) {
-        if (!bucket.startsWith(identity.getTenantId() + "-")) {
-            throw new SecurityException("Access denied: bucket does not belong to tenant " + identity.getTenantId());
+        if (!bucket.startsWith(identity.getTenant() + "-")) {
+            throw new SecurityException("Access denied: bucket does not belong to tenant " + identity.getTenant());
         }
     }
     
@@ -193,13 +193,13 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     public Mono<String> listBuckets(NormalizedIdentity identity) {
         return Mono.fromCallable(() -> {
             logger.info("Listing buckets for user: {}, tenant: {}", 
-                    identity.getPreferredUsername(), identity.getTenantId());
+                    identity.getUsername(), identity.getTenant());
             
             ListBucketsResponse response = s3Client.listBuckets();
             
             // Filter buckets by tenant prefix
-            String tenantPrefix = identity.getTenantId() + "-";
-            StringBuilder result = new StringBuilder("Buckets for tenant " + identity.getTenantId() + ":\n");
+            String tenantPrefix = identity.getTenant() + "-";
+            StringBuilder result = new StringBuilder("Buckets for tenant " + identity.getTenant() + ":\n");
             
             response.buckets().stream()
                     .filter(bucket -> bucket.name().startsWith(tenantPrefix))
@@ -245,7 +245,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     @Override
     public Mono<byte[]> getObject(String bucket, String key, NormalizedIdentity identity) {
         return Mono.fromCallable(() -> {
-            logger.info("Getting object: {}/{} for user: {}", bucket, key, identity.getPreferredUsername());
+            logger.info("Getting object: {}/{} for user: {}", bucket, key, identity.getUsername());
             
             assertTenantBucketAccess(bucket, identity);
             
@@ -282,7 +282,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     public Mono<byte[]> getObjectRange(String bucket, String key, long start, long end, NormalizedIdentity identity) {
         return Mono.fromCallable(() -> {
             logger.info("Getting object range: {}/{}[{}-{}] for user: {}", 
-                    bucket, key, start, end, identity.getPreferredUsername());
+                    bucket, key, start, end, identity.getUsername());
             
             assertTenantBucketAccess(bucket, identity);
             
@@ -300,7 +300,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     public Mono<String> putObject(String bucket, String key, byte[] content, NormalizedIdentity identity) {
         return Mono.fromCallable(() -> {
             logger.info("Putting object: {}/{} ({} bytes) for user: {}", 
-                    bucket, key, content.length, identity.getPreferredUsername());
+                    bucket, key, content.length, identity.getUsername());
             
             assertTenantBucketAccess(bucket, identity);
             
@@ -308,8 +308,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .bucket(bucket)
                     .key(key)
                     .metadata(java.util.Map.of(
-                            "uploaded-by", identity.getPreferredUsername(),
-                            "tenant", identity.getTenantId()
+                            "uploaded-by", identity.getUsername(),
+                            "tenant", identity.getTenant()
                     ))
                     .build();
             
@@ -322,7 +322,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     @Override
     public Mono<Void> deleteObject(String bucket, String key, NormalizedIdentity identity) {
         return Mono.fromRunnable(() -> {
-            logger.info("Deleting object: {}/{} for user: {}", bucket, key, identity.getPreferredUsername());
+            logger.info("Deleting object: {}/{} for user: {}", bucket, key, identity.getUsername());
             
             assertTenantBucketAccess(bucket, identity);
             
@@ -379,7 +379,7 @@ public class S3ProxyServiceImpl implements S3ProxyService {
     public Mono<String> initiateMultipartUpload(String bucket, String key, NormalizedIdentity identity) {
         return Mono.fromCallable(() -> {
             logger.info("Initiating multipart upload: {}/{} for user: {}", 
-                    bucket, key, identity.getPreferredUsername());
+                    bucket, key, identity.getUsername());
             
             assertTenantBucketAccess(bucket, identity);
             
@@ -387,8 +387,8 @@ public class S3ProxyServiceImpl implements S3ProxyService {
                     .bucket(bucket)
                     .key(key)
                     .metadata(java.util.Map.of(
-                            "uploaded-by", identity.getPreferredUsername(),
-                            "tenant", identity.getTenantId()
+                            "uploaded-by", identity.getUsername(),
+                            "tenant", identity.getTenant()
                     ))
                     .build();
             

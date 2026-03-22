@@ -1,7 +1,7 @@
 package com.ironbucket.brazznossel.service;
 
-import com.ironbucket.brazznossel.model.NormalizedIdentity;
-import com.ironbucket.brazznossel.model.PolicyDecision;
+import com.ironbucket.brazznossel.model.PolicyEvaluationResult;
+import com.ironbucket.pactumscroll.identity.NormalizedIdentity;
 import reactor.core.publisher.Mono;
 
 /**
@@ -23,7 +23,7 @@ public interface PolicyEvaluationService {
      * @param identity The normalized identity performing the action
      * @param action The S3 action (e.g., "s3:GetObject", "s3:PutObject")
      * @param resource The ARN or resource identifier (e.g., "arn:aws:s3:::bucket/key")
-     * @return A Mono<PolicyDecision> with ALLOW or DENY
+     * @return A Mono<PolicyEvaluationResult> with ALLOW or DENY
      */
-    Mono<PolicyDecision> evaluate(NormalizedIdentity identity, String action, String resource);
+    Mono<PolicyEvaluationResult> evaluate(NormalizedIdentity identity, String action, String resource);
 }

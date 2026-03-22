@@ -1,5 +1,6 @@
 package com.ironbucket.buzzlevane.error;
 
+import com.ironbucket.pactumscroll.error.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.UUID;

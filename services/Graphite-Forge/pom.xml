@@ -48,6 +48,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.ironbucket</groupId>
+            <artifactId>pactum-scroll</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.netflix.graphql.dgs</groupId>
             <artifactId>graphql-dgs-spring-graphql-starter</artifactId>
         </dependency>

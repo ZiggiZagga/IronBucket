@@ -1,6 +1,6 @@
 package com.ironbucket.brazznossel.controller;
 
-import com.ironbucket.brazznossel.model.NormalizedIdentity;
+import com.ironbucket.pactumscroll.identity.NormalizedIdentity;
 import com.ironbucket.brazznossel.service.S3ProxyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -43,8 +43,8 @@ public class S3Controller {
 		
 		return NormalizedIdentity.builder()
 				.userId(jwt.getSubject())
-				.tenantId(tenant)
-				.preferredUsername(username)
+				.tenant(tenant)
+				.username(username)
 				.email(jwt.getClaimAsString("email"))
 				.roles(roles)
 				.region(jwt.getClaimAsString("region"))

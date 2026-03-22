@@ -1,4 +1,4 @@
-package com.ironbucket.claimspindel.error;
+package com.ironbucket.pactumscroll.error;
 
 import java.time.Instant;
 

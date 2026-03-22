@@ -1,2 +1,19 @@
 # Pactum-Scroll
-defines IronBuckets shared trust contracts-schemas and models that govern who may access what, and when. Its the structural core of claim based authorization
+
+Shared Java library for IronBucket service contracts and cross-cutting behavior.
+
+It centralizes:
+- shared error contracts (`ApiErrorResponse`)
+- shared WebFlux error handling base classes
+- shared request-correlation filter behavior
+- shared cache, resilience, and WebClient configuration helpers
+
+Services consume this module as a Maven dependency:
+
+```xml
+<dependency>
+	<groupId>com.ironbucket</groupId>
+	<artifactId>pactum-scroll</artifactId>
+	<version>4.0.1</version>
+</dependency>
+```

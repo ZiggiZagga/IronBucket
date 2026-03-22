@@ -1,6 +1,6 @@
 package com.ironbucket.brazznossel.service;
 
-import com.ironbucket.brazznossel.model.NormalizedIdentity;
+import com.ironbucket.pactumscroll.identity.NormalizedIdentity;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -78,8 +78,8 @@ class S3ProxyServiceImplRoutingTests {
     private static NormalizedIdentity identity(String tenantId) {
         return NormalizedIdentity.builder()
             .userId("user-1")
-            .tenantId(tenantId)
-            .preferredUsername("alice")
+            .tenant(tenantId)
+            .username("alice")
             .roles(List.of("s3:read", "s3:write"))
             .build();
     }

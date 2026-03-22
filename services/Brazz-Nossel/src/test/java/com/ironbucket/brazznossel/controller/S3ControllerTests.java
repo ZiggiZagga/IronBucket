@@ -1,6 +1,6 @@
 package com.ironbucket.brazznossel.controller;
 
-import com.ironbucket.brazznossel.model.NormalizedIdentity;
+import com.ironbucket.pactumscroll.identity.NormalizedIdentity;
 import com.ironbucket.brazznossel.service.S3ProxyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -350,27 +350,27 @@ class S3ControllerTests {
         StepVerifier.create(tenantAwareController.listBuckets(jwtWithClaims(Map.of("tenant_id", "tenant-snake"))))
             .expectNext("[]")
             .verifyComplete();
-        org.junit.jupiter.api.Assertions.assertEquals("tenant-snake", capturedIdentity.get().getTenantId());
+        org.junit.jupiter.api.Assertions.assertEquals("tenant-snake", capturedIdentity.get().getTenant());
 
         StepVerifier.create(tenantAwareController.listBuckets(jwtWithClaims(Map.of("tenantId", "tenant-camel"))))
             .expectNext("[]")
             .verifyComplete();
-        org.junit.jupiter.api.Assertions.assertEquals("tenant-camel", capturedIdentity.get().getTenantId());
+        org.junit.jupiter.api.Assertions.assertEquals("tenant-camel", capturedIdentity.get().getTenant());
 
         StepVerifier.create(tenantAwareController.listBuckets(jwtWithClaims(Map.of("organization", "org-fallback"))))
             .expectNext("[]")
             .verifyComplete();
-        org.junit.jupiter.api.Assertions.assertEquals("org-fallback", capturedIdentity.get().getTenantId());
+        org.junit.jupiter.api.Assertions.assertEquals("org-fallback", capturedIdentity.get().getTenant());
 
         StepVerifier.create(tenantAwareController.listBuckets(jwtWithClaims(Map.of("groups", List.of("org:group-org")))))
             .expectNext("[]")
             .verifyComplete();
-        org.junit.jupiter.api.Assertions.assertEquals("group-org", capturedIdentity.get().getTenantId());
+        org.junit.jupiter.api.Assertions.assertEquals("group-org", capturedIdentity.get().getTenant());
 
         StepVerifier.create(tenantAwareController.listBuckets(jwtWithClaims(Map.of())))
             .expectNext("[]")
             .verifyComplete();
-        org.junit.jupiter.api.Assertions.assertEquals("default", capturedIdentity.get().getTenantId());
+        org.junit.jupiter.api.Assertions.assertEquals("default", capturedIdentity.get().getTenant());
     }
 
     @Test

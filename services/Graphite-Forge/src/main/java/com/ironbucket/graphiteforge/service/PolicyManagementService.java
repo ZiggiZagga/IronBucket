@@ -1,8 +1,8 @@
 package com.ironbucket.graphiteforge.service;
 
 import com.ironbucket.graphiteforge.exception.PolicyNotFoundException;
-import com.ironbucket.graphiteforge.model.PolicyDecision;
 import com.ironbucket.graphiteforge.model.PolicyEvaluationContext;
+import com.ironbucket.pactumscroll.policy.PolicyDecision;
 import com.ironbucket.graphiteforge.model.PolicyEvaluationResult;
 import com.ironbucket.graphiteforge.model.PolicyInput;
 import com.ironbucket.graphiteforge.model.PolicyRule;

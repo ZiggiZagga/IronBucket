@@ -40,6 +40,11 @@
 	</properties>
 	
 	<dependencies>
+		<dependency>
+			<groupId>com.ironbucket</groupId>
+			<artifactId>pactum-scroll</artifactId>
+			<version>4.0.1</version>
+		</dependency>
 	
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

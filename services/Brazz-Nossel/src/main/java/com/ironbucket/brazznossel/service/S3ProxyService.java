@@ -1,6 +1,6 @@
 package com.ironbucket.brazznossel.service;
 
-import com.ironbucket.brazznossel.model.NormalizedIdentity;
+import com.ironbucket.pactumscroll.identity.NormalizedIdentity;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
