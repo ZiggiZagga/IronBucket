@@ -25,6 +25,7 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 - LGTM remains intentionally plain HTTP on the internal Docker network for Loki, Tempo, Mimir, OTEL Collector HTTP ingest, and postgres-exporter. This is by current design, not a missing TLS bug.
 - `scripts/ci/run-observability-infra-gate.sh` is green with the split-stack model (`docker-compose-lgtm.yml` for LGTM only, `docker-compose-steel-hammer.yml` for app services).
 - Mixed-user business-path proof is green: Alice and Bob were driven through concurrent S3 method scenarios with per-scenario trace IDs, Tempo lookups, Loki workload-window ingestion, and Prometheus metric deltas.
+- The refreshed Next.js control-plane shell is now runtime-validated inside the Docker UI E2E container, including a cinematic screenshot pass and a fresh object-browser baseline re-run.
 
 **⚠️ Remaining production actions:**
 1. Enforce required branch checks and release preflight in protected-branch policy
@@ -142,6 +143,7 @@ PostgreSQL (Metadata)
 ✅ **Sentinel roadmap and behavioral implementation-gate profiles passing**
 ✅ **Graphite-Forge governance operation coverage validated in containerized Playwright** (`tests/ui-governance-methods-e2e.spec.ts`)
 ✅ **Containerized UI E2E baseline green** (`object-browser-baseline`, `ui-governance-methods-e2e`, `ui-live-upload-persistence`, `ui-s3-methods-e2e`, `ui-s3-methods-performance`)
+✅ **Containerized UI control-plane refresh validated** (`tests/ui-cinematic-showcase.spec.ts` + refreshed `object-browser-baseline` + `tests/ui-mixed-actor-observability-performance.spec.ts`)
 ✅ **Screenshot proof artifacts generated automatically for complete runs** (`test-results/e2e-complete/<timestamp>/browser-screenshots`)
 🟡 **Observability gate warm-up can delay full-run completion** when Loki/Tempo/Mimir report transient `NOT READY`
 
@@ -164,11 +166,14 @@ Current runtime status in the release-candidate environment:
 - Browser startup dependency issue fixed in UI E2E image by adding `libasound2` in `steel-hammer/DockerfileUIE2E`.
 - TLS trust propagation into Next.js Playwright web-server runtime fixed via `NODE_EXTRA_CA_CERTS` in `ironbucket-app-nextjs/playwright.config.ts`.
 - Current isolated and gate-driven containerized UI baseline result: `5/5 passing`.
-- Mixed-user observability/performance proof added and passing via `tests/ui-mixed-actor-observability-performance.spec.ts`.
+- Mixed-user observability/performance proof added and revalidated in container via `tests/ui-mixed-actor-observability-performance.spec.ts`.
+- Cinematic UI showcase proof is passing in container via `tests/ui-cinematic-showcase.spec.ts` with screenshot artifacts written to `test-results/ui-e2e-traces/`.
+- Fresh compose-run validation of `tests/object-browser-baseline.spec.ts` and `tests/ui-mixed-actor-observability-performance.spec.ts` completed green together: `2 passed (49.7s)`.
 - Complete-run screenshot evidence is now copied into `test-results/e2e-complete/<timestamp>/browser-screenshots` for documentation-grade proof packaging.
 
 Validation note:
 - Complete run was executed after deleting generated certificates; cert bootstrap regeneration path worked as expected.
+- Latest cinematic screenshot manifest: `test-results/ui-e2e-traces/ui-cinematic-showcase.json` (`ui-cinematic-overview-proof.png`, `ui-cinematic-object-browser-proof.png`).
 
 ### Run Comprehensive Tests
 
@@ -232,6 +237,7 @@ See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](do
 Latest verified proof: `test-results/phase2-observability/20260322T221104Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
 Latest verified performance proof: `test-results/phase2-performance/20260322T221139Z/PHASE2_PERFORMANCE_REPORT.md`
 Latest mixed-user proof: `test-results/ui-e2e-traces/ui-mixed-actor-observability-performance.json`
+Latest cinematic UI proof: `test-results/ui-e2e-traces/ui-cinematic-showcase.json`
 
 Latest complete system validation:
 - `test-results/reports/LATEST-REPORT.md`
@@ -243,7 +249,8 @@ Verified completed:
 - ✅ Runtime wiring: OTEL env wiring validated for sentinel/claimspindel/brazz/buzzle
 - ✅ Vault telemetry: Vault runs with TLS in LGTM compose and metrics are scraped via OTEL collector
 - ✅ Error handling + correlation propagation: Graphite-Forge 404 + GraphQL parse-error checks with `X-Correlation-ID` propagation
-- ✅ Mixed-user business-path proof: Alice + Bob concurrent S3 method runs generated 44 operations in 967 ms (`45.5 ops/s`) with 4/4 Tempo trace lookups succeeding and workload-window Loki ingestion confirmed
+- ✅ Mixed-user business-path proof: Alice + Bob concurrent S3 method runs generated 44 operations in 647 ms (`68.01 ops/s`) with 4/4 Tempo trace lookups succeeding, Loki workload-window ingestion count `5`, and metric deltas of `4` for API requests, bucket creates, and bucket deletes
+- ✅ Cinematic UI evidence: refreshed overview shell and live object-browser route captured as screenshot proof artifacts from the containerized Playwright runtime
 
 TLS scope clarified:
 - ✅ HTTPS is exercised end to end for the application path and identity/storage services using the generated internal CA.

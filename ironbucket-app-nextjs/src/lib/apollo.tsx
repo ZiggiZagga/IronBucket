@@ -7,6 +7,7 @@ import {
 import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { RetryLink } from '@apollo/client/link/retry';
+import { APP_ACCESS_TOKEN_STORAGE_KEY } from '@/lib/auth/session';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'https://localhost:8080/graphql';
 
@@ -69,7 +70,7 @@ const tracingLink = setContext((_, previousContext) => {
       : 'anonymous';
   const e2eAccessToken =
     typeof window !== 'undefined'
-      ? window.localStorage.getItem('ironbucket.e2e.accessToken') || ''
+      ? window.localStorage.getItem('ironbucket.e2e.accessToken') || window.localStorage.getItem(APP_ACCESS_TOKEN_STORAGE_KEY) || ''
       : '';
 
   return {

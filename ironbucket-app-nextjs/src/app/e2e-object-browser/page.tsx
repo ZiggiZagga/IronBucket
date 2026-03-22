@@ -2,6 +2,13 @@
 
 import { Suspense, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { useAppToast } from '@/components/ui/toast';
+import { formatDateTime } from '@/lib/utils';
 
 type Bucket = {
   name: string;
@@ -15,6 +22,7 @@ type BrowserObject = {
 
 function E2eObjectBrowserContent() {
   const searchParams = useSearchParams();
+  const { pushToast } = useAppToast();
   const [actor, setActor] = useState('alice');
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -219,6 +227,11 @@ function E2eObjectBrowserContent() {
     });
 
     setStatusMessage(`Download URL ready for ${key}`);
+    pushToast({
+      title: 'Download prepared',
+      description: `Signed URL generated for ${key}.`,
+      variant: 'success'
+    });
   };
 
   const handleDelete = async (key: string) => {
@@ -237,6 +250,11 @@ function E2eObjectBrowserContent() {
     });
 
     setStatusMessage(`Deleted ${key}`);
+    pushToast({
+      title: 'Object deleted',
+      description: `${key} removed from ${activeBucket}.`,
+      variant: 'info'
+    });
     await refreshObjects(activeBucket, appliedSearch);
   };
 
@@ -262,159 +280,223 @@ function E2eObjectBrowserContent() {
     });
 
     setStatusMessage(`Upload successful: ${pendingUploadFile.name}`);
+    pushToast({
+      title: 'Upload successful',
+      description: `${pendingUploadFile.name} stored in ${activeBucket}.`,
+      variant: 'success'
+    });
     setPendingUploadFile(null);
     await refreshObjects(activeBucket, appliedSearch);
   };
 
   return (
     <section className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-bold">Object Browser Baseline Scenario</h1>
-        <p className="text-sm text-gray-600">
-          Baseline aligned with object-browser core flows: bucket browse, object list, search, sort, upload,
-          download, delete, and trace headers.
-        </p>
-      </header>
+      <Card className="overflow-hidden border-white/10 bg-[linear-gradient(140deg,rgba(12,24,43,0.95),rgba(10,84,90,0.78),rgba(8,15,28,0.95))] text-white">
+        <CardContent className="grid gap-6 px-6 py-7 md:px-8 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-3">
+            <Badge variant="success">Live storage path</Badge>
+            <header className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight">Object Browser Baseline Scenario</h1>
+              <p className="max-w-2xl text-sm text-slate-300 md:text-base">
+                Baseline aligned with object-browser core flows: bucket browse, object list, search, sort, upload,
+                download, delete, and trace headers.
+              </p>
+            </header>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-1">
+            <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Active actor</p>
+              <p className="mt-2 text-2xl font-semibold">{actor}</p>
+            </div>
+            <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Bucket</p>
+              <p className="mt-2 truncate text-lg font-semibold">{activeBucket || 'Waiting for selection'}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-2">
-        <label htmlFor="actor-select" className="block text-sm font-medium">
-          Active user
-        </label>
-        <select
-          id="actor-select"
-          aria-label="Active user"
-          value={actor}
-          onChange={(event) => setActor(event.target.value)}
-          className="border rounded px-3 py-2"
-        >
-          <option value="alice">alice</option>
-          <option value="bob">bob</option>
-        </select>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Buckets</h2>
-        {!authReady ? (
-          <p className="text-sm text-gray-500">Preparing actor session...</p>
-        ) : authError ? (
-          <p className="text-sm text-red-600">Actor session failed: {authError}</p>
-        ) : loadingBuckets ? (
-          <p className="text-sm text-gray-500">Loading buckets...</p>
-        ) : (
-          <div className="flex gap-2 flex-wrap">
-            {buckets.map((bucket) => (
-              <button
-                key={bucket.name}
-                type="button"
-                className={`px-3 py-2 border rounded ${selectedBucket === bucket.name ? 'bg-black text-white' : ''}`}
-                onClick={() => setSelectedBucket(bucket.name)}
+      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Session and bucket control</CardTitle>
+            <CardDescription>
+              Keep the runtime actor explicit. This page still preserves the selectors used by the existing Playwright proof.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <label htmlFor="actor-select" className="block text-sm font-medium text-[color:var(--foreground)]">
+                Active user
+              </label>
+              <Select
+                id="actor-select"
+                aria-label="Active user"
+                value={actor}
+                onChange={(event) => setActor(event.target.value)}
               >
-                {bucket.name}
-              </button>
-            ))}
-            {activeBucket && !buckets.some((bucket) => bucket.name === activeBucket) ? (
-              <button
-                key={activeBucket}
-                type="button"
-                className="px-3 py-2 border rounded bg-black text-white"
-                onClick={() => setSelectedBucket(activeBucket)}
-              >
-                {activeBucket}
-              </button>
-            ) : null}
-          </div>
-        )}
-      </div>
+                <option value="alice">alice</option>
+                <option value="bob">bob</option>
+              </Select>
+            </div>
 
-      <div className="space-y-3 border rounded p-4">
-        <div className="grid gap-3 md:grid-cols-2">
-          <div>
-            <label htmlFor="search-objects" className="block text-sm font-medium mb-1">
-              Search objects
-            </label>
-            <input
-              id="search-objects"
-              aria-label="Search objects"
-              value={draftSearch}
-              onChange={(event) => setDraftSearch(event.target.value)}
-              className="border rounded px-3 py-2 w-full"
-              placeholder="type object key"
-            />
-          </div>
-          <div>
-            <label htmlFor="sort-order" className="block text-sm font-medium mb-1">
-              Sort order
-            </label>
-            <select
-              id="sort-order"
-              aria-label="Sort order"
-              value={draftSortDirection}
-              onChange={(event) => setDraftSortDirection(event.target.value as 'asc' | 'desc')}
-              className="border rounded px-3 py-2 w-full"
-            >
-              <option value="asc">asc</option>
-              <option value="desc">desc</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <button type="button" onClick={applySearch} className="border rounded px-3 py-2">
-            Apply search
-          </button>
-          <button type="button" onClick={applySort} className="border rounded px-3 py-2">
-            Apply sort
-          </button>
-        </div>
-      </div>
-
-      {activeBucket && (
-        <section>
-          <h2>Upload File</h2>
-          <p>Bucket: {activeBucket}</p>
-          <div>Drag and drop files here</div>
-
-          <label htmlFor="upload-file-input">Choose file</label>
-          <input id="upload-file-input" aria-label="Choose file" type="file" onChange={handleUploadSelection} />
-
-          <button type="button" onClick={handleUpload}>Upload</button>
-        </section>
-      )}
-
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Objects</h2>
-        {loadingObjects ? (
-          <p className="text-sm text-gray-500">Loading objects...</p>
-        ) : sortedObjects.length === 0 ? (
-          <p className="text-sm text-gray-500">No objects found.</p>
-        ) : (
-          <ul className="space-y-2">
-            {sortedObjects.map((objectItem) => (
-              <li key={objectItem.key} className="border rounded px-3 py-2 flex items-center justify-between gap-2">
-                <span>{objectItem.key}</span>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleDownload(objectItem.key)}
-                    className="border rounded px-2 py-1"
-                  >
-                    Download {objectItem.key}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(objectItem.key)}
-                    className="border rounded px-2 py-1"
-                  >
-                    Delete {objectItem.key}
-                  </button>
+            <div>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">Buckets</h2>
+              {!authReady ? (
+                <p className="text-sm text-[color:var(--muted-foreground)]">Preparing actor session...</p>
+              ) : authError ? (
+                <p className="text-sm text-rose-300">Actor session failed: {authError}</p>
+              ) : loadingBuckets ? (
+                <p className="text-sm text-[color:var(--muted-foreground)]">Loading buckets...</p>
+              ) : (
+                <div className="flex gap-2 flex-wrap">
+                  {buckets.map((bucket) => (
+                    <button
+                      key={bucket.name}
+                      type="button"
+                      className={`rounded-2xl border px-3 py-2 text-sm transition ${selectedBucket === bucket.name ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100' : 'border-[color:var(--border)] bg-[color:var(--panel-strong)] text-[color:var(--foreground)]'}`}
+                      onClick={() => setSelectedBucket(bucket.name)}
+                    >
+                      {bucket.name}
+                    </button>
+                  ))}
+                  {activeBucket && !buckets.some((bucket) => bucket.name === activeBucket) ? (
+                    <button
+                      key={activeBucket}
+                      type="button"
+                      className="rounded-2xl border border-emerald-400/40 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-100"
+                      onClick={() => setSelectedBucket(activeBucket)}
+                    >
+                      {activeBucket}
+                    </button>
+                  ) : null}
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
+              )}
+            </div>
+
+            {activeBucket && (
+              <div className="space-y-3 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--panel-strong)] p-4">
+                <div>
+                  <h2 className="text-lg font-semibold">Upload File</h2>
+                  <p className="text-sm text-[color:var(--muted-foreground)]">Bucket: {activeBucket}</p>
+                </div>
+                <div className="rounded-[24px] border border-dashed border-[color:var(--border)] bg-[color:var(--panel)] px-4 py-6 text-sm text-[color:var(--muted-foreground)]">
+                  Drag and drop files here
+                </div>
+                <label htmlFor="upload-file-input" className="block text-sm font-medium text-[color:var(--foreground)]">
+                  Choose file
+                </label>
+                <Input id="upload-file-input" aria-label="Choose file" type="file" onChange={handleUploadSelection} />
+                <Button type="button" onClick={handleUpload} disabled={!pendingUploadFile}>
+                  Upload
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Object search and sort</CardTitle>
+              <CardDescription>
+                Search, sort, and refresh against the active bucket while retaining existing labels and action names.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label htmlFor="search-objects" className="mb-1 block text-sm font-medium text-[color:var(--foreground)]">
+                    Search objects
+                  </label>
+                  <Input
+                    id="search-objects"
+                    aria-label="Search objects"
+                    value={draftSearch}
+                    onChange={(event) => setDraftSearch(event.target.value)}
+                    placeholder="type object key"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="sort-order" className="mb-1 block text-sm font-medium text-[color:var(--foreground)]">
+                    Sort order
+                  </label>
+                  <Select
+                    id="sort-order"
+                    aria-label="Sort order"
+                    value={draftSortDirection}
+                    onChange={(event) => setDraftSortDirection(event.target.value as 'asc' | 'desc')}
+                  >
+                    <option value="asc">asc</option>
+                    <option value="desc">desc</option>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" onClick={applySearch}>
+                  Apply search
+                </Button>
+                <Button type="button" variant="secondary" onClick={applySort}>
+                  Apply sort
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Objects</CardTitle>
+              <CardDescription>
+                Actions remain named for test compatibility while the presentation moves to a denser operator layout.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingObjects ? (
+                <p className="text-sm text-[color:var(--muted-foreground)]">Loading objects...</p>
+              ) : sortedObjects.length === 0 ? (
+                <p className="text-sm text-[color:var(--muted-foreground)]">No objects found.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {sortedObjects.map((objectItem) => (
+                    <li key={objectItem.key} className="flex flex-col gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--panel-strong)] px-4 py-4 md:flex-row md:items-center md:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">{objectItem.key}</p>
+                        <p className="text-xs text-[color:var(--muted-foreground)]">
+                          {objectItem.size} bytes
+                          {objectItem.lastModified ? ` • ${formatDateTime(objectItem.lastModified)}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleDownload(objectItem.key)}
+                        >
+                          Download {objectItem.key}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDelete(objectItem.key)}
+                        >
+                          Delete {objectItem.key}
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {statusMessage && <p className="text-sm font-medium">{statusMessage}</p>}
+      {statusMessage ? (
+        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-200">{statusMessage}</div>
+      ) : null}
     </section>
   );
 }

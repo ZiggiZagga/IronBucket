@@ -1,7 +1,7 @@
 # Next TODOs Plan
 
 ## Goal
-Reach a stable, fully containerized branch-tip run where GraphQL, UI, observability, and performance evidence are all green and reported from one canonical flow.
+Reach a stable, fully containerized branch-tip run where GraphQL, refreshed UI evidence, observability, and performance proofs are all green and reported from one canonical flow.
 
 ## Current State
 
@@ -18,7 +18,8 @@ Reach a stable, fully containerized branch-tip run where GraphQL, UI, observabil
 - Real object operations through Sentinel to MinIO are proven by the UI E2E path.
 - `scripts/ci/run-observability-infra-gate.sh` is green.
 - `scripts/e2e/prove-phase2-performance.sh` is green.
-- Mixed-user observability/performance proof is green for Alice and Bob.
+- Mixed-user observability/performance proof is green for Alice and Bob, with the latest container re-run producing 44 operations in 647 ms (`68.01 ops/s`) and 4/4 Tempo trace lookups.
+- The refreshed Next.js control-plane shell is container-validated with cinematic screenshot proof for `/` and `/e2e-object-browser`.
 - Certificate generation is integrated into the compose flow via `steel-hammer-cert-bootstrap`.
 - LGTM and application stacks are now correctly separated:
    - `steel-hammer/docker-compose-lgtm.yml` = LGTM only
@@ -33,6 +34,7 @@ Reach a stable, fully containerized branch-tip run where GraphQL, UI, observabil
    - OTEL Collector HTTP ingest
    - postgres-exporter
 - The mixed-user proof is green, but it is not yet part of the canonical shell-based gate flow.
+- The cinematic UI proof is green, but it is not yet surfaced in complete-run reporting.
 - The complete wrapper should still be rerun from the latest branch tip if a fresh all-in-one report is required.
 - Historical test failures in the larger wrapper flow still need final reconciliation where they are outside the now-green observability and mixed-user proof path.
 
@@ -50,14 +52,16 @@ Reach a stable, fully containerized branch-tip run where GraphQL, UI, observabil
    - metrics deltas
    become part of release-grade evidence, not just a standalone Playwright proof.
 
-### Priority 2: Surface the mixed-user artifact in complete-run reporting
+### Priority 2: Surface the mixed-user and cinematic artifacts in complete-run reporting
 - Include `test-results/ui-e2e-traces/ui-mixed-actor-observability-performance.json` in complete-run summaries.
+- Include `test-results/ui-e2e-traces/ui-cinematic-showcase.json` plus the generated screenshot files in complete-run summaries.
 - Include a short summary of:
    - total operations
    - throughput
    - successful trace lookups
    - Loki ingestion check
    - metric deltas
+   - cinematic screenshot artifact names
 
 ### Priority 3: Make the LGTM TLS posture explicit
 - Decide whether the supported model is:
@@ -112,10 +116,15 @@ bash steel-hammer/test-scripts/run-e2e-complete.sh
 - GraphQL via Sentinel:
    - `POST https://steel-hammer-sentinel-gear:8080/graphql` returns `HTTP 200`
 - UI E2E object-path proof:
+   - `test-results/ui-e2e-traces/object-browser-baseline-e2e.json`
    - `test-results/ui-e2e-traces/ui-live-upload-persistence.json`
    - `test-results/ui-e2e-traces/ui-s3-methods-e2e.json`
 - Mixed-user observability/performance proof:
    - `test-results/ui-e2e-traces/ui-mixed-actor-observability-performance.json`
+- Cinematic UI proof:
+   - `test-results/ui-e2e-traces/ui-cinematic-showcase.json`
+   - `test-results/ui-e2e-traces/ui-cinematic-overview-proof.png`
+   - `test-results/ui-e2e-traces/ui-cinematic-object-browser-proof.png`
 - Latest observability proof:
    - `test-results/phase2-observability/20260322T221104Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
 - Latest performance proof:
@@ -132,6 +141,7 @@ bash steel-hammer/test-scripts/run-e2e-complete.sh
 - One branch-tip run produces green evidence for:
    - GraphQL path
    - UI object path
+   - refreshed UI screenshot path
    - observability infra
    - performance proof
    - mixed-user proof
