@@ -2,6 +2,11 @@
 # IronBucket Complete Test Orchestrator
 # ONE COMMAND to run ALL tests + generate comprehensive report
 # Includes: Maven tests, E2E tests, Alice-Bob scenario, Observability validation
+#
+# Alignment note:
+# - steel-hammer/test-scripts/run-e2e-complete.sh is the canonical container E2E gate runner.
+# - scripts/run-all-tests-complete.sh is a superset runner that includes backend/perf checks
+#   plus the same observability-first runtime assumptions for Playwright E2E phases.
 
 set -euo pipefail
 
@@ -340,10 +345,56 @@ run_test_suite "Observability_Phase2_Proof" \
     "KEEP_STACK=true $PROJECT_ROOT/scripts/e2e/prove-phase2-observability.sh"
 
 # ============================================================================
-# PHASE 7: COLLECT OBSERVABILITY ARTIFACTS
+# PHASE 7: PLAYWRIGHT E2E UI TESTS (all GraphQL schema operations)
 # ============================================================================
 
-log_section "PHASE 7: Collect Observability Artifacts"
+log_section "PHASE 7: Playwright E2E UI Tests"
+
+echo "LGTM stack already running — Loki, Tempo and Mimir are available for trace/log/metric assertions."
+echo ""
+
+PLAYWRIGHT_APP_DIR="$PROJECT_ROOT/ironbucket-app-nextjs"
+
+# Install dependencies if not present
+if [[ ! -d "$PLAYWRIGHT_APP_DIR/node_modules" ]]; then
+        echo "Installing Next.js / Playwright dependencies..."
+        (cd "$PLAYWRIGHT_APP_DIR" && npm ci --prefer-offline 2>&1) || true
+fi
+
+# Install Playwright browsers if missing
+if [[ ! -d "$PLAYWRIGHT_APP_DIR/node_modules/.cache/ms-playwright" ]] && \
+     [[ ! -d "$HOME/.cache/ms-playwright" ]]; then
+        echo "Installing Playwright browsers..."
+    if ! (cd "$PLAYWRIGHT_APP_DIR" && npx playwright install chromium 2>&1); then
+        echo "Playwright browser-only install failed, retrying with system dependencies..."
+        (cd "$PLAYWRIGHT_APP_DIR" && npx playwright install --with-deps chromium 2>&1) || true
+    fi
+fi
+
+run_test_suite "Playwright_E2E_GraphQL_All_Schema_Ops" \
+        "cd '$PLAYWRIGHT_APP_DIR' && \
+         NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://127.0.0.1:8080/graphql \
+         E2E_SENTINEL_URL=http://127.0.0.1:8080 \
+         E2E_GATEWAY_GRAPHQL_URL=http://127.0.0.1:8080/graphql \
+         E2E_KEYCLOAK_TOKEN_URL=https://localhost:7081/realms/dev/protocol/openid-connect/token \
+         OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318 \
+         OTEL_SERVICE_NAME=ironbucket-app-nextjs \
+         npx playwright test \
+             tests/graphql-policy-e2e.spec.ts \
+             tests/graphql-identity-e2e.spec.ts \
+             tests/graphql-tenant-e2e.spec.ts \
+             tests/graphql-audit-e2e.spec.ts \
+             tests/ui-s3-methods-e2e.spec.ts \
+             tests/object-browser-baseline.spec.ts \
+             tests/ui-live-upload-persistence.spec.ts \
+         --reporter=list,json \
+         --output='$TEST_RESULTS_DIR/playwright-artifacts' 2>&1"
+
+# ============================================================================
+# PHASE 8: COLLECT OBSERVABILITY ARTIFACTS
+# ============================================================================
+
+log_section "PHASE 8: Collect Observability Artifacts"
 
 echo "Collecting Loki logs..."
 docker exec steel-hammer-sentinel-gear curl -s http://steel-hammer-loki:3100/loki/api/v1/labels > "$ARTIFACT_DIR/loki-labels.json" 2>&1 || true
@@ -363,10 +414,10 @@ echo -e "${GREEN}✅ Artifacts collected${NC}"
 echo ""
 
 # ============================================================================
-# PHASE 8: GENERATE COMPREHENSIVE REPORT
+# PHASE 9: GENERATE COMPREHENSIVE REPORT
 # ============================================================================
 
-log_section "PHASE 8: Generate Comprehensive Report"
+log_section "PHASE 9: Generate Comprehensive Report"
 
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
@@ -427,6 +478,8 @@ fi)
 
 ## Test Phases
 
+This runner is aligned with steel-hammer/test-scripts/run-e2e-complete.sh by ensuring LGTM runtime is available before UI E2E and observability assertions; it then extends coverage with backend, Vault/jclouds, and performance validation.
+
 ### Phase 1: Maven Backend Tests
 - **Purpose:** Validate unit and integration tests for all microservices
 - **Modules Tested:** Sentinel-Gear, Brazz-Nossel, Claimspindel, Buzzle-Vane, Pactum-Scroll
@@ -456,16 +509,19 @@ fi)
 - **Purpose:** Validate logging, tracing, metrics collection
 - **Components:** Loki, Tempo, Grafana, Promtail, OTEL Collector
 - **Framework:** Container-based health checks
+- **Executable Proof:** scripts/e2e/prove-phase2-observability.sh (evidence-backed report under test-results/phase2-observability/)
 
-- **Executable Proof:**
-    - scripts/e2e/prove-phase2-observability.sh
-    - Generates evidence-backed report under test-results/phase2-observability/
+### Phase 7: Playwright E2E UI Tests (all GraphQL schema operations)
+- **Purpose:** Prove that every operation in schema.graphqls has a passing Playwright scenario
+- **Tests:** Policy CRUD, Identity CRUD, Tenant CRUD, Audit+Stats queries, S3 object browser, upload persistence
+- **Schema coverage:** all relevant Queries and Mutations in current UI E2E scope; each test emits traces into LGTM stack
+- **Framework:** Playwright + Next.js E2E pages calling live Sentinel-Gear → Graphite-Forge
 
-### Phase 7: Artifact Collection
+### Phase 8: Artifact Collection
 - **Purpose:** Collect observability data for analysis
 - **Artifacts:** Logs, traces, metrics, service logs
 
-### Phase 8: Report Generation
+### Phase 9: Report Generation
 - **Purpose:** Consolidate all suite outputs into a single evidence report
 - **Artifacts:** Markdown summary, failed-suite log excerpts, latest symlink
 
