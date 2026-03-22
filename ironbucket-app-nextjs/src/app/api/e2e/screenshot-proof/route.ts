@@ -40,30 +40,14 @@ export async function POST(req: NextRequest) {
   }
 
   const bucket = `default-${actor}-proofs`;
+  const ownerTenant = bucket.split('-')[0] ?? actor;
   const key = `${actor}-ui-e2e-proof-${Date.now()}.png.b64`;
 
   try {
     const token = await fetchActorAccessToken(actor);
     const gatewayOptions = { actor, traceparent, correlationId };
 
-    const bucketsResponse = await callGatewayGraphql(token, {
-      query: `
-        query ListBuckets($jwtToken: String!) {
-          listBuckets(jwtToken: $jwtToken) {
-            name
-          }
-        }
-      `,
-      variables: {
-        jwtToken: token
-      }
-    }, gatewayOptions);
-
-    const existingBuckets = bucketsResponse?.data?.listBuckets ?? [];
-    const bucketExists = Array.isArray(existingBuckets)
-      && existingBuckets.some((entry: { name?: string }) => entry?.name === bucket);
-
-    if (!bucketExists) {
+    try {
       await callGatewayGraphql(token, {
         query: `
           mutation CreateBucket($jwtToken: String!, $bucketName: String!, $ownerTenant: String!) {
@@ -75,9 +59,16 @@ export async function POST(req: NextRequest) {
         variables: {
           jwtToken: token,
           bucketName: bucket,
-          ownerTenant: actor
+          ownerTenant
         }
       }, gatewayOptions);
+    } catch (bucketError) {
+      logger.warn('Screenshot proof bucket creation skipped; proceeding with existing bucket.', {
+        route,
+        actor,
+        bucket,
+        details: bucketError instanceof Error ? bucketError.message : String(bucketError)
+      });
     }
 
     await callGatewayGraphql(token, {

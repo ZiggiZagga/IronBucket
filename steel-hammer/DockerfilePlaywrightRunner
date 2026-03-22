@@ -1,0 +1,12 @@
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+
+# Small utility layer used by scripts and health/debug checks.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    jq \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspaces/IronBucket/ironbucket-app-nextjs
+
+CMD ["/bin/bash"]

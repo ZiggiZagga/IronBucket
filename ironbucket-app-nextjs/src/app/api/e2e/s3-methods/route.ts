@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
   const bucket = `default-${actor}-methods-${Date.now()}`;
   const key = `${actor}-all-methods-${Date.now()}.txt`;
   const ownerTenant = actor;
+  const routingTenantId = bucket.split('-')[0] ?? ownerTenant;
   const content = requestBody.content ?? `all-methods-payload-${new Date().toISOString()}`;
   const traceId = randomBytes(16).toString('hex');
   const parentSpanId = randomBytes(8).toString('hex');
