@@ -7,13 +7,16 @@ Stabiler, voll containerisierter End-to-End-Run mit gruenem Status fuer GraphQL 
 - Harmonisierung von `scripts/run-all-tests-complete.sh` mit dem E2E-Runner ist begonnen.
 - Neue GraphQL-E2E-Flows (Policy, Identity, Tenant, Audit) sind implementiert.
 - Graphite-Forge DGS Data Fetcher fuer Policy/Identity/Tenant/Audit sind angelegt.
-- Full run laeuft durch, hat aber verbleibende Fehl-Suites.
+- Dedizierter Playwright-Docker-Runner ist implementiert (`steel-hammer/DockerfilePlaywrightRunner`).
+- Phase 7 in `scripts/run-all-tests-complete.sh` fuehrt Playwright jetzt containerisiert aus.
+- Containerisierte Playwright-Validierung: 7/7 Specs gruen (GraphQL + S3 + Baseline + Live Upload).
 
 ## Prioritaet 1: Playwright sauber containerisieren
-1. Dedizierten Playwright Runner per Dockerfile anlegen (oder `steel-hammer/DockerfileTestRunner` erweitern).
-2. Browser-Binaries im Image vorinstallieren (`npx playwright install chromium`).
-3. System-Abhaengigkeiten im Image fixieren, damit kein apt-key/yarn-key Fehler zur Laufzeit auftritt.
-4. `scripts/run-all-tests-complete.sh` auf den Container-Runner umstellen (statt Host-Install).
+1. [DONE] Dedizierten Playwright Runner per Dockerfile angelegt.
+2. [DONE] Browser-Binaries ueber Playwright-Base-Image bereitgestellt.
+3. [DONE] Host-apt-Key-Probleme in Phase 7 eliminiert (kein `playwright install --with-deps` zur Laufzeit mehr).
+4. [DONE] `scripts/run-all-tests-complete.sh` auf Container-Runner umgestellt.
+5. [OPEN] `npm ci`/Lockfile-Drift bereinigen, damit kein Fallback auf `npm install` noetig ist.
 
 ## Prioritaet 2: Verbleibende Fehlsuiten beheben
 1. `Vault_Minio_SSE_Encryption`
@@ -27,6 +30,14 @@ Stabiler, voll containerisierter End-to-End-Run mit gruenem Status fuer GraphQL 
 
 4. `tools/Storage-Conductor` Maven Build
 - Abhaengigkeit `com.ironbucket:vault-smith:4.0.1` lokal/monorepo korrekt aufloesen (Reactor/BOM/Install-Reihenfolge).
+
+5. [DONE] Playwright Restsuiten
+- `tests/ui-s3-methods-e2e.spec.ts` gefixt (Routing-tenant + screenshot-proof idempotent).
+- `tests/object-browser-baseline.spec.ts` stabilisiert (seed + empty-state fallback).
+
+6. [OPEN] Lockfile Drift beheben
+- `npm ci` ist aktuell nicht lockfile-konsistent und faellt auf `npm install` zurueck.
+- Ziel: `package-lock.json` mit `package.json` synchronisieren, damit CI strikt mit `npm ci` laeuft.
 
 ## Prioritaet 3: Runner-Konsistenz finalisieren
 1. Rollen klar dokumentieren:

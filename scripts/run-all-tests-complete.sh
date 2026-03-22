@@ -354,41 +354,39 @@ echo "LGTM stack already running — Loki, Tempo and Mimir are available for tra
 echo ""
 
 PLAYWRIGHT_APP_DIR="$PROJECT_ROOT/ironbucket-app-nextjs"
+PLAYWRIGHT_RUNNER_IMAGE="ironbucket-playwright-runner:local"
 
-# Install dependencies if not present
-if [[ ! -d "$PLAYWRIGHT_APP_DIR/node_modules" ]]; then
-        echo "Installing Next.js / Playwright dependencies..."
-        (cd "$PLAYWRIGHT_APP_DIR" && npm ci --prefer-offline 2>&1) || true
-fi
-
-# Install Playwright browsers if missing
-if [[ ! -d "$PLAYWRIGHT_APP_DIR/node_modules/.cache/ms-playwright" ]] && \
-     [[ ! -d "$HOME/.cache/ms-playwright" ]]; then
-        echo "Installing Playwright browsers..."
-    if ! (cd "$PLAYWRIGHT_APP_DIR" && npx playwright install chromium 2>&1); then
-        echo "Playwright browser-only install failed, retrying with system dependencies..."
-        (cd "$PLAYWRIGHT_APP_DIR" && npx playwright install --with-deps chromium 2>&1) || true
-    fi
+# Build dedicated Playwright runner image if not present locally.
+if ! docker image inspect "$PLAYWRIGHT_RUNNER_IMAGE" >/dev/null 2>&1; then
+    echo "Building dedicated Playwright runner image..."
+    (cd "$PROJECT_ROOT/steel-hammer" && docker build -f DockerfilePlaywrightRunner -t "$PLAYWRIGHT_RUNNER_IMAGE" .)
 fi
 
 run_test_suite "Playwright_E2E_GraphQL_All_Schema_Ops" \
-        "cd '$PLAYWRIGHT_APP_DIR' && \
-         NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://127.0.0.1:8080/graphql \
-         E2E_SENTINEL_URL=http://127.0.0.1:8080 \
-         E2E_GATEWAY_GRAPHQL_URL=http://127.0.0.1:8080/graphql \
-         E2E_KEYCLOAK_TOKEN_URL=https://localhost:7081/realms/dev/protocol/openid-connect/token \
-         OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318 \
-         OTEL_SERVICE_NAME=ironbucket-app-nextjs \
-         npx playwright test \
-             tests/graphql-policy-e2e.spec.ts \
-             tests/graphql-identity-e2e.spec.ts \
-             tests/graphql-tenant-e2e.spec.ts \
-             tests/graphql-audit-e2e.spec.ts \
-             tests/ui-s3-methods-e2e.spec.ts \
-             tests/object-browser-baseline.spec.ts \
-             tests/ui-live-upload-persistence.spec.ts \
-         --reporter=list,json \
-         --output='$TEST_RESULTS_DIR/playwright-artifacts' 2>&1"
+    "docker run --rm --network '$STACK_NETWORK' \
+        -v '$PROJECT_ROOT':/workspaces/IronBucket \
+        -w /workspaces/IronBucket/ironbucket-app-nextjs \
+        -e CI=true \
+        -e PLAYWRIGHT_REPORT_DIR=/workspaces/IronBucket/test-results \
+        -e NODE_EXTRA_CA_CERTS=/workspaces/IronBucket/certs/ca/ca.crt \
+        -e CURL_CA_BUNDLE=/workspaces/IronBucket/certs/ca/ca.crt \
+        -e NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://steel-hammer-sentinel-gear:8080/graphql \
+        -e E2E_SENTINEL_URL=http://steel-hammer-sentinel-gear:8080 \
+        -e E2E_GATEWAY_GRAPHQL_URL=http://steel-hammer-sentinel-gear:8080/graphql \
+        -e E2E_KEYCLOAK_TOKEN_URL=https://steel-hammer-keycloak:7081/realms/dev/protocol/openid-connect/token \
+        -e OTEL_EXPORTER_OTLP_ENDPOINT=http://steel-hammer-otel-collector:4318 \
+        -e OTEL_SERVICE_NAME=ironbucket-app-nextjs \
+        '$PLAYWRIGHT_RUNNER_IMAGE' \
+                        /bin/bash -lc '(npm ci --prefer-offline || npm install --legacy-peer-deps) && npm run build && npx playwright test \
+          tests/graphql-policy-e2e.spec.ts \
+          tests/graphql-identity-e2e.spec.ts \
+          tests/graphql-tenant-e2e.spec.ts \
+          tests/graphql-audit-e2e.spec.ts \
+          tests/ui-s3-methods-e2e.spec.ts \
+          tests/object-browser-baseline.spec.ts \
+          tests/ui-live-upload-persistence.spec.ts \
+          --reporter=list,json \
+          --output=/workspaces/IronBucket/test-results/playwright-artifacts' 2>&1"
 
 # ============================================================================
 # PHASE 8: COLLECT OBSERVABILITY ARTIFACTS

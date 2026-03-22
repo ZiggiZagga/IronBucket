@@ -126,13 +126,12 @@ public class PolicyDataFetcher {
 
     @DgsMutation(field = "addPolicy")
     public Mono<Map<String, Object>> addPolicy(@InputArgument Map<String, Object> input) {
-        return createPolicy(input).block() == null
-            ? Mono.error(new IllegalStateException("addPolicy failed"))
-            : fromBlocking(() -> {
-                PolicyInput pi = fromSchemaInput(input);
-                PolicyRule created = policyService.createPolicy("internal", pi);
-                return toSchemaMap(created, str(input, "effect"));
-            });
+        return fromBlocking(() -> {
+            LOG.info("graphql addPolicy input={}", input);
+            PolicyInput pi = fromSchemaInput(input);
+            PolicyRule created = policyService.createPolicy("internal", pi);
+            return toSchemaMap(created, str(input, "effect"));
+        });
     }
 
     @DgsMutation(field = "updatePolicy")
