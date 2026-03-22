@@ -1,6 +1,6 @@
 # IronBucket Network Policies
 
-Kubernetes NetworkPolicies für Zero-Trust Network Architecture.
+Kubernetes NetworkPolicies for a zero-trust network architecture.
 
 ## Structure
 
@@ -38,16 +38,16 @@ kubectl get networkpolicies -n default
 ## Policy Tiers
 
 ### Tier 1: Ingress (External Traffic)
-- Sentinel-Gear (8080) ← Ingress Controller only
+- Sentinel-Gear (8080) <- Ingress Controller only
 
 ### Tier 2: Service-to-Service
-- Sentinel-Gear → Claimspindel (8081)
-- Sentinel-Gear → Brazz-Nossel (8082)
-- Sentinel-Gear → Buzzle-Vane (8083)
-- Sentinel-Gear → Keycloak (8080)
-- Claimspindel → PostgreSQL (5432)
-- Brazz-Nossel → MinIO (9000)
-- Brazz-Nossel → PostgreSQL (5432)
+- Sentinel-Gear -> Claimspindel (8081)
+- Sentinel-Gear -> Brazz-Nossel (8082)
+- Sentinel-Gear -> Buzzle-Vane (8083)
+- Sentinel-Gear -> Keycloak (8080)
+- Claimspindel -> PostgreSQL (5432)
+- Brazz-Nossel -> MinIO (9000)
+- Brazz-Nossel -> PostgreSQL (5432)
 
 ### Tier 3: Infrastructure
 - Default deny all egress/ingress
@@ -61,7 +61,7 @@ cd services/Sentinel-Gear
 mvn test -Dtest=*NetworkPolicy*
 ```
 
-## Monitoring & Debugging
+## Monitoring and Debugging
 
 ### Check which policies are blocking traffic
 ```bash
