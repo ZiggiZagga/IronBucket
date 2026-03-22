@@ -35,6 +35,26 @@ log() {
   printf '[all-projects-e2e-gate] %s\n' "$*" | tee -a "$LOG_FILE"
 }
 
+ensure_host_cert_permissions() {
+  local cert_root="$ROOT_DIR/certs"
+  local ca_truststore="$cert_root/ca/ca-truststore.p12"
+
+  if [[ ! -d "$cert_root" ]]; then
+    return
+  fi
+
+  # Keep private keys restricted, but make mounted trust/cert artifacts readable for non-root containers.
+  find "$cert_root" -type f -name "*.key" -exec chmod 600 {} + 2>/dev/null || true
+  find "$cert_root" -type f -name "*.crt" -exec chmod 644 {} + 2>/dev/null || true
+  find "$cert_root" -type f -name "*.p12" -exec chmod 644 {} + 2>/dev/null || true
+
+  if [[ -f "$ca_truststore" ]]; then
+    chmod 644 "$ca_truststore" 2>/dev/null || true
+  fi
+
+  log "Normalized certificate file permissions under $cert_root"
+}
+
 run_java_modules() {
   log "Bootstrapping local Java artifacts for cross-module dependencies"
   if (cd "$ROOT_DIR/tools/Vault-Smith" && mvn -B install -DskipTests) >>"$LOG_FILE" 2>&1; then
@@ -157,6 +177,7 @@ JAVA_FAILED_MODULES=""
 UI_FAILED_PROJECTS=""
 
 log "Starting all-projects e2e gate"
+ensure_host_cert_permissions
 run_java_modules
 run_ui_projects
 

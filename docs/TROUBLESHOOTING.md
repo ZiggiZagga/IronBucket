@@ -583,6 +583,127 @@ When reporting issues, include:
 5. Steps to reproduce
 6. Output of `docker ps -a`
 
+---
+
+## TLS / mTLS Troubleshooting
+
+### Graphite-Forge TLS Handshake Failure — `no cipher suites in common`
+
+**Problem:** Spring Cloud Gateway (Sentinel-Gear) cannot establish a TLS connection to Graphite-Forge.
+Logs show:
+```
+Fatal (HANDSHAKE_FAILURE): no cipher suites in common
+No X.509 cert selected for RSA/RSASSA-PSS
+No available authentication scheme
+handshake_failure alert 40
+```
+
+**Root Cause:** The JVM policy disables `TLS_RSA_*` cipher suites via `jdk.tls.disabledAlgorithms`.
+When Graphite-Forge is configured with a **PKCS12 keystore**, JSSE attempts RSA key-exchange ciphers
+(which are disabled) and finds no common cipher suite. The session cannot be established.
+
+**Fix:** Switch Graphite-Forge from PKCS12 to **PEM-based TLS**. Spring Boot 3.x supports
+`server.ssl.certificate` + `server.ssl.certificate-private-key`. PEM mode allows JSSE to select
+`ECDHE_RSA` cipher suites (not disabled).
+
+In `docker-compose-steel-hammer.yml`, replace the PKCS12 keystore env vars for `graphite-forge` with:
+```yaml
+- "SERVER_SSL_CERTIFICATE=file:/vault-pki-certs/services/graphite-forge/fullchain.crt"
+- "SERVER_SSL_CERTIFICATE_PRIVATE_KEY=file:/vault-pki-certs/services/graphite-forge/tls.key"
+- "SERVER_SSL_KEYSTORE="            # explicitly clear to prevent PKCS12 loading
+- "SERVER_SSL_KEYSTORE_PASSWORD="
+- "SERVER_SSL_KEYSTORE_TYPE="
+```
+
+**Enable TLS debug to capture handshake traces:**
+```bash
+# Add to JAVA_TOOL_OPTIONS for graphite-forge in compose (remove after investigation):
+-Djavax.net.debug=ssl,handshake
+
+# Then tail logs:
+docker logs -f steel-hammer-graphite-forge 2>&1 | grep -E 'HANDSHAKE|cipher|X.509|alert|TLS'
+```
+
+**Verify fix:**
+```bash
+# From Sentinel container, check ALPN and certificate
+docker compose -f steel-hammer/docker-compose-steel-hammer.yml \
+  exec steel-hammer-sentinel-gear \
+  openssl s_client -connect steel-hammer-graphite-forge:8084 </dev/null 2>&1 | \
+  grep -E 'ALPN|Cipher|Verify return code'
+# Expected: Verify return code: 0 (ok)
+```
+
+---
+
+### Sentinel → Graphite `/graphql` Proxy Returns "Connection Prematurely Closed"
+
+**Problem:** After TLS handshake succeeds, Spring Cloud Gateway returns HTTP 500 with:
+```
+Connection prematurely closed BEFORE response
+```
+Direct calls from within the network (`curl -H "Authorization: Bearer ..." https://graphite-forge:8084/graphql`) return HTTP 200.
+
+**Likely Cause:** HTTP/2 vs HTTP/1.1 codec mismatch. Spring Cloud Gateway's WebClient may negotiate
+`h2` via ALPN, while Graphite-Forge's embedded Netty server does not advertise `h2`, causing the
+connection to be dropped immediately.
+
+**Diagnosis:**
+```bash
+# Check if Graphite advertises h2 in ALPN
+docker compose -f steel-hammer/docker-compose-steel-hammer.yml \
+  exec steel-hammer-sentinel-gear \
+  openssl s_client -alpn h2 -connect steel-hammer-graphite-forge:8084 </dev/null 2>&1 | grep -i alpn
+# If output says "ALPN protocol: (none)" or "http/1.1", Graphite does not support h2.
+
+# Enable security debug on Graphite to confirm Authorization header arrives:
+# Add to graphite-forge env in compose (temporary):
+- "LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=DEBUG"
+# Then trigger a request and check:
+docker logs steel-hammer-graphite-forge --tail 80 | grep -Ei 'security|denied|401|403|authorization'
+```
+
+**Fix Option A — Enable HTTP/2 on Graphite-Forge:**
+```yaml
+# In docker-compose-steel-hammer.yml, graphite-forge environment:
+- "SERVER_HTTP2_ENABLED=true"
+```
+
+**Fix Option B — Disable HTTP/2 on Spring Cloud Gateway outbound:**
+```yaml
+# In sentinel-gear environment:
+- "SPRING_CLOUD_GATEWAY_HTTPCLIENT_HTTP2_ENABLED=false"
+```
+
+---
+
+### PKI Init Script Does Not Write `intermediate-ca.crt` / `root-ca.crt`
+
+**Problem:** Services or tests reference `intermediate-ca.crt` or `root-ca.crt` but those files do
+not exist in `/vault-pki-certs/services/<service>/`. The init script (`init-vault-pki.sh`) writes
+`issuing-ca.crt` and `ca-chain.crt` but historically skipped the compatibility names.
+
+**Fix:** `steel-hammer/vault/init-vault-pki.sh` was patched to write compatibility copies:
+```sh
+cp "$INT_CA_PEM"  "$SVCDIR/intermediate-ca.crt"
+cp "$ROOT_CA_PEM" "$SVCDIR/root-ca.crt"
+```
+These are written alongside `issuing-ca.crt` / `ca-chain.crt` during every PKI init. Applies on the
+next full stack restart that triggers Vault PKI initialization.
+
+**If live containers need the files immediately (without restart):**
+```bash
+# For each service directory that needs the compatibility files
+SVCDIR=/vault-pki-certs/services/graphite-forge
+docker compose -f steel-hammer/docker-compose-steel-hammer.yml \
+  exec steel-hammer-vault sh -c "
+    cp /vault/pki-certs/ca/int-ca.pem  $SVCDIR/intermediate-ca.crt
+    cp /vault/pki-certs/ca/root-ca.pem $SVCDIR/root-ca.crt
+  "
+```
+
+---
+
 ## Status
 
 **Troubleshooting Guide:** ✅ Comprehensive  

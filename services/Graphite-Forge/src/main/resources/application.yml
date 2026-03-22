@@ -5,6 +5,8 @@ server:
     include-binding-errors: always
   ssl:
     enabled: ${SERVER_SSL_ENABLED:false}
+    certificate: ${SERVER_SSL_CERTIFICATE:}
+    certificate-private-key: ${SERVER_SSL_CERTIFICATE_PRIVATE_KEY:}
     key-store: ${SERVER_SSL_KEYSTORE:}
     key-store-password: ${SERVER_SSL_KEYSTORE_PASSWORD:}
     key-password: ${SERVER_SSL_KEY_PASSWORD:${SERVER_SSL_KEYSTORE_PASSWORD:}}

@@ -223,12 +223,15 @@ issue_cert() {
     exit 1
   fi
   cp "$INT_CA_PEM" "$SVCDIR/issuing-ca.crt"
+  # Compatibility filenames for scripts/tools that expect explicit root/intermediate names.
+  cp "$INT_CA_PEM" "$SVCDIR/intermediate-ca.crt"
+  cp "$ROOT_CA_PEM" "$SVCDIR/root-ca.crt"
   cp "$INT_CHAIN_PEM" "$SVCDIR/ca-chain.crt"
 
   # Build fullchain (leaf + intermediates)
   write_pem_bundle "$SVCDIR/fullchain.crt" "$SVCDIR/tls.crt" "$SVCDIR/ca-chain.crt"
 
-  chmod 644 "$SVCDIR/tls.key" "$SVCDIR/tls.crt" "$SVCDIR/fullchain.crt" "$SVCDIR/ca-chain.crt"
+  chmod 644 "$SVCDIR/tls.key" "$SVCDIR/tls.crt" "$SVCDIR/fullchain.crt" "$SVCDIR/ca-chain.crt" "$SVCDIR/intermediate-ca.crt" "$SVCDIR/root-ca.crt"
 
   # Build PKCS12 keystore for JVM services
   openssl pkcs12 -export \

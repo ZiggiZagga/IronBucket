@@ -6,6 +6,7 @@ server:
     enabled: ${SERVER_SSL_ENABLED:true}
     key-store: ${SERVER_SSL_KEYSTORE:/vault-pki-certs/services/buzzle-vane/keystore.p12}
     key-store-password: ${SERVER_SSL_KEYSTORE_PASSWORD:changeit}
+    key-password: ${SERVER_SSL_KEY_PASSWORD:${SERVER_SSL_KEYSTORE_PASSWORD:changeit}}
     key-store-type: ${SERVER_SSL_KEYSTORE_TYPE:PKCS12}
     trust-store: ${SERVER_SSL_TRUSTSTORE:/vault-pki-certs/ca/ca-truststore.p12}
     trust-store-password: ${SERVER_SSL_TRUSTSTORE_PASSWORD:changeit}

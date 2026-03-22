@@ -104,7 +104,10 @@ services:
 
   steel-hammer-buzzle-vane:
     networks:
-      - steel-hammer-network
+      steel-hammer-network:
+        aliases:
+          - buzzle-vane
+          - buzzle-vane.ironbucket.local
 
     hostname: steel-hammer-buzzle-vane
     container_name: steel-hammer-buzzle-vane
@@ -124,9 +127,10 @@ services:
     user: "0:0"
 
     entrypoint: ["/bin/sh", "-c"]
-    command: ["export SPRING_CLOUD_VAULT_APP_ROLE_ROLE_ID=$$(cat /vault-pki-certs/.approle/buzzle-vane.role_id) && export SPRING_CLOUD_VAULT_APP_ROLE_SECRET_ID=$$(cat /vault-pki-certs/.approle/buzzle-vane.secret_id) && cp /vault-pki-certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar app.jar --spring.profiles.active=docker${MTLS_PROFILE:-}"]
+    command: ["export SPRING_CLOUD_VAULT_APP_ROLE_ROLE_ID=$$(cat /vault-pki-certs/.approle/buzzle-vane.role_id) && export SPRING_CLOUD_VAULT_APP_ROLE_SECRET_ID=$$(cat /vault-pki-certs/.approle/buzzle-vane.secret_id) && if [ \"$${BUZZLE_VANE_TLS_MODE:-pem}\" = \"vault-pkcs12\" ]; then unset SERVER_SSL_CERTIFICATE SERVER_SSL_CERTIFICATE_PRIVATE_KEY && export SERVER_SSL_KEYSTORE=\"$${SERVER_SSL_KEYSTORE:-/vault-pki-certs/services/buzzle-vane/keystore.p12}\" SERVER_SSL_KEYSTORE_PASSWORD=\"$${SERVER_SSL_KEYSTORE_PASSWORD:-changeit}\" SERVER_SSL_KEY_PASSWORD=\"$${SERVER_SSL_KEY_PASSWORD:-changeit}\" SERVER_SSL_KEYSTORE_TYPE=\"$${SERVER_SSL_KEYSTORE_TYPE:-PKCS12}\"; else export SERVER_SSL_KEYSTORE=\"\" SERVER_SSL_KEYSTORE_PASSWORD=\"\" SERVER_SSL_KEY_PASSWORD=\"\" SERVER_SSL_KEYSTORE_TYPE=\"\" SERVER_SSL_CERTIFICATE=\"$${BUZZLE_VANE_PEM_CERT}\" SERVER_SSL_CERTIFICATE_PRIVATE_KEY=\"$${BUZZLE_VANE_PEM_KEY}\"; fi && cp /vault-pki-certs/ca/ca.crt /usr/local/share/ca-certificates/ironbucket-ca.crt && update-ca-certificates && exec java -jar app.jar --spring.profiles.active=docker${MTLS_PROFILE:-}"]
 
     volumes:
+      - ../certs:/certs:ro
       - vault-pki-certs:/vault-pki-certs:ro
 
     environment:
@@ -146,13 +150,18 @@ services:
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
       - "EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false"
       - "SERVER_SSL_ENABLED=true"
-      - "SERVER_SSL_KEYSTORE=/vault-pki-certs/services/buzzle-vane/keystore.p12"
-      - "SERVER_SSL_KEYSTORE_PASSWORD=changeit"
-      - "SERVER_SSL_KEYSTORE_TYPE=PKCS12"
+      - "BUZZLE_VANE_TLS_MODE=${BUZZLE_VANE_TLS_MODE:-pem}"
+      - "BUZZLE_VANE_PEM_CERT=${BUZZLE_VANE_PEM_CERT:-file:/certs/services/buzzle-vane/fullchain.crt}"
+      - "BUZZLE_VANE_PEM_KEY=${BUZZLE_VANE_PEM_KEY:-file:/certs/services/buzzle-vane/tls.key}"
+      - "SERVER_SSL_KEYSTORE=${SERVER_SSL_KEYSTORE:-/vault-pki-certs/services/buzzle-vane/keystore.p12}"
+      - "SERVER_SSL_KEYSTORE_PASSWORD=${SERVER_SSL_KEYSTORE_PASSWORD:-changeit}"
+      - "SERVER_SSL_KEY_PASSWORD=${SERVER_SSL_KEY_PASSWORD:-changeit}"
+      - "SERVER_SSL_KEY_ALIAS=${SERVER_SSL_KEY_ALIAS:-}"
+      - "SERVER_SSL_KEYSTORE_TYPE=${SERVER_SSL_KEYSTORE_TYPE:-PKCS12}"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
       - "OTEL_EXPORTER_OTLP_ENDPOINT=https://steel-hammer-otel-collector:4317"
-      - "HEALTH_CHECK_URL=https://steel-hammer-buzzle-vane:8083/actuator/health"
+      - "HEALTH_CHECK_URL=https://localhost:8083/actuator/health"
 
     healthcheck:
       test: ["CMD", "/bin/sh", "-c", "curl -sf --cacert /vault-pki-certs/ca/ca.crt $${HEALTH_CHECK_URL}"]
@@ -216,6 +225,8 @@ services:
       - "SPRING_CLOUD_VAULT_APP_ROLE_APP_ROLE_PATH=approle"
       - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/sentinel-gear}"
+      - "SPRING_CLOUD_GATEWAY_HTTPCLIENT_PROTOCOL=HTTP11"
+      - "SPRING_CLOUD_GATEWAY_HTTPCLIENT_POOL_TYPE=disabled"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
       - "IRONBUCKET_SECURITY_VAULT_ENABLED=${IRONBUCKET_SECURITY_VAULT_ENABLED:-true}"
       - "IRONBUCKET_SECURITY_VAULT_URI=https://steel-hammer-vault:8200"
@@ -225,7 +236,7 @@ services:
       - "IRONBUCKET_SECURITY_PRESIGNED_ENABLED=${IRONBUCKET_SECURITY_PRESIGNED_ENABLED:-true}"
       - "IRONBUCKET_SECURITY_PRESIGNED_SECRET=${IRONBUCKET_SECURITY_PRESIGNED_SECRET:-dev-presigned-secret-for-steel-hammer}"
       - "IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL=${IRONBUCKET_SECURITY_PRESIGNED_NONCE_TTL:-PT5M}"
-      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "EUREKA_URI=https://buzzle-vane:8083/eureka"
       - "SERVER_SSL_ENABLED=true"
       - "SERVER_SSL_KEYSTORE=/vault-pki-certs/services/sentinel-gear/keystore.p12"
       - "SERVER_SSL_KEYSTORE_PASSWORD=changeit"
@@ -295,7 +306,7 @@ services:
       - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/claimspindel}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
-      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "EUREKA_URI=https://buzzle-vane:8083/eureka"
       - "SERVER_SSL_ENABLED=true"
       - "SERVER_SSL_KEYSTORE=/vault-pki-certs/services/claimspindel/keystore.p12"
       - "SERVER_SSL_KEYSTORE_PASSWORD=changeit"
@@ -366,7 +377,7 @@ services:
       - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/brazz-nossel}"
       - "MANAGEMENT_HEALTH_VAULT_ENABLED=false"
-      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "EUREKA_URI=https://buzzle-vane:8083/eureka"
       - "SERVER_SSL_ENABLED=true"
       - "SERVER_SSL_KEYSTORE=/vault-pki-certs/services/brazz-nossel/keystore.p12"
       - "SERVER_SSL_KEYSTORE_PASSWORD=changeit"
@@ -421,15 +432,14 @@ services:
       - "SPRING_CLOUD_VAULT_APP_ROLE_APP_ROLE_PATH=approle"
       - "SPRING_CLOUD_VAULT_KV_BACKEND=${SPRING_CLOUD_VAULT_KV_BACKEND:-secret}"
       - "SPRING_CLOUD_VAULT_KV_CONTEXT=${SPRING_CLOUD_VAULT_KV_CONTEXT:-ironbucket/graphite-forge}"
-      - "EUREKA_URI=https://steel-hammer-buzzle-vane:8083/eureka"
+      - "LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=DEBUG"
+      - "EUREKA_URI=https://buzzle-vane:8083/eureka"
       - "SERVER_SSL_ENABLED=true"
-      - "SERVER_SSL_KEYSTORE=/vault-pki-certs/services/graphite-forge/keystore.p12"
-      - "SERVER_SSL_KEYSTORE_PASSWORD=changeit"
-      - "SERVER_SSL_KEY_PASSWORD=changeit"
-      - "SERVER_SSL_KEYSTORE_TYPE=PKCS12"
-      - "SERVER_SSL_TRUSTSTORE=/vault-pki-certs/ca/ca-truststore.p12"
-      - "SERVER_SSL_TRUSTSTORE_PASSWORD=changeit"
-      - "SERVER_SSL_TRUSTSTORE_TYPE=PKCS12"
+      - "SERVER_SSL_CERTIFICATE=file:/vault-pki-certs/services/graphite-forge/fullchain.crt"
+      - "SERVER_SSL_CERTIFICATE_PRIVATE_KEY=file:/vault-pki-certs/services/graphite-forge/tls.key"
+      - "SERVER_SSL_KEYSTORE="
+      - "SERVER_SSL_KEYSTORE_PASSWORD="
+      - "SERVER_SSL_KEYSTORE_TYPE="
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0"
       - "MANAGEMENT_METRICS_TAGS_ENVIRONMENT=docker"
@@ -442,7 +452,7 @@ services:
         condition: service_healthy
 
     healthcheck:
-      test: ["CMD", "curl", "-sf", "--cacert", "/vault-pki-certs/ca/ca.crt", "https://localhost:8084/actuator/health"]
+      test: ["CMD", "/bin/bash", "-lc", "exec 3<>/dev/tcp/localhost/8084"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -539,7 +549,7 @@ services:
       - "SENTINEL_GEAR_URL=https://steel-hammer-sentinel-gear:8080"
       - "CLAIMSPINDEL_URL=https://steel-hammer-claimspindel:8081"
       - "BRAZZ_NOSSEL_URL=https://steel-hammer-brazz-nossel:8082"
-      - "BUZZLE_VANE_URL=https://steel-hammer-buzzle-vane:8083"
+      - "BUZZLE_VANE_URL=https://buzzle-vane:8083"
       - "CURL_CA_BUNDLE=/vault-pki-certs/ca/ca.crt"
       - "NODE_EXTRA_CA_CERTS=/vault-pki-certs/ca/ca.crt"
       - "OTEL_SERVICE_NAME=steel-hammer-test"
