@@ -3,14 +3,15 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STACK_DIR="$ROOT_DIR/steel-hammer"
-COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
+LGTM_COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
+APP_COMPOSE_FILE="$STACK_DIR/docker-compose-steel-hammer.yml"
 
 source "$ROOT_DIR/scripts/.env.defaults"
 source "$ROOT_DIR/scripts/lib/common.sh"
 register_error_trap
 ensure_cert_artifacts
 
-TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+RUN_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
 
 resolve_test_results_dir() {
@@ -33,7 +34,7 @@ if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
   echo "[prove-phase2-performance] Using fallback test-results directory: $TEST_RESULTS_DIR" >&2
 fi
 
-OUT_DIR="$TEST_RESULTS_DIR/phase2-performance/$TIMESTAMP"
+OUT_DIR="$TEST_RESULTS_DIR/phase2-performance/$RUN_TIMESTAMP"
 EVIDENCE_DIR="$OUT_DIR/evidence"
 REPORT_FILE="$OUT_DIR/PHASE2_PERFORMANCE_REPORT.md"
 HISTORY_CSV="$TEST_RESULTS_DIR/phase2-performance/performance-history.csv"
@@ -164,13 +165,24 @@ PY
 }
 
 if [[ "$PERF_REUSE_STACK" != "true" ]]; then
-  log "Starting LGTM + services stack for performance proof"
+  log "Starting LGTM stack and Steel-Hammer app stack for performance proof"
   (
     cd "$STACK_DIR"
-    docker compose -f "$COMPOSE_FILE" up -d --build
+    docker compose -f "$LGTM_COMPOSE_FILE" up -d --build
+    docker compose -f "$APP_COMPOSE_FILE" up -d --build \
+      steel-hammer-postgres \
+      steel-hammer-vault \
+      steel-hammer-keycloak \
+      steel-hammer-postgres-exporter \
+      steel-hammer-buzzle-vane \
+      steel-hammer-graphite-forge \
+      steel-hammer-minio \
+      steel-hammer-sentinel-gear \
+      steel-hammer-claimspindel \
+      steel-hammer-brazz-nossel
   ) > "$EVIDENCE_DIR/compose-up.log" 2>&1
 else
-  log "Reusing existing LGTM + services stack for performance proof"
+  log "Reusing existing LGTM stack and Steel-Hammer app stack for performance proof"
 fi
 
 NETWORK_NAME="$(docker inspect steel-hammer-loki --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' 2>/dev/null | head -n1 | tr -d '\r')"
@@ -182,9 +194,9 @@ log "Discovered network: $NETWORK_NAME"
 
 STACK_OK=true
 wait_internal_http "Graphite-Forge" "https://steel-hammer-graphite-forge:8084/actuator/health" || STACK_OK=false
-wait_internal_http "Tempo" "https://steel-hammer-tempo:3200/ready" || STACK_OK=false
-wait_internal_http "Loki" "https://steel-hammer-loki:3100/ready" || STACK_OK=false
-wait_internal_http "Mimir" "https://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
+wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
+wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
+wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
 
 if [[ "$STACK_OK" != "true" ]]; then
   echo "Stack not ready for performance proof" >&2
@@ -322,12 +334,12 @@ mkdir -p "$(dirname "$HISTORY_CSV")"
 if [[ ! -f "$HISTORY_CSV" ]]; then
   echo "timestamp,target,requests,concurrency,success_rate,error_rate,rps,latency_avg_ms,latency_p50_ms,latency_p95_ms,latency_p99_ms,latency_ok,latency_p99_ok,throughput_ok,success_rate_ok,error_rate_ok" > "$HISTORY_CSV"
 fi
-echo "$TIMESTAMP,$PERF_TARGET_URL,$PERF_REQUESTS,$PERF_CONCURRENCY,$success_rate,$error_rate,$rps,$latency_avg_ms,$latency_p50_ms,$latency_p95_ms,$latency_p99_ms,$LATENCY_OK,$LATENCY_P99_OK,$THROUGHPUT_OK,$SUCCESS_RATE_OK,$ERROR_RATE_OK" >> "$HISTORY_CSV"
+echo "$RUN_TIMESTAMP,$PERF_TARGET_URL,$PERF_REQUESTS,$PERF_CONCURRENCY,$success_rate,$error_rate,$rps,$latency_avg_ms,$latency_p50_ms,$latency_p95_ms,$latency_p99_ms,$LATENCY_OK,$LATENCY_P99_OK,$THROUGHPUT_OK,$SUCCESS_RATE_OK,$ERROR_RATE_OK" >> "$HISTORY_CSV"
 
 cat > "$REPORT_FILE" <<EOF
 # Phase 2 Performance Proof Report
 
-- Timestamp (UTC): $TIMESTAMP
+- Timestamp (UTC): $RUN_TIMESTAMP
 - Target URL: $PERF_TARGET_URL
 - Requests: $PERF_REQUESTS
 - Concurrency: $PERF_CONCURRENCY
@@ -384,7 +396,8 @@ if [[ "$KEEP_STACK" != "true" ]]; then
   log "Stopping stack"
   (
     cd "$STACK_DIR"
-    docker compose -f "$COMPOSE_FILE" down
+    docker compose -f "$APP_COMPOSE_FILE" down
+    docker compose -f "$LGTM_COMPOSE_FILE" down
   ) >> "$EVIDENCE_DIR/compose-down.log" 2>&1 || true
 fi
 

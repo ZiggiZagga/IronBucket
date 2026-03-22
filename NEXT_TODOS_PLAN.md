@@ -6,6 +6,40 @@ Stable, fully-containerized end-to-end run with green status for GraphQL + UI + 
 ## Session Summary (2026-03-22)
 This session completed the Sentinel -> Graphite GraphQL proxy fix and re-ran the full all-projects E2E gate.
 
+### Additional Runtime Findings (2026-03-22, follow-up)
+- Certificate bootstrap is now part of the compose flow via `steel-hammer-cert-bootstrap`.
+   Missing bootstrap certs in `certs/` no longer require a manual `generate-certificates.sh` pre-step.
+- Graphite-Forge had a second runtime blocker unrelated to TLS:
+   duplicate DGS registrations from `GovernanceDataFetcher` overlapped the dedicated fetchers and
+   caused `Duplicate data fetchers registered for Query.getPolicyStatistics` during startup.
+- Graphite-Forge also required PEM mode to be internally consistent at startup:
+   `SERVER_SSL_TRUSTSTORE`, `SERVER_SSL_TRUSTSTORE_PASSWORD`, and `SERVER_SSL_TRUSTSTORE_TYPE`
+   must be empty when no server truststore is used, otherwise Spring Boot still attempts to
+   materialize a PKCS12 truststore from an empty location.
+- Keycloak `dev` realm authentication was verified from inside the compose network using the realm file:
+   client `dev-client` + secret `dev-secret` with password grant for user `bob` / `bobP@ss`.
+   `client_credentials` does not work for `dev-client` because service accounts are not enabled.
+- Verified runtime path again from inside the network:
+   `POST https://steel-hammer-sentinel-gear:8080/graphql` with the `bob` token returns `HTTP 200`
+   and `{"data":{"__typename":"Query"}}`.
+- Verified actual object operations through Sentinel Gear to MinIO using the existing UI E2E flows,
+    not just GraphQL reachability:
+    - `tests/ui-live-upload-persistence.spec.ts` passed and wrote
+       `test-results/ui-e2e-traces/ui-live-upload-persistence.json` with `verified: true` for
+       bucket `default-alice-files`.
+    - `tests/ui-s3-methods-e2e.spec.ts` passed and wrote
+       `test-results/ui-e2e-traces/ui-s3-methods-e2e.json` proving `createBucket`, `listBuckets`,
+       `getBucket`, `uploadObject`, `listObjects`, `getObject`, `getBucketRoutingDecision`,
+       `downloadObject`, `deleteObject`, and `deleteBucket` all succeeded through Sentinel.
+    - Concrete proof artifact values from the passing run:
+       bucket `default-alice-methods-1774212707180`,
+       key `alice-all-methods-1774212707180.txt`,
+       traceId `8cc1832ff9cecfcdc374e20456b3cf80`.
+- Observability gap still remains:
+    the request path is proven functionally, but the propagated trace id was not easily recoverable
+    from plain `docker logs` on Sentinel/Graphite/Claimspindel/Brazz during this run. Log/trace
+    correlation still needs a dedicated observability follow-up.
+
 ### Root Cause Found (TLS Handshake): PKCS12 + Disabled RSA Cipher Suites
 The JVM policy (`jdk.tls.disabledAlgorithms`) disables `TLS_RSA_*` cipher suites. Graphite-Forge was
 configured with a PKCS12 keystore. When JSSE attempted TLS, it tried RSA key-exchange ciphers (disabled)
@@ -43,6 +77,12 @@ Verified from inside the compose network with Keycloak realm `dev` token (`dev-c
 {"data":{"__typename":"Query"}}
 ```
 
+Verified authentication detail:
+- `dev-client` is usable with password grant for seeded realm users.
+- Example confirmed credential: `bob` / `bobP@ss`.
+- `client_credentials` for `dev-client` returns `unauthorized_client` because service-account access
+   is not enabled in `steel-hammer/keycloak/dev-realm.json`.
+
 ### Also Fixed: PKI Init Script Naming Contract
 `steel-hammer/vault/init-vault-pki.sh` patched to also write `intermediate-ca.crt` and `root-ca.crt`
 as compatibility copies alongside the existing `issuing-ca.crt` / `ca-chain.crt`.
@@ -56,33 +96,43 @@ Result summary:
 - UI projects: `1/2` passed
 - Overall: `FAILED`
 
-Only remaining failure:
+Historical failing item in that full gate run:
 - `ironbucket-app-nextjs` (Playwright E2E)
+
+Targeted rerun status from this session:
+- `tests/ui-live-upload-persistence.spec.ts`: `PASS`
+- `tests/ui-s3-methods-e2e.spec.ts`: `PASS`
+- Playwright report: `test-results/ui-playwright-report.json`
+- Proof artifacts: `test-results/ui-e2e-traces/`
 
 ---
 
-## Priority 1: Fix `ironbucket-app-nextjs` Playwright E2E Failure
+## Priority 1: Re-run the Full UI Gate with the Proven Fix Path
 
-### Step 1 — Reproduce using canonical script
-Use the steel-hammer runner scripts for deterministic reproduction:
+### Step 1 — Re-run the canonical containerized UI gate
+The targeted proof specs are green. Re-run the broader gate to replace the stale historical failure:
 ```bash
 bash steel-hammer/test-scripts/run-e2e-complete.sh
 ```
 
-### Step 2 — Capture Playwright artifacts and failing spec
+### Step 2 — Preserve the passing proof artifacts
 Collect and inspect:
-- `ironbucket-app-nextjs/test-results/`
-- `ironbucket-app-nextjs/playwright-report/`
-- `test-results/all-projects-e2e-gate/20260322T190853Z/gate.log`
+- `test-results/ui-playwright-report.json`
+- `test-results/ui-playwright-report.xml`
+- `test-results/ui-e2e-traces/`
 
 ### Step 3 — Validate environment + endpoints in test runtime
-Confirm the UI test container sees expected URLs and healthy dependencies:
+Confirm the UI test container still sees expected URLs and healthy dependencies:
 ```bash
 docker compose -f steel-hammer/docker-compose-steel-hammer.yml ps
 docker compose -f steel-hammer/docker-compose-steel-hammer.yml exec steel-hammer-sentinel-gear curl -sk https://steel-hammer-sentinel-gear:8080/graphql
 ```
 
-### Step 4 — Re-run only failing UI gate until green
+### Step 4 — Close the observability correlation gap
+Functional proof is complete, but tracing evidence is weaker than it should be. Ensure the same request
+can be found cleanly in logs/traces across Sentinel, Graphite, Claimspindel, and Brazz.
+
+### Step 5 — Re-run the aggregate gate
 ```bash
 bash scripts/ci/run-all-projects-e2e-gate.sh
 ```

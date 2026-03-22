@@ -3,14 +3,16 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STACK_DIR="$ROOT_DIR/steel-hammer"
-COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
-TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+LGTM_COMPOSE_FILE="$STACK_DIR/docker-compose-lgtm.yml"
+APP_COMPOSE_FILE="$STACK_DIR/docker-compose-steel-hammer.yml"
 TEST_RESULTS_DIR="${TEST_RESULTS_DIR:-$ROOT_DIR/test-results}"
 
 source "$ROOT_DIR/scripts/.env.defaults"
 source "$ROOT_DIR/scripts/lib/common.sh"
 register_error_trap
 ensure_cert_artifacts
+
+RUN_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 
 resolve_test_results_dir() {
   local requested_dir="$1"
@@ -32,7 +34,7 @@ if [[ "$TEST_RESULTS_DIR" != "$REQUESTED_TEST_RESULTS_DIR" ]]; then
   echo "[prove-phase2-observability] Using fallback test-results directory: $TEST_RESULTS_DIR" >&2
 fi
 
-OUT_DIR="$TEST_RESULTS_DIR/phase2-observability/$TIMESTAMP"
+OUT_DIR="$TEST_RESULTS_DIR/phase2-observability/$RUN_TIMESTAMP"
 EVIDENCE_DIR="$OUT_DIR/evidence"
 REPORT_FILE="$OUT_DIR/PHASE2_OBSERVABILITY_PROOF_REPORT.md"
 KEEP_STACK="${KEEP_STACK:-false}"
@@ -173,15 +175,27 @@ print('false')
 PY
 }
 
-log "Starting LGTM + services stack"
+log "Starting LGTM stack and Steel-Hammer app stack"
 (
   cd "$STACK_DIR"
-  docker compose -f "$COMPOSE_FILE" up -d --build
+  docker compose -f "$LGTM_COMPOSE_FILE" up -d --build
+  docker compose -f "$APP_COMPOSE_FILE" up -d --build \
+    steel-hammer-postgres \
+    steel-hammer-vault \
+    steel-hammer-keycloak \
+    steel-hammer-postgres-exporter \
+    steel-hammer-buzzle-vane \
+    steel-hammer-graphite-forge \
+    steel-hammer-minio \
+    steel-hammer-sentinel-gear \
+    steel-hammer-claimspindel \
+    steel-hammer-brazz-nossel
 ) > "$EVIDENCE_DIR/compose-up.log" 2>&1
 
 (
   cd "$STACK_DIR"
-  docker compose -f "$COMPOSE_FILE" ps
+  docker compose -f "$LGTM_COMPOSE_FILE" ps
+  docker compose -f "$APP_COMPOSE_FILE" ps
 ) > "$EVIDENCE_DIR/compose-ps-initial.txt"
 
 NETWORK_NAME="$(docker inspect steel-hammer-loki --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' | head -n1 | tr -d '\r')"
@@ -192,14 +206,14 @@ fi
 log "Discovered network: $NETWORK_NAME"
 
 STACK_OK=true
-wait_internal_http "Loki" "https://steel-hammer-loki:3100/ready" || STACK_OK=false
-wait_internal_http "Tempo" "https://steel-hammer-tempo:3200/ready" || STACK_OK=false
-wait_internal_http "Mimir" "https://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
+wait_internal_http "Loki" "http://steel-hammer-loki:3100/ready" || STACK_OK=false
+wait_internal_http "Tempo" "http://steel-hammer-tempo:3200/ready" || STACK_OK=false
+wait_internal_http "Mimir" "http://steel-hammer-mimir:9009/prometheus/api/v1/status/buildinfo" || STACK_OK=false
 wait_internal_http "Keycloak" "https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration" 90 3 || STACK_OK=false
 INFRA_ENDPOINTS_READY=true
 wait_internal_http "Keycloak metrics" "https://steel-hammer-keycloak:7081/metrics" 90 3 || INFRA_ENDPOINTS_READY=false
 wait_internal_http "MinIO metrics" "https://steel-hammer-minio:9000/minio/v2/metrics/cluster" || INFRA_ENDPOINTS_READY=false
-wait_internal_http "Postgres exporter metrics" "https://steel-hammer-postgres-exporter:9187/metrics" || INFRA_ENDPOINTS_READY=false
+wait_internal_http "Postgres exporter metrics" "http://steel-hammer-postgres-exporter:9187/metrics" || INFRA_ENDPOINTS_READY=false
 wait_internal_http "Buzzle-Vane" "https://steel-hammer-buzzle-vane:8083/actuator/health" || STACK_OK=false
 wait_internal_http "Claimspindel" "https://steel-hammer-claimspindel:8081/actuator/health" || STACK_OK=false
 wait_internal_http "Brazz-Nossel" "https://steel-hammer-brazz-nossel:8082/actuator/health" || STACK_OK=false
@@ -212,7 +226,7 @@ run_internal_curl "https://steel-hammer-brazz-nossel:8082/actuator/prometheus" "
 run_container_local_curl "steel-hammer-sentinel-gear" "https://localhost:8081/actuator/prometheus" "$EVIDENCE_DIR/sentinel-prometheus.txt" || true
 run_internal_curl "https://steel-hammer-keycloak:7081/metrics" "$EVIDENCE_DIR/keycloak-metrics.txt" || true
 run_internal_curl "https://steel-hammer-minio:9000/minio/v2/metrics/cluster" "$EVIDENCE_DIR/minio-metrics.txt" || true
-run_internal_curl "https://steel-hammer-postgres-exporter:9187/metrics" "$EVIDENCE_DIR/postgres-exporter-metrics.txt" || true
+run_internal_curl "http://steel-hammer-postgres-exporter:9187/metrics" "$EVIDENCE_DIR/postgres-exporter-metrics.txt" || true
 
 log "Generating synthetic OTLP trace"
 OTLP_TRACE_JSON="$EVIDENCE_DIR/synthetic-trace.json"
@@ -249,7 +263,7 @@ PY
 OTLP_POST_RAW="$EVIDENCE_DIR/otlp-trace-post-raw.txt"
 docker run --rm --network "$NETWORK_NAME" -v "$EVIDENCE_DIR:/evidence:rw" curlimages/curl:8.12.1 \
   -sS -w "\n%{http_code}" \
-  -X POST "https://steel-hammer-otel-collector:4318/v1/traces" \
+  -X POST "http://steel-hammer-otel-collector:4318/v1/traces" \
   -H "Content-Type: application/json" \
   --data @/evidence/synthetic-trace.json > "$OTLP_POST_RAW"
 
@@ -262,7 +276,7 @@ log "Collecting backend evidence"
 QUERY_END_NS="$(date +%s%N)"
 QUERY_START_NS="$((QUERY_END_NS - 3600000000000))"
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "https://steel-hammer-loki:3100/loki/api/v1/query_range" \
+  "http://steel-hammer-loki:3100/loki/api/v1/query_range" \
   --data-urlencode 'query={container="steel-hammer-brazz-nossel"}' \
   --data-urlencode "start=${QUERY_START_NS}" \
   --data-urlencode "end=${QUERY_END_NS}" \
@@ -270,15 +284,15 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
   > "$EVIDENCE_DIR/loki-query-brazz.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "https://steel-hammer-loki:3100/loki/api/v1/query_range" \
+  "http://steel-hammer-loki:3100/loki/api/v1/query_range" \
   --data-urlencode 'query={service_name=~".+"}' \
   --data-urlencode "start=${QUERY_START_NS}" \
   --data-urlencode "end=${QUERY_END_NS}" \
   --data-urlencode 'limit=200' \
   > "$EVIDENCE_DIR/loki-query-services.json" || true
 
-run_internal_curl "https://steel-hammer-loki:3100/loki/api/v1/labels" "$EVIDENCE_DIR/loki-labels.json" || true
-run_internal_curl "https://steel-hammer-tempo:3200/metrics" "$EVIDENCE_DIR/tempo-metrics.txt" || true
+run_internal_curl "http://steel-hammer-loki:3100/loki/api/v1/labels" "$EVIDENCE_DIR/loki-labels.json" || true
+run_internal_curl "http://steel-hammer-tempo:3200/metrics" "$EVIDENCE_DIR/tempo-metrics.txt" || true
 # Collector telemetry endpoint is frequently bound to localhost inside container.
 run_container_local_curl "steel-hammer-otel-collector" "http://localhost:8888/metrics" "$EVIDENCE_DIR/otel-collector-metrics.txt" || true
 
@@ -299,32 +313,32 @@ PY
 )"
 UI_TRACEPARENT="00-${UI_TRACE_ID}-${UI_SPAN_ID}-01"
 
-docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -i \
   -H "X-Correlation-ID: ${ERROR_CORR_ID}" \
   "https://steel-hammer-graphite-forge:8084/non-existent-endpoint" \
   > "$EVIDENCE_DIR/graphite-404-response.txt" || true
 
-docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -i \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: ${GRAPHQL_CORR_ID}" \
   --data '{"query":"{"}' \
   "https://steel-hammer-graphite-forge:8084/graphql" \
   > "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt" || true
 
-docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -i \
   -H "X-Correlation-ID: ${PROTECTED_UNAUTH_CORR_ID}" \
   "https://steel-hammer-brazz-nossel:8082/s3/buckets" \
   > "$EVIDENCE_DIR/brazz-protected-unauth-response.txt" || true
 
 # Semantic correlation assertion stimulus: same correlation id through gateway and direct management plane.
-docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -i \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: ${SEMANTIC_CORR_ID}" \
   --data '{"query":"{"}' \
   "https://steel-hammer-sentinel-gear:8080/graphql" \
   > "$EVIDENCE_DIR/sentinel-graphql-parse-error-response.txt" || true
 
-docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -i \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: ${SEMANTIC_CORR_ID}" \
   --data '{"query":"{"}' \
@@ -332,7 +346,7 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
   > "$EVIDENCE_DIR/graphite-graphql-semantic-correlation-response.txt" || true
 
 # P6-2 stimulus: UI-style traceparent propagated through gateway so we can look up the exact trace in Tempo.
-docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -i \
+docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -ksS -i \
   -H "Content-Type: application/json" \
   -H "traceparent: ${UI_TRACEPARENT}" \
   -H "X-Correlation-ID: ${SEMANTIC_CORR_ID}" \
@@ -378,7 +392,7 @@ PY
 UI_TRACE_BRIDGE_POST_RAW="$EVIDENCE_DIR/ui-trace-bridge-post-raw.txt"
 docker run --rm --network "$NETWORK_NAME" -v "$EVIDENCE_DIR:/evidence:rw" curlimages/curl:8.12.1 \
   -sS -w "\n%{http_code}" \
-  -X POST "https://steel-hammer-otel-collector:4318/v1/traces" \
+  -X POST "http://steel-hammer-otel-collector:4318/v1/traces" \
   -H "Content-Type: application/json" \
   --data @/evidence/ui-trace-bridge.json > "$UI_TRACE_BRIDGE_POST_RAW" || true
 
@@ -390,7 +404,7 @@ for attempt in {1..8}; do
   TEMPO_TRACE_LOOKUP_RAW="$EVIDENCE_DIR/tempo-trace-lookup-raw-attempt-${attempt}.txt"
   docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 \
     -sS -w "\n%{http_code}" \
-    "https://steel-hammer-tempo:3200/api/traces/${UI_TRACE_ID}" > "$TEMPO_TRACE_LOOKUP_RAW" || true
+    "http://steel-hammer-tempo:3200/api/traces/${UI_TRACE_ID}" > "$TEMPO_TRACE_LOOKUP_RAW" || true
 
   TEMPO_TRACE_LOOKUP_STATUS="$(tail -n1 "$TEMPO_TRACE_LOOKUP_RAW" 2>/dev/null || echo 000)"
   sed '$d' "$TEMPO_TRACE_LOOKUP_RAW" > "$EVIDENCE_DIR/tempo-trace-lookup.json"
@@ -405,7 +419,7 @@ for attempt in {1..8}; do
 done
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "https://steel-hammer-loki:3100/loki/api/v1/query_range" \
+  "http://steel-hammer-loki:3100/loki/api/v1/query_range" \
   --data-urlencode 'query={service_name=~"steel-hammer-(sentinel-gear|graphite-forge)"}' \
   --data-urlencode "start=${QUERY_START_NS}" \
   --data-urlencode "end=${QUERY_END_NS}" \
@@ -413,28 +427,29 @@ docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
   > "$EVIDENCE_DIR/loki-query-correlation-semantic.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=up' \
   > "$EVIDENCE_DIR/mimir-query-up.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=max_over_time(up{job="steel-hammer-keycloak"}[10m])' \
   > "$EVIDENCE_DIR/mimir-query-keycloak-up.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=max_over_time(up{job="steel-hammer-minio"}[10m])' \
   > "$EVIDENCE_DIR/mimir-query-minio-up.json" || true
 
 docker run --rm --network "$NETWORK_NAME" curlimages/curl:8.12.1 -sS -G \
-  "https://steel-hammer-mimir:9009/prometheus/api/v1/query" \
+  "http://steel-hammer-mimir:9009/prometheus/api/v1/query" \
   --data-urlencode 'query=max_over_time(up{job="steel-hammer-postgres-exporter"}[10m])' \
   > "$EVIDENCE_DIR/mimir-query-postgres-exporter-up.json" || true
 
 (
   cd "$STACK_DIR"
-  docker compose -f "$COMPOSE_FILE" ps
+  docker compose -f "$LGTM_COMPOSE_FILE" ps
+  docker compose -f "$APP_COMPOSE_FILE" ps
 ) > "$EVIDENCE_DIR/compose-ps-final.txt"
 
 PROM_ENDPOINTS_OK=true
@@ -590,7 +605,7 @@ for service_container in \
 done
 
 ERROR_404_STATUS_OK=false
-if grep -Eq '^HTTP/1.1 (401|403|404)' "$EVIDENCE_DIR/graphite-404-response.txt"; then
+if grep -Eq '^HTTP/(1\.1|2)(\.?0)? (401|403|404)' "$EVIDENCE_DIR/graphite-404-response.txt"; then
   ERROR_404_STATUS_OK=true
 fi
 
@@ -600,10 +615,10 @@ if grep -Eiq "^X-Correlation-ID: ${ERROR_CORR_ID}" "$EVIDENCE_DIR/graphite-404-r
 fi
 
 GRAPHQL_PARSE_ERROR_OK=false
-if grep -q '^HTTP/1.1 200' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt" && \
+if grep -Eq '^HTTP/(1\.1|2)(\.?0)? 200' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt" && \
    grep -q '"classification":"InvalidSyntax"' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt"; then
   GRAPHQL_PARSE_ERROR_OK=true
-elif grep -Eq '^HTTP/1.1 (401|403)' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt"; then
+elif grep -Eq '^HTTP/(1\.1|2)(\.?0)? (401|403)' "$EVIDENCE_DIR/graphite-graphql-parse-error-response.txt"; then
   GRAPHQL_PARSE_ERROR_OK=true
 fi
 
@@ -662,8 +677,9 @@ fi
 cat > "$REPORT_FILE" <<EOF
 # Phase 2 Observability Proof Report
 
-- Timestamp (UTC): $TIMESTAMP
-- Stack compose file: steel-hammer/docker-compose-lgtm.yml
+- Timestamp (UTC): $RUN_TIMESTAMP
+- LGTM compose file: steel-hammer/docker-compose-lgtm.yml
+- App compose file: steel-hammer/docker-compose-steel-hammer.yml
 - Evidence directory: $EVIDENCE_DIR
 
 ## Results
@@ -739,7 +755,8 @@ if [[ "$KEEP_STACK" != "true" ]]; then
   log "Stopping stack"
   (
     cd "$STACK_DIR"
-    docker compose -f "$COMPOSE_FILE" down
+    docker compose -f "$APP_COMPOSE_FILE" down
+    docker compose -f "$LGTM_COMPOSE_FILE" down
   ) >> "$EVIDENCE_DIR/compose-down.log" 2>&1 || true
 fi
 

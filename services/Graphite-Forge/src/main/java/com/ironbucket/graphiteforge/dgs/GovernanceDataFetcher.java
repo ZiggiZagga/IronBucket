@@ -1,6 +1,5 @@
 package com.ironbucket.graphiteforge.dgs;
 
-import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsMutation;
 import com.netflix.graphql.dgs.DgsQuery;
 import com.netflix.graphql.dgs.InputArgument;
@@ -15,7 +14,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-@DgsComponent
 public class GovernanceDataFetcher {
 
     private final ConcurrentMap<String, Map<String, Object>> tenants = new ConcurrentHashMap<>();

@@ -57,6 +57,13 @@ ensure_host_cert_permissions() {
 
 run_java_modules() {
   log "Bootstrapping local Java artifacts for cross-module dependencies"
+  if bash "$ROOT_DIR/scripts/ci/run-maven-in-container.sh" "services/Pactum-Scroll" -B -V install -DskipTests >>"$LOG_FILE" 2>&1; then
+    log "PASS: bootstrap services/Pactum-Scroll install -DskipTests"
+  else
+    log "FAIL: bootstrap services/Pactum-Scroll install -DskipTests"
+    JAVA_FAILED_MODULES+="services/Pactum-Scroll (bootstrap install)\n"
+  fi
+
   if (cd "$ROOT_DIR/tools/Vault-Smith" && mvn -B install -DskipTests) >>"$LOG_FILE" 2>&1; then
     log "PASS: bootstrap tools/Vault-Smith install -DskipTests"
   else

@@ -1,5 +1,24 @@
 services:
 
+  steel-hammer-cert-bootstrap:
+    networks:
+      - steel-hammer-network
+
+    build:
+      context: .
+      dockerfile: ./cert-bootstrap/Dockerfile
+    container_name: steel-hammer-cert-bootstrap
+    hostname: steel-hammer-cert-bootstrap
+
+    working_dir: /certs
+    entrypoint: ["/bin/bash", "/bootstrap/entrypoint.sh"]
+
+    volumes:
+      - ../certs:/certs
+      - ./cert-bootstrap/entrypoint.sh:/bootstrap/entrypoint.sh:ro
+
+    restart: "no"
+
   steel-hammer-vault:
     networks:
       - steel-hammer-network
@@ -29,6 +48,10 @@ services:
     environment:
       - "VAULT_ADDR=https://127.0.0.1:8200"
       - "VAULT_CACERT=/certs/ca/ca.crt"
+
+    depends_on:
+      steel-hammer-cert-bootstrap:
+        condition: service_completed_successfully
 
     healthcheck:
       test: ["CMD", "sh", "-c", "wget --no-check-certificate -qO- https://127.0.0.1:8200/v1/sys/health?standbyok=true && test -f /vault/pki-certs/.ready"]
@@ -88,19 +111,42 @@ services:
       #- "KC_HTTPS_KEY_STORE_PASSWORD=KC_HTTPS_KEY_STORE_PASSWORD"
       - "KC_BOOTSTRAP_ADMIN_USERNAME=admin"
       - "KC_BOOTSTRAP_ADMIN_PASSWORD=admin"
+      - "KC_METRICS_ENABLED=true"
+      - "KC_HEALTH_ENABLED=true"
+      - "KC_LEGACY_OBSERVABILITY_INTERFACE=true"
       - "KC_DB=postgres"
       - "KC_DB_USERNAME=keycloak_db_user"
       - "KC_DB_PASSWORD=keycloak_db_pass"
       - "KC_DB_URL=jdbc:postgresql://steel-hammer-postgres:5432/keycloak"
 
     depends_on:
-      - steel-hammer-postgres
+      steel-hammer-cert-bootstrap:
+        condition: service_completed_successfully
+      steel-hammer-postgres:
+        condition: service_healthy
 
     healthcheck:
       test: ["CMD", "curl", "-kf", "https://localhost:7081/realms/dev/.well-known/openid-configuration"]
       interval: 10s
       timeout: 5s
       retries: 12
+
+  steel-hammer-postgres-exporter:
+    networks:
+      - steel-hammer-network
+
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: steel-hammer-postgres-exporter
+    hostname: steel-hammer-postgres-exporter
+
+    environment:
+      - "DATA_SOURCE_NAME=postgresql://postgres:postgres_admin_pw@steel-hammer-postgres:5432/postgres?sslmode=disable"
+
+    depends_on:
+      steel-hammer-postgres:
+        condition: service_healthy
+
+    restart: always
 
   steel-hammer-buzzle-vane:
     networks:
@@ -113,10 +159,12 @@ services:
     container_name: steel-hammer-buzzle-vane
 
     build:
-      context: ../services/Buzzle-Vane
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: services/Buzzle-Vane/Dockerfile
 
     depends_on:
+      steel-hammer-cert-bootstrap:
+        condition: service_completed_successfully
       steel-hammer-keycloak:
         condition: service_healthy
       steel-hammer-postgres:
@@ -179,8 +227,8 @@ services:
     container_name: steel-hammer-sentinel-gear
 
     build:
-      context: ../services/Sentinel-Gear
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: services/Sentinel-Gear/Dockerfile
 
     ports:
       - "8080:8080"
@@ -267,8 +315,8 @@ services:
     container_name: steel-hammer-claimspindel
 
     build:
-      context: ../services/Claimspindel
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: services/Claimspindel/Dockerfile
 
     depends_on:
       steel-hammer-keycloak:
@@ -334,8 +382,8 @@ services:
     container_name: steel-hammer-brazz-nossel
 
     build:
-      context: ../services/Brazz-Nossel
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: services/Brazz-Nossel/Dockerfile
 
     depends_on:
       steel-hammer-keycloak:
@@ -403,8 +451,8 @@ services:
     container_name: steel-hammer-graphite-forge
 
     build:
-      context: ../services/Graphite-Forge
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: services/Graphite-Forge/Dockerfile
 
     user: "0:0"
 
@@ -439,6 +487,9 @@ services:
       - "SERVER_SSL_KEYSTORE="
       - "SERVER_SSL_KEYSTORE_PASSWORD="
       - "SERVER_SSL_KEYSTORE_TYPE="
+      - "SERVER_SSL_TRUSTSTORE="
+      - "SERVER_SSL_TRUSTSTORE_PASSWORD="
+      - "SERVER_SSL_TRUSTSTORE_TYPE="
       - "SERVER_HTTP2_ENABLED=true"
       - "MANAGEMENT_OTLP_TRACING_ENDPOINT=https://steel-hammer-otel-collector:4317"
       - "MANAGEMENT_TRACING_SAMPLING_PROBABILITY=1.0"
@@ -478,6 +529,7 @@ services:
       - "MINIO_BROWSER=on"
       - "MINIO_ROOT_USER=${MINIO_ROOT_USER:-vault-managed-root-user}"
       - "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-vault-managed-root-password}"
+      - "MINIO_PROMETHEUS_AUTH_TYPE=public"
       - "MINIO_BROWSER_REDIRECT_URL=https://steel-hammer-minio:9001"
       - "MINIO_IDENTITY_OPENID_CONFIG_URL=https://steel-hammer-keycloak:7081/realms/dev/.well-known/openid-configuration"
       - "MINIO_IDENTITY_OPENID_CLIENT_ID=minio-console"
@@ -491,6 +543,8 @@ services:
       - vault-pki-certs:/vault-pki-certs:ro
 
     depends_on:
+      steel-hammer-cert-bootstrap:
+        condition: service_completed_successfully
       steel-hammer-vault:
         condition: service_healthy
       steel-hammer-keycloak:

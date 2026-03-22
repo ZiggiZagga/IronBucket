@@ -4,7 +4,7 @@ Production-ready S3-compatible microservices platform with JWT authentication, m
 
 ## 🚨 Production Readiness Status
 
-**Current Status**: 🟢 **Core Build/Test + UI E2E Gates Green** | 🟢 **Browser Screenshot Evidence Automated** | 🟡 **Release Hardening Active**
+**Current Status**: 🟢 **Core Build/Test + UI E2E Gates Green** | 🟢 **Observability + Performance Gates Green** | 🟡 **Release Hardening Active**
 
 IronBucket has validated Java test baselines and roadmap/behavioral gates, with ongoing hardening focused on release governance and production operations.
 
@@ -17,7 +17,14 @@ IronBucket has validated Java test baselines and roadmap/behavioral gates, with 
 | Security Design | ✅ A+ | Zero-trust, multi-layer |
 | **Network Isolation** | 🔴 **C** | **NetworkPolicies required** |
 | **Credential Mgmt** | 🟡 **C+** | **Vault TLS integrated in LGTM; secret lifecycle/runbook hardening pending** |
-| Observability | ✅ A- | LGTM logs/metrics/tracing operational incl. Vault metrics scrape; proof hardening still expanding |
+| Observability | ✅ A | LGTM logs/metrics/tracing operational, observability infra gate green, mixed-user proof green |
+
+### Validated Today (2026-03-22)
+
+- End-to-end application TLS is proven for the IronBucket runtime path: Keycloak, Sentinel-Gear, Graphite-Forge, Claimspindel, Brazz-Nossel, MinIO, and the Next.js E2E backend were exercised over HTTPS with the generated internal CA.
+- LGTM remains intentionally plain HTTP on the internal Docker network for Loki, Tempo, Mimir, OTEL Collector HTTP ingest, and postgres-exporter. This is by current design, not a missing TLS bug.
+- `scripts/ci/run-observability-infra-gate.sh` is green with the split-stack model (`docker-compose-lgtm.yml` for LGTM only, `docker-compose-steel-hammer.yml` for app services).
+- Mixed-user business-path proof is green: Alice and Bob were driven through concurrent S3 method scenarios with per-scenario trace IDs, Tempo lookups, Loki workload-window ingestion, and Prometheus metric deltas.
 
 **⚠️ Remaining production actions:**
 1. Enforce required branch checks and release preflight in protected-branch policy
@@ -45,6 +52,8 @@ bash scripts/run-all-tests-complete.sh
 cd steel-hammer
 docker-compose -f docker-compose-steel-hammer.yml up -d --build
 ```
+
+Certificate generation is now part of the compose flow via `steel-hammer-cert-bootstrap`; a manual pre-run step in `certs/` is no longer required.
 
 **Result:** End-to-end orchestrator runs Maven suites + infrastructure checks + full E2E + observability proof and writes reports to `test-results/`.
 
@@ -155,6 +164,7 @@ Current runtime status in the release-candidate environment:
 - Browser startup dependency issue fixed in UI E2E image by adding `libasound2` in `steel-hammer/DockerfileUIE2E`.
 - TLS trust propagation into Next.js Playwright web-server runtime fixed via `NODE_EXTRA_CA_CERTS` in `ironbucket-app-nextjs/playwright.config.ts`.
 - Current isolated and gate-driven containerized UI baseline result: `5/5 passing`.
+- Mixed-user observability/performance proof added and passing via `tests/ui-mixed-actor-observability-performance.spec.ts`.
 - Complete-run screenshot evidence is now copied into `test-results/e2e-complete/<timestamp>/browser-screenshots` for documentation-grade proof packaging.
 
 Validation note:
@@ -217,10 +227,11 @@ From clean Docker environment:
 
 See [E2E-QUICKSTART.md](docs/E2E-QUICKSTART.md), [E2E-OBSERVABILITY-GUIDE.md](docs/E2E-OBSERVABILITY-GUIDE.md), and [OBSERVABILITY-FEATURESET-STATUS.md](docs/OBSERVABILITY-FEATURESET-STATUS.md) for details.
 
-## Observability Runtime Status (2026-03-14)
+## Observability Runtime Status (2026-03-22)
 
-Latest verified proof: `test-results/phase2-observability/20260313T222356Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
-Latest verified performance proof: `test-results/phase2-performance/20260313T222700Z/PHASE2_PERFORMANCE_REPORT.md`
+Latest verified proof: `test-results/phase2-observability/20260322T221104Z/PHASE2_OBSERVABILITY_PROOF_REPORT.md`
+Latest verified performance proof: `test-results/phase2-performance/20260322T221139Z/PHASE2_PERFORMANCE_REPORT.md`
+Latest mixed-user proof: `test-results/ui-e2e-traces/ui-mixed-actor-observability-performance.json`
 
 Latest complete system validation:
 - `test-results/reports/LATEST-REPORT.md`
@@ -232,6 +243,11 @@ Verified completed:
 - ✅ Runtime wiring: OTEL env wiring validated for sentinel/claimspindel/brazz/buzzle
 - ✅ Vault telemetry: Vault runs with TLS in LGTM compose and metrics are scraped via OTEL collector
 - ✅ Error handling + correlation propagation: Graphite-Forge 404 + GraphQL parse-error checks with `X-Correlation-ID` propagation
+- ✅ Mixed-user business-path proof: Alice + Bob concurrent S3 method runs generated 44 operations in 967 ms (`45.5 ops/s`) with 4/4 Tempo trace lookups succeeding and workload-window Loki ingestion confirmed
+
+TLS scope clarified:
+- ✅ HTTPS is exercised end to end for the application path and identity/storage services using the generated internal CA.
+- ℹ️ Loki, Tempo, Mimir, OTEL Collector HTTP ingest, and postgres-exporter are currently internal HTTP services inside Docker and are validated as such.
 
 Verified not completed (remaining gaps):
 - ⚠️ `Observability_Phase2_Proof` currently failing in latest complete run and requires stabilization before next release cut.
@@ -257,6 +273,7 @@ Latest UI evidence artifacts:
 - `test-results/ui-e2e-traces/ui-s3-methods-proof.png`
 - `test-results/ui-e2e-traces/ui-s3-methods-performance.json`
 - `test-results/ui-e2e-traces/ui-s3-methods-performance-proof.png`
+- `test-results/ui-e2e-traces/ui-mixed-actor-observability-performance.json`
 - `test-results/ui-e2e-traces/object-browser-baseline-e2e.json`
 - `test-results/ui-e2e-traces/object-browser-baseline-proof.png`
 

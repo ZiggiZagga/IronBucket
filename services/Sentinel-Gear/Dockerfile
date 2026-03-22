@@ -3,8 +3,10 @@
 # Stage 1: Build
 FROM maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
-COPY . .
-RUN mvn clean package -DskipTests -q
+COPY services/Pactum-Scroll /build/services/Pactum-Scroll
+COPY services/Sentinel-Gear /build/services/Sentinel-Gear
+RUN mvn -f /build/services/Pactum-Scroll/pom.xml clean install -DskipTests -q \
+    && mvn -f /build/services/Sentinel-Gear/pom.xml clean package -DskipTests -q
 
 # Stage 2: Runtime
 FROM eclipse-temurin:25-jre-alpine
@@ -14,7 +16,7 @@ WORKDIR /app
 RUN apk add --no-cache curl
 
 # Copy JAR from builder
-COPY --from=builder /build/target/*.jar app.jar
+COPY --from=builder /build/services/Sentinel-Gear/target/*.jar app.jar
 
 # Create non-root user
 RUN addgroup -g 1000 appuser && \
