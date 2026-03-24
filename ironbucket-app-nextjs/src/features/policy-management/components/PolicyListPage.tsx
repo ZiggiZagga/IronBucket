@@ -10,10 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormLabel } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table';
 import { useAppToast } from '@/components/ui/toast';
 import { useAppSession } from '@/components/auth/session-provider';
 import { apiDeletePolicy, apiListPolicies } from '@/lib/api/policy-client';
+import { canManageAdminResources, canReadControlPlane } from '@/lib/auth/rbac';
 import type { PolicyRecord } from '../types';
 
 export function PolicyListPage({ tenantId }: { tenantId: string }) {
@@ -21,6 +23,9 @@ export function PolicyListPage({ tenantId }: { tenantId: string }) {
   const { session } = useAppSession();
   const { pushToast } = useAppToast();
   const actor = session?.user.username;
+  const userRoles = session?.user.roles ?? [];
+  const canManagePolicies = canManageAdminResources(userRoles);
+  const canReadPolicies = canReadControlPlane(userRoles);
   const [query, setQuery] = useState('');
 
   const policyQuery = useQuery({
@@ -51,8 +56,34 @@ export function PolicyListPage({ tenantId }: { tenantId: string }) {
     );
   }, [policyQuery.data, query]);
 
+  if (!session) {
+    return (
+      <section className="space-y-6" data-testid="policy-list-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in required</CardTitle>
+            <CardDescription>Policy management is available after authentication.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
+  if (!canReadPolicies) {
+    return (
+      <section className="space-y-6" data-testid="policy-list-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access restricted</CardTitle>
+            <CardDescription>Your role set does not include policy read permissions.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
   return (
-    <section className="space-y-6" data-testid="policy-list-page">
+    <section className="space-y-6" data-testid="policy-list-page" aria-busy={policyQuery.isLoading}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -78,15 +109,36 @@ export function PolicyListPage({ tenantId }: { tenantId: string }) {
             </div>
           </FormField>
           <div className="flex items-end">
-            <Button asChild>
-              <Link href={`/policies/${tenantId}/new`}>
+            {canManagePolicies ? (
+              <Button asChild>
+                <Link href={`/policies/${tenantId}/new`}>
+                  <Plus className="h-4 w-4" />
+                  New policy
+                </Link>
+              </Button>
+            ) : (
+              <Button type="button" disabled aria-label="New policy requires admin role">
                 <Plus className="h-4 w-4" />
                 New policy
-              </Link>
-            </Button>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {policyQuery.isError ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Could not load policies</CardTitle>
+            <CardDescription>
+              {policyQuery.error instanceof Error ? policyQuery.error.message : 'An unexpected error occurred while loading policies.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="secondary" onClick={() => policyQuery.refetch()}>Retry</Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Table>
         <TableHead>
@@ -101,9 +153,18 @@ export function PolicyListPage({ tenantId }: { tenantId: string }) {
         </TableHead>
         <TableBody>
           {policyQuery.isLoading ? (
-            <TableRow><TableCell colSpan={6}>Loading policies...</TableCell></TableRow>
+            Array.from({ length: 4 }).map((_, index) => (
+              <TableRow key={`policy-loading-${index}`}>
+                <TableCell colSpan={6}><Skeleton className="h-10 w-full" /></TableCell>
+              </TableRow>
+            ))
           ) : filtered.length === 0 ? (
-            <TableRow><TableCell colSpan={6}>No policies found for this tenant filter.</TableCell></TableRow>
+            <TableRow>
+              <TableCell colSpan={6}>
+                <p className="font-medium">No policies found.</p>
+                <p className="mt-1 text-xs text-[color:var(--muted-foreground)]">Adjust search or create a policy if your role has write access.</p>
+              </TableCell>
+            </TableRow>
           ) : (
             filtered.map((policy) => (
               <TableRow key={policy.id} data-testid={`policy-row-${policy.id}`}>
@@ -121,7 +182,7 @@ export function PolicyListPage({ tenantId }: { tenantId: string }) {
                   <p className="text-xs text-[color:var(--muted-foreground)]">history: {policy.versionHistoryCount ?? 0}</p>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
                     <Button asChild variant="secondary" size="sm">
                       <Link href={`/policies/${tenantId}/${policy.id}`}>
                         Open
@@ -132,7 +193,8 @@ export function PolicyListPage({ tenantId }: { tenantId: string }) {
                       variant="danger"
                       size="sm"
                       type="button"
-                      disabled={deleteMutation.isPending}
+                      aria-label={`Delete policy ${policy.id}`}
+                      disabled={!canManagePolicies || deleteMutation.isPending}
                       onClick={() => {
                         if (window.confirm(`Delete policy ${policy.id}?`)) {
                           deleteMutation.mutate(policy.id);

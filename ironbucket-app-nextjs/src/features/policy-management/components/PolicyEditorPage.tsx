@@ -13,6 +13,7 @@ import { CodeEditor } from '@/components/ui/code-editor';
 import { FormField, FormHint, FormLabel } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAppToast } from '@/components/ui/toast';
 import {
   apiCreatePolicy,
@@ -27,6 +28,7 @@ import {
 } from '@/lib/api/policy-client';
 import { policySchemaAutocomplete, policyTemplates } from '@/lib/policy/templates';
 import { insertSchemaKey, parsePolicySource, serializePolicyDraft } from '@/lib/policy/serialization';
+import { canManageAdminResources, canReadControlPlane } from '@/lib/auth/rbac';
 import type { PolicyDraft, PolicyRecord } from '../types';
 
 function toPolicyDraft(policy: PolicyRecord | null, tenantId: string): PolicyDraft {
@@ -81,6 +83,9 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
   const { session } = useAppSession();
   const { pushToast } = useAppToast();
   const actor = session?.user.username;
+  const userRoles = session?.user.roles ?? [];
+  const canWritePolicy = canManageAdminResources(userRoles);
+  const canReadPolicy = canReadControlPlane(userRoles);
 
   const policyQuery = useQuery({
     queryKey: ['policy-detail', policyId, actor],
@@ -192,8 +197,48 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
     return 'Policy is saved, GitOps pull/push can now be triggered.';
   }, [policyId]);
 
+  if (!session) {
+    return (
+      <section className="space-y-6" data-testid="policy-editor-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in required</CardTitle>
+            <CardDescription>Policy editing is available after authentication.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
+  if (!canReadPolicy) {
+    return (
+      <section className="space-y-6" data-testid="policy-editor-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access restricted</CardTitle>
+            <CardDescription>Your role set does not include policy read permissions.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
   return (
-    <section className="space-y-6" data-testid="policy-editor-page">
+    <section className="space-y-6" data-testid="policy-editor-page" aria-busy={policyQuery.isLoading}>
+      {policyQuery.isError ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Could not load policy</CardTitle>
+            <CardDescription>
+              {policyQuery.error instanceof Error ? policyQuery.error.message : 'An unexpected error occurred while loading policy details.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="secondary" onClick={() => policyQuery.refetch()}>Retry</Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -217,6 +262,7 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
             <Select
               id="policy-template"
               defaultValue=""
+              disabled={!canWritePolicy}
               onChange={(event: ChangeEvent<HTMLSelectElement>) => {
                 const template = policyTemplates.find((entry) => entry.id === event.target.value);
                 if (!template) {
@@ -240,6 +286,7 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
             <Select
               id="policy-json-mode"
               value={editorMode}
+              disabled={!canWritePolicy}
               onChange={(event: ChangeEvent<HTMLSelectElement>) => {
                 const nextMode = event.target.value as 'json' | 'yaml';
                 setEditorMode(nextMode);
@@ -265,6 +312,7 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
               title={editorMode === 'yaml' ? 'Policy YAML' : 'Policy JSON'}
               language={editorMode}
               value={rawPolicy}
+              readOnly={!canWritePolicy}
               onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
                 setRawPolicy(event.target.value);
                 try {
@@ -275,7 +323,7 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
                 }
               }}
               suggestions={policySchemaAutocomplete}
-              onInsertSuggestion={(value: string) => {
+              onInsertSuggestion={canWritePolicy ? (value: string) => {
                 const next = insertSchemaKey(rawPolicy, value, editorMode);
                 setRawPolicy(next);
                 try {
@@ -283,14 +331,14 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
                 } catch {
                   // Keep draft unchanged until source is valid again.
                 }
-              }}
+              } : undefined}
               aria-label="Policy source"
             />
             <div className="flex flex-wrap gap-3">
               <Button
                 type="button"
                 variant="secondary"
-                disabled={!canSave || validateMutation.isPending}
+                disabled={!canWritePolicy || !canSave || validateMutation.isPending}
                 onClick={() => validateMutation.mutate(draft)}
               >
                 <CheckCircle2 className="h-4 w-4" />
@@ -298,13 +346,19 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
               </Button>
               <Button
                 type="button"
-                disabled={!canSave || saveMutation.isPending}
+                disabled={!canWritePolicy || !canSave || saveMutation.isPending}
                 onClick={() => saveMutation.mutate(draft)}
               >
                 <Save className="h-4 w-4" />
                 Save policy
               </Button>
             </div>
+
+            {!canWritePolicy ? (
+              <p className="text-xs text-amber-300" role="status">
+                Read-only mode: write actions require an admin role.
+              </p>
+            ) : null}
 
             {lastValidation ? (
               <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel-strong)] p-3 text-sm">
@@ -386,6 +440,7 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
                 <Play className="h-4 w-4" />
                 Run dry run
               </Button>
+              {dryRunMutation.isPending ? <Skeleton className="h-14 w-full" /> : null}
               {dryRunMutation.data ? (
                 <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel-strong)] p-3 text-sm">
                   <p><strong>Decision:</strong> {dryRunMutation.data.allow ? 'allow' : 'deny'}</p>
@@ -411,7 +466,7 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
                 <Button
                   type="button"
                   variant="secondary"
-                  disabled={!policyId || gitopsMutation.isPending}
+                  disabled={!canWritePolicy || !policyId || gitopsMutation.isPending}
                   onClick={() => gitopsMutation.mutate({ action: 'pull', branch: gitopsQuery.data?.branch ?? 'main' })}
                 >
                   <GitBranch className="h-4 w-4" />
@@ -419,7 +474,7 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
                 </Button>
                 <Button
                   type="button"
-                  disabled={!policyId || gitopsMutation.isPending}
+                  disabled={!canWritePolicy || !policyId || gitopsMutation.isPending}
                   onClick={() => gitopsMutation.mutate({ action: 'push', branch: gitopsQuery.data?.branch ?? 'main' })}
                 >
                   <GitBranch className="h-4 w-4" />
@@ -473,7 +528,9 @@ export function PolicyEditorPage({ tenantId, policyId }: { tenantId: string; pol
           </div>
 
           <div className="grid gap-3">
-            {(versionsQuery.data ?? []).length === 0 ? (
+            {versionsQuery.isLoading ? (
+              <Skeleton className="h-16 w-full" />
+            ) : (versionsQuery.data ?? []).length === 0 ? (
               <p className="text-sm text-[color:var(--muted-foreground)]">No version history yet.</p>
             ) : (
               (versionsQuery.data ?? []).map((entry) => (

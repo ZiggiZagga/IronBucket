@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { FormError, FormField, FormHint, FormLabel } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table';
 import { useAppToast } from '@/components/ui/toast';
 import {
@@ -20,6 +21,7 @@ import {
   apiListTenants,
   apiUpdateTenant
 } from '@/lib/api/ironbucket-client';
+import { canManageAdminResources, canReadControlPlane } from '@/lib/auth/rbac';
 import type { CreateTenantPayload, TenantRecord, TenantStatus } from './types';
 import { useTenantFilters } from './useTenantFilters';
 
@@ -47,8 +49,9 @@ export function TenantManagementPage() {
   const { query, setQuery, status, setStatus } = useTenantFilters();
 
   const actor = session?.user.username;
-  const roleSet = new Set(session?.user.roles ?? []);
-  const canManageTenants = roleSet.has('admin') || roleSet.has('adminrole');
+  const userRoles = session?.user.roles ?? [];
+  const canManageTenants = canManageAdminResources(userRoles);
+  const canReadTenants = canReadControlPlane(userRoles);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<CreateTenantPayload>({
@@ -125,8 +128,34 @@ export function TenantManagementPage() {
     });
   }, [query, status, tenantQuery.data]);
 
+  if (!session) {
+    return (
+      <section className="space-y-6" data-testid="tenant-management-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in required</CardTitle>
+            <CardDescription>Tenant management is available after authentication.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
+  if (!canReadTenants) {
+    return (
+      <section className="space-y-6" data-testid="tenant-management-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access restricted</CardTitle>
+            <CardDescription>Your current role set does not include control-plane read access.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
   return (
-    <section className="space-y-6" data-testid="tenant-management-page">
+    <section className="space-y-6" data-testid="tenant-management-page" aria-busy={tenantQuery.isLoading}>
       <Card>
         <CardHeader>
           <CardTitle>Tenant Management</CardTitle>
@@ -228,6 +257,20 @@ export function TenantManagementPage() {
         </CardContent>
       </Card>
 
+      {tenantQuery.isError ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Could not load tenants</CardTitle>
+            <CardDescription>
+              {tenantQuery.error instanceof Error ? tenantQuery.error.message : 'An unexpected error occurred while loading tenants.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" variant="secondary" onClick={() => tenantQuery.refetch()}>Retry</Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Table>
         <TableHead>
           <TableRow>
@@ -239,12 +282,19 @@ export function TenantManagementPage() {
         </TableHead>
         <TableBody>
           {tenantQuery.isLoading ? (
-            <TableRow>
-              <TableCell colSpan={4}>Loading tenants...</TableCell>
-            </TableRow>
+            Array.from({ length: 4 }).map((_, index) => (
+              <TableRow key={`tenant-loading-${index}`}>
+                <TableCell colSpan={4}>
+                  <Skeleton className="h-10 w-full" />
+                </TableCell>
+              </TableRow>
+            ))
           ) : filteredTenants.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4}>No tenants match the current filter.</TableCell>
+              <TableCell colSpan={4}>
+                <p className="font-medium">No tenants match your filter.</p>
+                <p className="mt-1 text-xs text-[color:var(--muted-foreground)]">Try clearing search/status filters or create a tenant if you have admin access.</p>
+              </TableCell>
             </TableRow>
           ) : (
             filteredTenants.map((tenant) => (
@@ -264,7 +314,7 @@ export function TenantManagementPage() {
                   </p>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
                     <Button asChild variant="ghost" size="sm" type="button">
                       <Link href={`/tenants/${tenant.id}`}>
                         <UserCog className="h-4 w-4" />
@@ -349,6 +399,7 @@ export function TenantManagementPage() {
                     <Button
                       variant="danger"
                       size="sm"
+                      aria-label={`Delete tenant ${tenant.name}`}
                       type="button"
                       disabled={!canManageTenants || deleteMutation.isPending}
                       onClick={() => {

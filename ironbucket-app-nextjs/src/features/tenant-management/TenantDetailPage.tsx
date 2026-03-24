@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FormField, FormHint, FormLabel } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table';
 import { useAppToast } from '@/components/ui/toast';
 import {
@@ -20,6 +21,7 @@ import {
   apiListMemberships,
   apiUpdateMembership
 } from '@/lib/api/ironbucket-client';
+import { canManageAdminResources, canReadControlPlane } from '@/lib/auth/rbac';
 import type { CreateMembershipPayload, TenantMembershipRole } from './types';
 
 const roles: TenantMembershipRole[] = ['admin', 'auditor', 'developer', 'viewer'];
@@ -45,8 +47,9 @@ export function TenantDetailPage({ tenantId }: { tenantId: string }) {
   const { pushToast } = useAppToast();
   const actor = session?.user.username;
 
-  const roleSet = new Set(session?.user.roles ?? []);
-  const canManageMembership = roleSet.has('admin') || roleSet.has('adminrole');
+  const userRoles = session?.user.roles ?? [];
+  const canManageMembership = canManageAdminResources(userRoles);
+  const canReadMembership = canReadControlPlane(userRoles);
 
   const [form, setForm] = useState<CreateMembershipPayload>({
     userId: '',
@@ -99,15 +102,41 @@ export function TenantDetailPage({ tenantId }: { tenantId: string }) {
 
   const sessionRoleSummary = useMemo(() => (session?.user.roles ?? []).join(', ') || 'none', [session?.user.roles]);
 
+  if (!session) {
+    return (
+      <section className="space-y-6" data-testid="tenant-detail-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in required</CardTitle>
+            <CardDescription>Tenant membership management requires an authenticated session.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
+  if (!canReadMembership) {
+    return (
+      <section className="space-y-6" data-testid="tenant-detail-page">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access restricted</CardTitle>
+            <CardDescription>Your role set does not include membership read permissions.</CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+    );
+  }
+
   return (
-    <section className="space-y-6" data-testid="tenant-detail-page">
+    <section className="space-y-6" data-testid="tenant-detail-page" aria-busy={membershipQuery.isLoading || tenantQuery.isLoading}>
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5" />
-                {tenantQuery.data?.name ?? 'Tenant detail'}
+                {tenantQuery.isLoading ? 'Loading tenant...' : tenantQuery.data?.name ?? 'Tenant detail'}
               </CardTitle>
               <CardDescription>
                 Membership and role assignment workspace for tenant {tenantId}.
@@ -136,6 +165,25 @@ export function TenantDetailPage({ tenantId }: { tenantId: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {tenantQuery.isError || membershipQuery.isError ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Could not load membership workspace</CardTitle>
+            <CardDescription>
+              {tenantQuery.error instanceof Error
+                ? tenantQuery.error.message
+                : membershipQuery.error instanceof Error
+                  ? membershipQuery.error.message
+                  : 'An unexpected error occurred while loading tenant membership data.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={() => tenantQuery.refetch()}>Retry tenant</Button>
+            <Button type="button" variant="secondary" onClick={() => membershipQuery.refetch()}>Retry memberships</Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -228,12 +276,19 @@ export function TenantDetailPage({ tenantId }: { tenantId: string }) {
         </TableHead>
         <TableBody>
           {membershipQuery.isLoading ? (
-            <TableRow>
-              <TableCell colSpan={5}>Loading memberships...</TableCell>
-            </TableRow>
+            Array.from({ length: 4 }).map((_, index) => (
+              <TableRow key={`membership-loading-${index}`}>
+                <TableCell colSpan={5}>
+                  <Skeleton className="h-10 w-full" />
+                </TableCell>
+              </TableRow>
+            ))
           ) : (membershipQuery.data ?? []).length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5}>No members assigned yet.</TableCell>
+              <TableCell colSpan={5}>
+                <p className="font-medium">No members assigned yet.</p>
+                <p className="mt-1 text-xs text-[color:var(--muted-foreground)]">Add a member above to start role assignments for this tenant.</p>
+              </TableCell>
             </TableRow>
           ) : (
             (membershipQuery.data ?? []).map((membership) => (
@@ -273,6 +328,7 @@ export function TenantDetailPage({ tenantId }: { tenantId: string }) {
                   <Button
                     variant="danger"
                     size="sm"
+                    aria-label={`Remove member ${membership.displayName}`}
                     type="button"
                     disabled={!canManageMembership || deleteMembership.isPending}
                     onClick={() => deleteMembership.mutate(membership.id)}

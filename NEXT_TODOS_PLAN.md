@@ -65,6 +65,19 @@ Reach a stable, fully containerized branch-tip run where GraphQL, refreshed UI e
    - add YAML linting/autocomplete quality parity with JSON suggestions,
    - then include policy engine specs in canonical evidence reporting.
 
+### Priority 0.75: Sprint 9 UI hardening completed, productionization follow-up remains
+- Completed in this pass:
+   - role-based read/write gating across tenant and policy UI surfaces,
+   - explicit sign-in-required and access-restricted states,
+   - retryable error states for key data queries,
+   - loading skeletons for table and detail loading paths,
+   - mobile action-row wrapping and accessibility improvements (`aria-busy`, clearer action labels, read-only notices).
+- Follow-up objective:
+   - enforce RBAC server-side for all corresponding API routes (currently UI-focused hardening),
+   - add automated accessibility checks (axe or equivalent) in CI,
+   - add viewport-specific Playwright coverage for mobile breakpoints,
+   - include accessibility and responsive evidence in release reporting.
+
 ### Priority 1: Promote mixed-user proof into the canonical gates
 - Integrate `ironbucket-app-nextjs/tests/ui-mixed-actor-observability-performance.spec.ts` into a formal gate path.
 - Preferred integration points:
