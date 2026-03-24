@@ -1,8 +1,10 @@
 /** @jest-environment jsdom */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { useMutation } from '@apollo/client';
 import '@testing-library/jest-dom';
 import PolicyEditor from '@/components/ironbucket/admin/PolicyEditor';
+import { AppToastProvider } from '@/components/ui/toast';
 import { CREATE_POLICY, UPDATE_POLICY, DRY_RUN_POLICY } from '@/graphql/ironbucket-mutations';
 
 jest.mock('@apollo/client', () => ({
@@ -12,6 +14,10 @@ jest.mock('@apollo/client', () => ({
 }));
 
 const mockedUseMutation = useMutation as jest.Mock;
+
+function renderWithProviders(node: ReactElement) {
+  return render(<AppToastProvider>{node}</AppToastProvider>);
+}
 
 describe('PolicyEditor Component', () => {
   let createPolicyMutation: jest.Mock;
@@ -59,7 +65,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should render empty policy editor', () => {
-    render(<PolicyEditor />);
+    renderWithProviders(<PolicyEditor />);
 
     expect(screen.getByLabelText(/tenant/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/roles/i)).toBeInTheDocument();
@@ -67,14 +73,14 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should render with existing policy data', () => {
-    render(<PolicyEditor policy={mockPolicy} />);
+    renderWithProviders(<PolicyEditor policy={mockPolicy} />);
 
     expect(screen.getByDisplayValue('test-tenant')).toBeInTheDocument();
     expect(screen.getByDisplayValue('admin')).toBeInTheDocument();
   });
 
   it('should validate required fields', async () => {
-    render(<PolicyEditor />);
+    renderWithProviders(<PolicyEditor />);
 
     fireEvent.change(screen.getByLabelText(/tenant/i), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText(/roles/i), { target: { value: '' } });
@@ -89,7 +95,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should validate bucket name format', async () => {
-    render(<PolicyEditor />);
+    renderWithProviders(<PolicyEditor />);
 
     const bucketInput = screen.getByLabelText(/allowed buckets/i);
     fireEvent.change(bucketInput, { target: { value: 'INVALID_BUCKET' } });
@@ -101,7 +107,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should validate S3 operation format', async () => {
-    render(<PolicyEditor />);
+    renderWithProviders(<PolicyEditor />);
 
     const operationInput = screen.getByLabelText(/operations/i);
     fireEvent.change(operationInput, { target: { value: 'invalid:operation' } });
@@ -113,7 +119,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should test policy before saving', async () => {
-    render(<PolicyEditor policy={mockPolicy} />);
+    renderWithProviders(<PolicyEditor policy={mockPolicy} />);
 
     fireEvent.click(screen.getByText(/test policy/i));
 
@@ -144,7 +150,7 @@ describe('PolicyEditor Component', () => {
       }
     });
 
-    render(<PolicyEditor policy={mockPolicy} />);
+    renderWithProviders(<PolicyEditor policy={mockPolicy} />);
 
     fireEvent.click(screen.getByText(/test policy/i));
 
@@ -155,7 +161,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should create new policy', async () => {
-    render(<PolicyEditor />);
+    renderWithProviders(<PolicyEditor />);
 
     fireEvent.change(screen.getByLabelText(/tenant/i), { target: { value: 'test-tenant' } });
     fireEvent.change(screen.getByLabelText(/roles/i), { target: { value: 'admin' } });
@@ -183,7 +189,7 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should update existing policy', async () => {
-    render(<PolicyEditor policy={mockPolicy} />);
+    renderWithProviders(<PolicyEditor policy={mockPolicy} />);
 
     fireEvent.click(screen.getByText(/save policy/i));
 
@@ -202,23 +208,23 @@ describe('PolicyEditor Component', () => {
   });
 
   it('should highlight YAML syntax', () => {
-    render(<PolicyEditor mode="yaml" />);
+    renderWithProviders(<PolicyEditor mode="yaml" />);
 
     const editor = screen.getByLabelText(/policy syntax/i);
     expect(editor).toHaveClass('syntax-highlighted');
   });
 
   it('should highlight JSON syntax', () => {
-    render(<PolicyEditor mode="json" />);
+    renderWithProviders(<PolicyEditor mode="json" />);
 
     const editor = screen.getByLabelText(/policy syntax/i);
     expect(editor).toHaveClass('syntax-highlighted');
   });
 
   it('should render access notice and admin fields', () => {
-    render(<PolicyEditor />);
+    renderWithProviders(<PolicyEditor />);
 
-    expect(screen.getByText(/access denied/i)).toBeInTheDocument();
+    expect(screen.getByText(/policy studio/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/tenant/i)).toBeInTheDocument();
   });
 });

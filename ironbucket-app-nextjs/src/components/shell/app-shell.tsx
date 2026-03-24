@@ -31,7 +31,10 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: '/', label: 'Overview', description: 'Product surface and live proofs', icon: Home },
+  { href: '/tenants', label: 'Tenants', description: 'CRUD + membership and role assignment', icon: Users },
+  { href: '/policies', label: 'Policy Engine', description: 'Policy list, editor, validation and GitOps', icon: ShieldCheck },
   { href: '/e2e-object-browser', label: 'Object Browser', description: 'Browse, upload, download, delete', icon: FolderKanban },
+  { href: '/e2e-tenant', label: 'Tenant E2E', description: 'Tenant GraphQL coverage scenario', icon: Users },
   { href: '/e2e-policy', label: 'Policy Studio', description: 'Evaluate and manage policy flows', icon: ShieldCheck },
   { href: '/e2e-audit', label: 'Audit Lens', description: 'Trace logs and audit windows', icon: Activity },
   { href: '/e2e-s3-methods', label: 'S3 Methods', description: 'Full method coverage and proof', icon: Gauge },
@@ -206,7 +209,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <nav className="space-y-2">
                 {navItems.map((item) => {
                   const Icon = item.icon;
-                  const active = pathname === item.href;
+                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                   return (
                     <Link
                       key={item.href}

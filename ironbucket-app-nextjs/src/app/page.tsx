@@ -27,6 +27,16 @@ const focusCards = [
 
 const routeCards = [
   {
+    href: '/tenants',
+    title: 'Tenant Management',
+    copy: 'Create, edit, and remove tenants while assigning users and roles in a shared admin workflow.'
+  },
+  {
+    href: '/policies/alice',
+    title: 'Policy Engine',
+    copy: 'Manage tenant policies with editor, validation, dry-run simulation, version history and GitOps actions.'
+  },
+  {
     href: '/e2e-object-browser',
     title: 'Object Browser',
     copy: 'Browse buckets, upload files, and verify delete/download flows with live runtime data.'

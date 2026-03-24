@@ -40,6 +40,31 @@ Reach a stable, fully containerized branch-tip run where GraphQL, refreshed UI e
 
 ## Current TODOs
 
+### Priority 0: Tenant UI sprint follow-up (intentionally red E2E)
+- New UI + Playwright mappings were added for tenant foundation and membership/RBAC:
+   - `ironbucket-app-nextjs/tests/ui-tenant-management-foundation.spec.ts`
+   - `ironbucket-app-nextjs/tests/ui-tenant-membership-rbac.spec.ts`
+- These two specs are expected to fail right now by design.
+- Next sprint objective:
+   - wire deterministic backend fixtures for tenant and Keycloak membership synchronization,
+   - replace the deliberate failing assertions with real readiness markers and service-backed checks,
+   - then promote both specs into canonical gate reporting.
+
+### Priority 0.5: Policy Engine UI sprint follow-up (intentionally red E2E)
+- New Phase-3 policy management UI was added with list/editor/validation/dry-run/diff/gitops mapping:
+   - `ironbucket-app-nextjs/tests/ui-policy-engine-management.spec.ts`
+   - `ironbucket-app-nextjs/tests/ui-policy-engine-diff-gitops.spec.ts`
+- These policy specs are expected to fail by design for now.
+- Completed in this follow-up pass:
+   - true JSON/YAML mode switching in the policy editor,
+   - beginner-focused semantic validation hints and on-page validation summary,
+   - explicit GitOps action-state guidance before/after first save.
+- Next sprint objective:
+   - connect policy versioning and gitops actions to persistent SCM-backed storage,
+   - replace deliberate readiness-marker failures with real service-backed assertions,
+   - add YAML linting/autocomplete quality parity with JSON suggestions,
+   - then include policy engine specs in canonical evidence reporting.
+
 ### Priority 1: Promote mixed-user proof into the canonical gates
 - Integrate `ironbucket-app-nextjs/tests/ui-mixed-actor-observability-performance.spec.ts` into a formal gate path.
 - Preferred integration points:
