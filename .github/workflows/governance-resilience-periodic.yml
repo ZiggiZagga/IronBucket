@@ -1,8 +1,6 @@
 name: governance-resilience-periodic
 
 on:
-  schedule:
-    - cron: '17 2 * * 1'
   workflow_dispatch:
 
 permissions:
